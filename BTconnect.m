@@ -14,13 +14,12 @@ function [btobj] = BTconnect()
     % [1] Search for bluetooth-enabled devices
     disp('Searching for bluetooth devices...'); % Warning message on command window or console
     btdevices = instrhwinfo('Bluetooth'); % Defining structure with bluetooth devices found
-
     % [2] Identifying device of interest
     %     - As of 10/22/2015, the program searches for the 3M Littmann
     %       s1tethoscope only
-    Ndevices = length(devices.RemoteNames); % Define the number of devices found
+    Ndevices = length(btdevices.RemoteNames); % Define the number of devices found
     for i = 1:Ndevices % Loop through the names of the devices within range   
-        name = devices.RemoteNames(i,1);
+        name = btdevices.RemoteNames(i,1);
         comp_index = strcmp(name{1}(1:5),'M3200'); % Name of each device is compared to the default name of the desired device    
         if comp_index == 1 % If the name of the device does match that of the desire device, the program...        
             disp('DEVICE FOUND') % ...displays a message
