@@ -79,11 +79,12 @@ varargout{1} = handles.output;
 % list of the input recording devices recognized by the system.
 function pushbutton1_Callback(hObject, ~, handles)
 
-    [selectedInputDeviceName, selectedInputDeviceID, status] = selectInputDevice();
-    
-    if status == 1
+    try
+        [selectedInputDeviceName, selectedInputDeviceID, status] = selectInputDevice();
         handles.selectedInputDeviceName = selectedInputDeviceName;
         handles.selectedInputDeviceID = selectedInputDeviceID;
+    catch
+        disp('User did not select an input recording device')
     end
 
 guidata(hObject,handles)
