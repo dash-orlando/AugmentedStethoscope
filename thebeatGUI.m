@@ -81,8 +81,10 @@ function pushbutton1_Callback(hObject, ~, handles)
 
     [selectedInputDeviceName, selectedInputDeviceID, status] = selectInputDevice();
     
-    handles.selectedInputDeviceName = selectedInputDeviceName;
-    handles.selectedInputDeviceID = selectedInputDeviceID;
+    if status == 1
+        handles.selectedInputDeviceName = selectedInputDeviceName;
+        handles.selectedInputDeviceID = selectedInputDeviceID;
+    end
 
 guidata(hObject,handles)
 
