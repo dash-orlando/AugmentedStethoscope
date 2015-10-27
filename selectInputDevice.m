@@ -22,7 +22,9 @@ function [selectedInputDeviceName, selectedInputDeviceID, status] = selectInputD
                                  'PromptString','Select one of the input devices listed',...
                                  'OKString','OK',...
                                  'CancelString','Cancel');
-    % the name and the id corresponding to the slected device are stored
-    selectedInputDeviceName = info.input(selection).Name;
-    selectedInputDeviceID = info.input(selection).ID;
+    if status == 1 % if statement is used to avoid errors related to usr cancellation (status == 0)
+        % the name and the id corresponding to the slected device are stored
+        selectedInputDeviceName = info.input(selection).Name;
+        selectedInputDeviceID = info.input(selection).ID;
+    end
 end % End of function
