@@ -6,7 +6,7 @@
 %
 % Fluvio L. Lobo Fenoglietto
 
-function [selectedInputDeviceName, selectedInputDeviceID] = selectInputDevice()
+function [selectedInputDeviceName, selectedInputDeviceID, status] = selectInputDevice()
     info = audiodevinfo; % detect connected audio devices
     Nidev = length(info.input); % number of input devices
     inputDevicesList = cell(Nidev,1); % initialize list for the names of the detected input devices
@@ -14,7 +14,7 @@ function [selectedInputDeviceName, selectedInputDeviceID] = selectInputDevice()
         inputDevicesList{i,1} = info.input(i).Name;   
     end
     % a listbox GUI allows for the user to select the preferred input device
-    [selection,~] = listdlg('ListString',inputDevicesList,...
+    [selection,status] = listdlg('ListString',inputDevicesList,...
                                  'SelectionMode','single',...
                                  'ListSize',[400, 100],...
                                  'InitialValue',1,...
