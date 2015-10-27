@@ -22,7 +22,7 @@ function varargout = thebeatGUI(varargin)
 
 % Edit the above text to modify the response to help thebeatGUI
 
-% Last Modified by GUIDE v2.5 26-Oct-2015 22:08:00
+% Last Modified by GUIDE v2.5 26-Oct-2015 23:09:49
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -90,3 +90,9 @@ function pushbutton1_Callback(hObject, ~, handles)
 
 guidata(hObject,handles)
 
+
+% --- Executes on button press in pushbutton2.
+function pushbutton2_Callback(hObject, eventdata, handles)
+% hObject    handle to pushbutton2 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
