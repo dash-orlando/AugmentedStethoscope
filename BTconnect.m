@@ -10,4 +10,5 @@
 function [btobj] = btconnect(btdevsel)
     % [1] Generate bluetooth object with selected device
     btobj = Bluetooth(btdevsel.device{1}, 1);
+    disp(horzcat('Computer connected to ',btdevsel.device{1},'...'));
 end % End of function
