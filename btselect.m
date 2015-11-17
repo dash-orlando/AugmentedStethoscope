@@ -9,6 +9,7 @@
 
 function [btdevsel] = btselect(btdev)
     % [1] Generate list dialog for user to select bluetooth device
+    disp('Select bluetooth device...');
     devicenames = btdev.devices;
     [selection,status] = listdlg('ListString',devicenames,...
                                  'SelectionMode','single',...
@@ -22,6 +23,7 @@ function [btdevsel] = btselect(btdev)
     if status == 1
         btdevsel.index = selection;
         btdevsel.device = devicenames(selection);
+        disp(horzcat('User selected ',devicenames{selection},'...'));
     elseif status == 0
         btdevsel = [];
         disp('User cancelled selection!');
