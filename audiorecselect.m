@@ -11,6 +11,7 @@ function [audiorecsel] = audiorecselect(audiorecdev)
     % [1] Generate list dialog for user to select audio recording devices
     disp('Select audio recording device...');
     devicenames = audiorecdev.devices;
+    deviceid = audiorecdev.id;
     [selection,status] = listdlg('ListString',devicenames,...
                                  'SelectionMode','single',...
                                  'ListSize', [200 200],...
@@ -23,6 +24,7 @@ function [audiorecsel] = audiorecselect(audiorecdev)
     if status == 1
         audiorecsel.index = selection;
         audiorecsel.device = devicenames(selection);
+        audiorecsel.id = deviceid(selection);
         disp(horzcat('User selected ',devicenames{selection},'...'));
     elseif status == 0
         audiorecsel = [];
