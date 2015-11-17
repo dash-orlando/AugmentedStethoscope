@@ -14,4 +14,5 @@ function [btdev] = btsearch()
     % [2] Storing device information in structure array
     btdev.devices = btinstrinfo.RemoteNames;
     btdev.id = btinstrinfo.RemoteIDs;
+    disp('Bluetooth devices found and stored within "btdev"...');
 end % End of function
