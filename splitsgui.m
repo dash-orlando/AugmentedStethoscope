@@ -91,11 +91,28 @@ function pushbutton3_Callback(hObject, ~, handles)
         [btobj] = btconnect(btdevsel); % creates a bluetooth object from the selected bluetooth device
         
         outString = horzcat('Computer connected to ',btdevsel.device{1}); % reporting connection
-        set(handles.text7, 'String', outString); % printing report string 
+        set(handles.text7, 'String', outString); % printing report string
+        
+        set(handles.togglebutton1, 'Visible', 'on');
     
     handles.btobj = btobj; % stores bluetooth object into handles structure
 
 guidata(hObject, handles);
 
 
+% --- Executes on button press in togglebutton1.
+function togglebutton1_Callback(hObject, eventdata, handles)
+% hObject    handle to togglebutton1 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
 
+% Hint: get(hObject,'Value') returns toggle state of togglebutton1
+
+
+% --- Executes on button press in togglebutton2.
+function togglebutton2_Callback(hObject, eventdata, handles)
+% hObject    handle to togglebutton2 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hint: get(hObject,'Value') returns toggle state of togglebutton2
