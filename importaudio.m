@@ -11,11 +11,11 @@
 % Fluvio L. Lobo Fenoglietto
 %
 
-function [audiopath, audiofilename, audio] = importaudio()
+function [audiodata] = importaudio()
 
     % the function sends a notification to the command window referring to the supported file extensions
     disp('importaudio supports the following file extensions :: ');
-    supportedextensions = {'*.wav';'*.mp3';'*.mp4';'*.m4a';'*.ogg';'*.flac';'*.au';'*.aiff';'*.aif';'*.aifc'}
+    supportedextensions = {'*.wav';'*.mp3';'*.mp4';'*.m4a';'*.ogg';'*.flac';'*.au';'*.aiff';'*.aif';'*.aifc'};
     
     % using uigetfile, the user is prompted to crowse for the desired audio file
     [filename, pathname] = uigetfile(supportedextensions,'Select Audio File');
@@ -28,9 +28,9 @@ function [audiopath, audiofilename, audio] = importaudio()
     tmax = length(signal)/fs;
     time = 0:1/fs:tmax-1/fs;
     
-    audiopath = pathname; % pathname of the audio file
-    audiofilename = filename; % name of the audio file
-    audio(:,1) = time; % time array of the audio file
-    audio(:,2) = signal; % voltage or amplitude array of the audio file
+    audiodata.audiopath = pathname; % pathname of the audio file
+    audiodata.audiofilename = filename; % name of the audio file
+    audiodata.time = time; % time array of the audio file
+    audiodata.signal = signal; % voltage or amplitude array of the audio file
     
 end
