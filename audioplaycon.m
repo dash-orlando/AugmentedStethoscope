@@ -7,9 +7,11 @@
 % Fluvio L. Lobo Fenoglietto
 %
 
-function [audioplayer] = audioplaycon(audioplaysel, Fs, nBits)
+function [audioplayobj] = audioplaycon(audiodata, audioplaysel, nBits)
     % [1] Generate audio player
+    audioSignal = audiodata.signal;
+    audioFs = audiodata.fs;
     selectedInputDeviceID = audioplaysel.id;
-    audioplayer = audiorecorder(Fs,nBits,nChannels,selectedInputDeviceID);
+    audioplayobj = audioplayer(audioSignal,audioFs,nBits,selectedInputDeviceID);
     disp(horzcat('Computer connected to ',audioplaysel.device{1},'...'));
 end % End of function
