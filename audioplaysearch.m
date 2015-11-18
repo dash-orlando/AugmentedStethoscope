@@ -14,10 +14,10 @@ function [audioplaydev] = audioplaysearch()
     disp('Searching for audio playback devices...'); % Warning message on command window or console
     audioplayinfo = audiodevinfo;
     % [2] Storing device information in structure array
-    Ndevices = length(audioplayinfo.input); % Number of audio input devices
+    Ndevices = length(audioplayinfo.output); % Number of audio input devices
     for i = 1:Ndevices
-        audioplaydev.devices{i} = audioplayinfo.input(i).Name;
-        audioplaydev.id(i) = audioplayinfo.input(i).ID;
+        audioplaydev.devices{i} = audioplayinfo.output(i).Name;
+        audioplaydev.id(i) = audioplayinfo.output(i).ID;
     end % End of for-loop
     disp('Audio recording devices found and stored within "audioplaydev"...');
 end % End of function
