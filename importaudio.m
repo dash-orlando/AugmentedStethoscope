@@ -32,5 +32,6 @@ function [audiodata] = importaudio()
     audiodata.audiofilename = filename; % name of the audio file
     audiodata.time = time; % time array of the audio file
     audiodata.signal = signal; % voltage or amplitude array of the audio file
+    audiodata.fs = fs; % sampling frequency
     
 end
