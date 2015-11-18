@@ -1,28 +1,5 @@
 function varargout = splitsgui(varargin)
-% SPLITSGUI MATLAB code for splitsgui.fig
-%      SPLITSGUI, by itself, creates a new SPLITSGUI or raises the existing
-%      singleton*.
-%
-%      H = SPLITSGUI returns the handle to a new SPLITSGUI or the handle to
-%      the existing singleton*.
-%
-%      SPLITSGUI('CALLBACK',hObject,eventData,handles,...) calls the local
-%      function named CALLBACK in SPLITSGUI.M with the given input arguments.
-%
-%      SPLITSGUI('Property','Value',...) creates a new SPLITSGUI or raises the
-%      existing singleton*.  Starting from the left, property value pairs are
-%      applied to the GUI before splitsgui_OpeningFcn gets called.  An
-%      unrecognized property name or invalid value makes property application
-%      stop.  All inputs are passed to splitsgui_OpeningFcn via varargin.
-%
-%      *See GUI Options on GUIDE's Tools menu.  Choose "GUI allows only one
-%      instance to run (singleton)".
-%
-% See also: GUIDE, GUIDATA, GUIHANDLES
 
-% Edit the above text to modify the response to help splitsgui
-
-% Last Modified by GUIDE v2.5 18-Nov-2015 14:35:51
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -45,10 +22,10 @@ end
 
 
 % --- Executes just before splitsgui is made visible.
-function splitsgui_OpeningFcn(hObject, eventdata, handles, varargin)
+function splitsgui_OpeningFcn(hObject, ~, handles, varargin)
 % This function has no output args, see OutputFcn.
 % hObject    handle to figure
-% eventdata  reserved - to be defined in a future version of MATLAB
+% ~  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 % varargin   command line arguments to splitsgui (see VARARGIN)
 
@@ -63,11 +40,62 @@ guidata(hObject, handles);
 
 
 % --- Outputs from this function are returned to the command line.
-function varargout = splitsgui_OutputFcn(hObject, eventdata, handles) 
+function varargout = splitsgui_OutputFcn(hObject, ~, handles) 
 % varargout  cell array for returning output args (see VARARGOUT);
 % hObject    handle to figure
-% eventdata  reserved - to be defined in a future version of MATLAB
+% ~  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 
 % Get default command line output from handles structure
 varargout{1} = handles.output;
+
+
+%
+% Bluetooth Device Search
+% The button executes the function "btsearch.m"
+function pushbutton1_Callback(hObject, ~, handles)
+
+        [btdev] = btsearch(); % searches for available bluetooth devices
+        
+        Ndev = length(btdev.devices); % determining number of devices found
+        outString = horzcat(num2str(Ndev),' devices were found'); % reporting number of devices on string
+        set(handles.text5, 'String', outString); % printing report string
+    
+    handles.btdev = btdev; % stores bluetooth device information into handles structure
+    
+guidata(hObject, handles);
+
+%
+% Bluetooth Device Select
+% The button executes the function "btselect.m"
+function pushbutton2_Callback(hObject, ~, handles)
+
+    btdev = handles.btdev; % extracting bluetooth device info from handles structure
+
+        [btdevsel] = btselect(btdev); % allows the user to select from the list of found devices
+        
+        outString = horzcat('User selected ',btdevsel.device{1}); % reporting user selection
+        set(handles.text6, 'String', outString); % printing report string 
+    
+    handles.btdevsel = btdevsel; % stores selected bluetooth device info within handles structure
+
+guidata(hObject, handles);
+
+%
+% Bluetooth Device Connect
+% The button executes the function "btconnect.m"
+function pushbutton3_Callback(hObject, ~, handles)
+
+    btdevsel = handles.btdevsel; % extracting selected bluetooth device info from handles structure
+
+        [btobj] = btconnect(btdevsel); % creates a bluetooth object from the selected bluetooth device
+        
+        outString = horzcat('Computer connected to ',btdevsel.device{1}); % reporting connection
+        set(handles.text7, 'String', outString); % printing report string 
+    
+    handles.btobj = btobj; % stores bluetooth object into handles structure
+
+guidata(hObject, handles);
+
+
+
