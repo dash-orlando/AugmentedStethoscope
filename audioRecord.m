@@ -11,6 +11,8 @@ function [audiosignal] = audiorecord(audiorecobj, time)
     % [1] Begin recording
     disp('Begin recording...');
     recordblocking(audiorecobj, time); % time in seconds
+    disp(horzcat(num2str(time),' seconds elapsed, recording completed...'));
     % [2] Store recording into double-precision array
     audiosignal = getaudiodata(audiorecobj,'double');
+    disp('Audio data retrieved to workspace...');
 end % End of function
