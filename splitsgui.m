@@ -93,26 +93,56 @@ function pushbutton3_Callback(hObject, ~, handles)
         outString = horzcat('Computer connected to ',btdevsel.device{1}); % reporting connection
         set(handles.text7, 'String', outString); % printing report string
         
-        set(handles.togglebutton1, 'Visible', 'on');
+        set(handles.togglebutton1, 'Visible', 'on'); % set visibility of 'record' toggle button to 'on' 
+        set(handles.text8, 'Visible', 'on'); % set visibility of textbox toggle button to 'on' 
+        set(handles.togglebutton2, 'Visible', 'on'); % set visibility of 'playback' toggle button to 'on'
     
     handles.btobj = btobj; % stores bluetooth object into handles structure
 
 guidata(hObject, handles);
 
+%
+% Recording
+% The toggle button will activate the recording functions
+function togglebutton1_Callback(hObject, ~, handles)
 
-% --- Executes on button press in togglebutton1.
-function togglebutton1_Callback(hObject, eventdata, handles)
-% hObject    handle to togglebutton1 (see GCBO)
+    % import variables
+    
+        % functionality
+        set(handles.togglebutton2, 'Value', 0); % set the playback toggle button to 'off'
+        set(handles.pushbutton5, 'Visible', 'off'); % set playback button visibility 'off'
+        
+        set(handles.pushbutton4, 'Visible', 'on'); % set record button visibility 'on'
+    
+
+guidata(hObject, handles);
+
+%
+% Playback
+% The toggle button will activate the playback functions
+function togglebutton2_Callback(hObject, ~, handles)
+
+    % import variables
+    
+        % functionality
+        set(handles.togglebutton1, 'Value', 0); % set the playback toggle button to 'off'
+        set(handles.pushbutton4, 'Visible', 'off'); % set record button visibility 'off'
+        
+        set(handles.pushbutton5, 'Visible', 'on'); % set playback button visibility 'on'
+    
+
+guidata(hObject, handles);
+
+
+% --- Executes on button press in pushbutton4.
+function pushbutton4_Callback(hObject, eventdata, handles)
+% hObject    handle to pushbutton4 (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 
-% Hint: get(hObject,'Value') returns toggle state of togglebutton1
 
-
-% --- Executes on button press in togglebutton2.
-function togglebutton2_Callback(hObject, eventdata, handles)
-% hObject    handle to togglebutton2 (see GCBO)
+% --- Executes on button press in pushbutton5.
+function pushbutton5_Callback(hObject, eventdata, handles)
+% hObject    handle to pushbutton5 (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-
-% Hint: get(hObject,'Value') returns toggle state of togglebutton2
