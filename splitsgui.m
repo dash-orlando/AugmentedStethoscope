@@ -41,13 +41,10 @@ guidata(hObject, handles);
 
 % --- Outputs from this function are returned to the command line.
 function varargout = splitsgui_OutputFcn(hObject, ~, handles) 
-% varargout  cell array for returning output args (see VARARGOUT);
-% hObject    handle to figure
-% ~  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
 
-% Get default command line output from handles structure
-varargout{1} = handles.output;
+    varargout{1} = handles.output;
+
+guidata(hObject, handles);
 
 
 %
@@ -109,12 +106,19 @@ function recordtoggle_Callback(hObject, ~, handles)
     % import variables
     
         % functionality
-        set(handles.playbacktoggle, 'Value', 0); % set the playback toggle button to 'off'
-        set(handles.searchplaypush, 'Visible', 'off'); % set playback button visibility 'off'
-        set(handles.playtitle, 'Visible', 'on'); % set playback title box visibility 'off'
+        % set all playback features to 'hidden'
+        set(handles.playbacktoggle, 'Value', 0);
+        set(handles.searchplaypush, 'Visible', 'off');
+        set(handles.playtitle, 'Visible', 'off');
         
-        set(handles.rectitle, 'Visible', 'on'); % set record title box visibility 'on'
-        set(handles.searchrecpush, 'Visible', 'on'); % set record button visibility 'on'
+        % set all recording features to 'visible'
+        set(handles.rectitle, 'Visible', 'on');
+        set(handles.searchrecpush, 'Visible', 'on');
+        set(handles.searchrecstatus, 'Visible', 'on');
+        set(handles.selectrecpush, 'Visible', 'on');
+        set(handles.selectrecstatus, 'Visible', 'on');
+        set(handles.connectrecpush, 'Visible', 'on');
+        set(handles.connectrecstatus, 'Visible', 'on');
     
 
 guidata(hObject, handles);
@@ -127,9 +131,14 @@ function playbacktoggle_Callback(hObject, ~, handles)
     % import variables
     
         % functionality
-        set(handles.recordtoggle, 'Value', 0); % set the record toggle button to 'off'
-        set(handles.searchrecpush, 'Visible', 'off'); % set record button visibility 'off'
-        set(handles.rectitle, 'Visible', 'off'); % set record title box visibility 'off'
+        % set all recording features to 'hidden'
+        set(handles.rectitle, 'Visible', 'off');
+        set(handles.searchrecpush, 'Visible', 'off');
+        set(handles.searchrecstatus, 'Visible', 'off');
+        set(handles.selectrecpush, 'Visible', 'off');
+        set(handles.selectrecstatus, 'Visible', 'off');
+        set(handles.connectrecpush, 'Visible', 'off');
+        set(handles.connectrecstatus, 'Visible', 'off');
         
         set(handles.playtitle, 'Visible', 'on'); % set playback title box visibility 'on'
         set(handles.searchplaypush, 'Visible', 'on'); % set playback button visibility 'on'
@@ -173,6 +182,47 @@ function selectrecpush_Callback(hObject, ~, handles)
 
 guidata(hObject, handles);
 
+%
+% Audio Input/Recording Device Connect
+% The button executes the function "audiorecon.m"
+function connectrecpush_Callback(hObject, ~, handles)
+
+    audiorecsel = handles.audiorecsel; % extracting selected bluetooth device info from handles structure
+        
+        Fs = 8000; % using default frequency
+        nBits = 16; % usign 16 bits instead of 8 for default
+        nChannels = 1; % using the default 'mono'
+        [audiorecobj] = audiorecon(audiorecsel, Fs, nBits, nChannels); % creates a bluetooth object from the selected bluetooth device
+        
+        outString = horzcat('Computer connected to ',audiorecsel.device{1}); % reporting connection
+        set(handles.connectrecstatus, 'String', outString); % printing report string
+        
+        % set recording controls to 'visible'
+        set(handles.startrecpush, 'Visible', 'on');
+        set(handles.startrecstatus, 'Visible', 'on');
+        set(handles.stoprecpush, 'Visible', 'on');
+        set(handles.stoprecstatus, 'Visible', 'on');
+    
+    handles.btobj = btobj; % stores bluetooth object into handles structure
+
+guidata(hObject, handles);
+
+% --- Executes on button press in startrecpush.
+function startrecpush_Callback(hObject, eventdata, handles)
+
+    % import variables from handles
+    
+        % functionality
+        
+    % export variables to guidata
+
+guidata(hObject, handles);
+
+
+% --- Executes on button press in stoprecpush.
+function stoprecpush_Callback(hObject, eventdata, handles)
+
+guidata(hObject, handles);
 
 % --- Executes on button press in searchplaypush.
 function searchplaypush_Callback(hObject, eventdata, handles)
