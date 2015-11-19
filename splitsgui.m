@@ -111,7 +111,9 @@ function togglebutton1_Callback(hObject, ~, handles)
         % functionality
         set(handles.togglebutton2, 'Value', 0); % set the playback toggle button to 'off'
         set(handles.pushbutton5, 'Visible', 'off'); % set playback button visibility 'off'
+        set(handles.text10, 'Visible', 'on'); % set playback title box visibility 'off'
         
+        set(handles.text9, 'Visible', 'on'); % set record title box visibility 'on'
         set(handles.pushbutton4, 'Visible', 'on'); % set record button visibility 'on'
     
 
@@ -125,11 +127,13 @@ function togglebutton2_Callback(hObject, ~, handles)
     % import variables
     
         % functionality
-        set(handles.togglebutton1, 'Value', 0); % set the playback toggle button to 'off'
+        set(handles.togglebutton1, 'Value', 0); % set the record toggle button to 'off'
         set(handles.pushbutton4, 'Visible', 'off'); % set record button visibility 'off'
+        set(handles.text9, 'Visible', 'off'); % set record title box visibility 'off'
         
+        set(handles.text10, 'Visible', 'on'); % set playback title box visibility 'on'
         set(handles.pushbutton5, 'Visible', 'on'); % set playback button visibility 'on'
-    
+         
 
 guidata(hObject, handles);
 
