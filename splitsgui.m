@@ -362,13 +362,19 @@ function connectplaypush_Callback(hObject, ~, handles)
         % set recording controls to 'visible'
         set(handles.startplaypush, 'Visible', 'on');
         set(handles.startplaytitle, 'Visible', 'on');
-        set(handles.stopplaypush, 'Visible', 'on');
-        set(handles.stopplaytitle, 'Visible', 'on');
+        set(handles.singleplayradio, 'Visible', 'on');
+        set(handles.singleplaytitle, 'Visible', 'on');
+        set(handles.multipleplayradio, 'Visible', 'on');
+        set(handles.multiplaynum, 'Visible', 'on');
+        %set(handles.stopplaypush, 'Visible', 'on');
+        %set(handles.stopplaytitle, 'Visible', 'on');
         set(handles.displayplaypush, 'Visible', 'on');
         set(handles.displayplaytitle, 'Visible', 'on');
-        set(handles.writeplaypush, 'Visible', 'on');
-        set(handles.writeplaytitle, 'Visible', 'on');
-    
+        
+        % default selection
+        set(handles.singleplayradio, 'Value', 1);
+        set(handles.multipleplayradio, 'Value', 0);
+        
     % exporting variables to handles
     handles.audioplayobj = audioplayobj;
 
@@ -390,13 +396,69 @@ function startplaypush_Callback(hObject, ~, handles)
 
 guidata(hObject, handles);
 
+%
+% Single Playback Option
+% This radio button allows the user to specify a single instance of
+% playback. This is the default options.
+function singleplayradio_Callback(hObject, ~, handles)
 
+    % importing variables from handles
+    
+        % executions
+        set(handles.multipleplayradio, 'Value', 0);
+        
+    % exporting variables to handles
+
+guidata(hObject, handles);
+
+%
+% Multiple Playback Option
+% This radio button allows the user to specify more than one repetition on
+% audio playback
+function multipleplayradio_Callback(hObject, ~, handles)
+
+    % importing variables from handles
+    
+        % executions
+        set(handles.singleplayradio, 'Value', 0);
+        
+    % exporting variables to handles
+
+guidata(hObject, handles);
+
+%
+% Number of Playback Repetitions
+% This edit box allows the user to specify the number of desired playback
+% repetitions
+function multiplaynum_Callback(hObject, ~, handles)
+
+    % import variables from handles
+    
+        % executions
+        try
+            numofreps = str2double(get(hObject,'String'));
+        catch
+            disp('Error, input must only contain numbers!');
+        end
+        
+    % export variables to handles
+    handles.numofreps = numofreps;
+
+guidata(hObject, handles);
+
+%
+% Number of Playback Repetitions
+% Formatting
+function multiplaynum_CreateFcn(hObject, ~, handles)
+
+    if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+        set(hObject,'BackgroundColor','white');
+    end
+
+guidata(hObject, handles);
 
 % --- Executes on button press in displayplaypush.
 function displayplaypush_Callback(hObject, ~, handles)
 % hObject    handle to displayplaypush (see GCBO)
 % ~  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-
-
-
