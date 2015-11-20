@@ -203,24 +203,41 @@ function connectrecpush_Callback(hObject, ~, handles)
         set(handles.stoprecpush, 'Visible', 'on');
         set(handles.stoprecstatus, 'Visible', 'on');
     
-    handles.btobj = btobj; % stores bluetooth object into handles structure
+    handles.audiorecobj = audiorecobj; % stores bluetooth object into handles structure
 
 guidata(hObject, handles);
 
-% --- Executes on button press in startrecpush.
-function startrecpush_Callback(hObject, eventdata, handles)
+%
+% Start Recording
+% The button executes the commands to begin recording from the selected
+% input device
+function startrecpush_Callback(hObject, ~, handles)
 
     % import variables from handles
+    audiorecobj = handles.audiorecobj;
     
         % functionality
+        set(handles.recstatus, 'String', 'Begin recording');
+        record(audiorecobj);
         
     % export variables to guidata
 
 guidata(hObject, handles);
 
+%
+% Stop Recording
+% The button executes the commands to stop recording from the selected
+% input device
+function stoprecpush_Callback(hObject, ~, handles)
 
-% --- Executes on button press in stoprecpush.
-function stoprecpush_Callback(hObject, eventdata, handles)
+    % import variables from handles
+    audiorecobj = handles.audiorecobj;
+    
+        % functionality
+        set(handles.recstatus, 'String', 'Recording stopped');
+        stop(audiorecobj);
+        
+    % export variables to guidata
 
 guidata(hObject, handles);
 
