@@ -17,7 +17,7 @@ function [audiodata] = importaudio()
     disp('importaudio supports the following file extensions :: ');
     supportedextensions = {'*.wav';'*.mp3';'*.mp4';'*.m4a';'*.ogg';'*.flac';'*.au';'*.aiff';'*.aif';'*.aifc'};
     
-    % using uigetfile, the user is prompted to crowse for the desired audio file
+    % using uigetfile, the user is prompted to browse for the desired audio file
     [filename, pathname] = uigetfile(supportedextensions,'Select Audio File');
     
     % audioread is then used to convert the audio file into a vector composed of amplitude or voltage values
