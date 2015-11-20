@@ -274,7 +274,7 @@ function writerecpush_Callback(hObject, ~, handles)
 
     %import variables from handles
     audiorecdata.signal = handles.signal;
-    audiorecdata.Fs = handles.recparams.Fs;
+    audiorecdata.fs = handles.recparams.Fs;
     
         %functionality
         exportaudio(audiorecdata);
