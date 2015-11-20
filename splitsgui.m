@@ -208,6 +208,9 @@ function connectrecpush_Callback(hObject, ~, handles)
         set(handles.writerectitle, 'Visible', 'on');
     
     handles.audiorecobj = audiorecobj; % stores bluetooth object into handles structure
+    handles.recparams.Fs = Fs; % store recording hardware parameters
+    handles.recparams.nBits = nBits;
+    handles.recparams.nChannels = nChannels;
 
 guidata(hObject, handles);
 
@@ -260,12 +263,19 @@ function displayrecpush_Callback(hObject, ~, handles)
 
 guidata(hObject, handles);
 
+%
+% Write Recording
+% This button executes a routine to write the audio recording to an audio
+% file (.mp3)
+function writerecpush_Callback(hObject, ~, handles)
 
-% --- Executes on button press in writerecpush.
-function writerecpush_Callback(hObject, eventdata, handles)
-% hObject    handle to writerecpush (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
+    %import variables from handles
+    
+        %functionality
+        
+    %export variables to handles
+
+guidata(hObject, handles);
 
 
 % --- Executes on button press in searchplaypush.

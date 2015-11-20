@@ -80,7 +80,7 @@ varargout{1} = handles.output;
 function pushbutton1_Callback(hObject, ~, handles)
 
     try
-        [selectedInputDeviceName, selectedInputDeviceID, ~] = selectInputDevice();
+        [selectedInputDeviceName, selectedInputDeviceID, ~] = selectInputDevice()
         handles.selectedInputDeviceName = selectedInputDeviceName;
         handles.selectedInputDeviceID = selectedInputDeviceID;
         disp(horzcat('User selected ',selectedInputDeviceName,', as the input recording device'));
