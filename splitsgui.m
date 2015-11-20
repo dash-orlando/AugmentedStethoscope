@@ -291,45 +291,112 @@ function writerecpush_Callback(hObject, ~, handles)
 
 guidata(hObject, handles);
 
+%
+% Audio Output/Playback Device Search
+% This button executes the 'audioplaysearch' function
+function searchplaypush_Callback(hObject, ~, handles)
 
-% --- Executes on button press in searchplaypush.
-function searchplaypush_Callback(hObject, eventdata, handles)
-% hObject    handle to searchplaypush (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
+    % import data from handles
+    
+        % executions
+        [audioplaydev] = audioplaysearch();
+        
+        Nplaydev = length(audioplaydev.devices);
+        outString = horzcat(num2str(Nplaydev),' devices were found');
+        set(handles.searchrecstatus, 'String', outString);
+        
+    % export to handles
+    handles.audioplaydev = audioplaydev;
+
+guidata(hObject, handles);
+
+%
+% Audio Output/Playback Device Selection
+% This button executes the 'audioplayselect' function
+function selectplaypush_Callback(hObject, ~, handles)
+
+    audioplaydev = handles.audioplaydev;
+
+        [audioplaysel] = audiorecselect(audioplaydev);
+        
+        outString = horzcat('User selected ',audiorecsel.device{1});
+        set(handles.selectplaystatus, 'String', outString);
+    
+    handles.audioplaysel = audioplaysel;
+
+guidata(hObject, handles);
+
+%
+% Audio Import
+% This button executes the 'audioimport' function
+function importplaypush_Callback(hObject, ~, handles)
+
+    % import variables from handles
+    
+        % executions
+        [audioplaydata] = importaudio();
+        set(handles.importplaystatus, 'String', 'Accessing disk');
+        
+    % export variables to handles
+    handles.audioplaydata = audioplaydata;
+
+guidata(hObject, handles);
 
 
+%
+% Audio Output/Playback Device Connection
+% This button executes the 'audioplaycon' function
+function connectplaypush_Callback(hObject, ~, handles)
 
-% --- Executes on button press in selectplaypush.
-function selectplaypush_Callback(hObject, eventdata, handles)
-% hObject    handle to selectplaypush (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
+    % importing variables from handles
+    audioplaysel = handles.audioplaysel;
+    audioplaydata = handles.audioplaydata;
+        
+        % executions
+        nBits = 16;
+        [audioplayobj] = audioplaycon(audioplaydata, audioplaysel, nBits); % creates a bluetooth object from the selected bluetooth device
+        
+        outString = horzcat('Computer connected to ',audioplaysel.device{1}); % reporting connection
+        set(handles.connectplaystatus, 'String', outString); % printing report string
+        
+        % set recording controls to 'visible'
+        set(handles.startplaypush, 'Visible', 'on');
+        set(handles.startplaytitle, 'Visible', 'on');
+        set(handles.stopplaypush, 'Visible', 'on');
+        set(handles.stopplaytitle, 'Visible', 'on');
+        set(handles.displayplaypush, 'Visible', 'on');
+        set(handles.displayplaytitle, 'Visible', 'on');
+        set(handles.writeplaypush, 'Visible', 'on');
+        set(handles.writeplaytitle, 'Visible', 'on');
+    
+    % exporting variables to handles
+    handles.audioplayobj = audioplayobj;
 
+guidata(hObject, handles);
 
-% --- Executes on button press in connectplaypush.
-function connectplaypush_Callback(hObject, eventdata, handles)
-% hObject    handle to connectplaypush (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
+%
+% Start Playback
+% This button begins the playback of the imported audio file
+function startplaypush_Callback(hObject, ~, handles)
 
+    % import variables from handles
+    audioplayobj = handles.audioplayobj;
+    
+        % functionality
+        set(handles.recstatus, 'String', 'Begin recording');
+        play(audioplayobj);
+        
+    % export variables to guidata
 
-% --- Executes on button press in startplaypush.
-function startplaypush_Callback(hObject, eventdata, handles)
-% hObject    handle to startplaypush (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
+guidata(hObject, handles);
 
-
-% --- Executes on button press in stopplaypush.
-function stopplaypush_Callback(hObject, eventdata, handles)
-% hObject    handle to stopplaypush (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
 
 
 % --- Executes on button press in displayplaypush.
-function displayplaypush_Callback(hObject, eventdata, handles)
+function displayplaypush_Callback(hObject, ~, handles)
 % hObject    handle to displayplaypush (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
+% ~  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
+
+
+
