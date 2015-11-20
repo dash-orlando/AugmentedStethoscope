@@ -14,7 +14,7 @@ function [audiodata] = exportaudio(audiodata)
 
     % the function sends a notification to the command window referring to the supported file extensions
     disp('exportaudio supports the following file extensions :: ');
-    supportedextensions = {'*.wav';'*.mp3';'*.mp4';'*.m4a';'*.ogg';'*.flac';'*.au';'*.aiff';'*.aif';'*.aifc'};
+    supportedextensions = {'*.wav';'*.mp4';'*.m4a';'*.ogg';'*.flac'};
     
     % using uiputfile, the user is prompted to browse for the desired directory
     [filename, pathname] = uiputfile(supportedextensions,'Select Destination Directory');
