@@ -199,9 +199,13 @@ function connectrecpush_Callback(hObject, ~, handles)
         
         % set recording controls to 'visible'
         set(handles.startrecpush, 'Visible', 'on');
-        set(handles.startrecstatus, 'Visible', 'on');
+        set(handles.startrectitle, 'Visible', 'on');
         set(handles.stoprecpush, 'Visible', 'on');
-        set(handles.stoprecstatus, 'Visible', 'on');
+        set(handles.stoprectitle, 'Visible', 'on');
+        set(handles.displayrecpush, 'Visible', 'on');
+        set(handles.displayrectitle, 'Visible', 'on');
+        set(handles.writerecpush, 'Visible', 'on');
+        set(handles.writerectitle, 'Visible', 'on');
     
     handles.audiorecobj = audiorecobj; % stores bluetooth object into handles structure
 
@@ -244,7 +248,7 @@ guidata(hObject, handles);
 %
 % Display Recording
 % This button executes a routine that displays the recorded audio signal
-function displayrecpush_Callback(hObject, eventdata, handles)
+function displayrecpush_Callback(hObject, ~, handles)
 
     % import variables from handles
     audiorecobj = handles.audiorecobj;
