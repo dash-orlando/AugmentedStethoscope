@@ -260,6 +260,9 @@ function displayrecpush_Callback(hObject, ~, handles)
         signal = getaudiodata(audiorecobj);
         figure,
         plot(signal);
+        
+    % export variables to handles
+    handles.signal = signal;
 
 guidata(hObject, handles);
 
@@ -270,8 +273,11 @@ guidata(hObject, handles);
 function writerecpush_Callback(hObject, ~, handles)
 
     %import variables from handles
+    audiorecdata.signal = handles.signal;
+    audiorecdata.Fs = handles.recparams.Fs;
     
         %functionality
+        exportaudio(audiorecdata);
         
     %export variables to handles
 
