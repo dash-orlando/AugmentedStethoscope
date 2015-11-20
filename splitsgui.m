@@ -241,10 +241,32 @@ function stoprecpush_Callback(hObject, ~, handles)
 
 guidata(hObject, handles);
 
+%
+% Display Recording
+% This button executes a routine that displays the recorded audio signal
+function displayrecpush_Callback(hObject, eventdata, handles)
+
+    % import variables from handles
+    audiorecobj = handles.audiorecobj;
+    
+        % functionality
+        signal = getaudiodata(audiorecobj);
+        figure,
+        plot(signal);
+
+guidata(hObject, handles);
+
+
+% --- Executes on button press in writerecpush.
+function writerecpush_Callback(hObject, eventdata, handles)
+% hObject    handle to writerecpush (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+
 % --- Executes on button press in searchplaypush.
 function searchplaypush_Callback(hObject, eventdata, handles)
 % hObject    handle to searchplaypush (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-
 
