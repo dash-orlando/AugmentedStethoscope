@@ -139,13 +139,21 @@ function playbacktoggle_Callback(hObject, ~, handles)
         set(handles.selectrecstatus, 'Visible', 'off');
         set(handles.connectrecpush, 'Visible', 'off');
         set(handles.connectrecstatus, 'Visible', 'off');
+        set(handles.startrecpush, 'Visible', 'off');
+        set(handles.startrectitle, 'Visible', 'off');
+        set(handles.stoprecpush, 'Visible', 'off');
+        set(handles.stoprectitle, 'Visible', 'off');
+        set(handles.displayrecpush, 'Visible', 'off');
+        set(handles.displayrectitle, 'Visible', 'off');
+        set(handles.writerecpush, 'Visible', 'off');
+        set(handles.writerectitle, 'Visible', 'off');
+        
         
         set(handles.playtitle, 'Visible', 'on'); % set playback title box visibility 'on'
         set(handles.searchplaypush, 'Visible', 'on'); % set playback button visibility 'on'
          
 
 guidata(hObject, handles);
-
 
 %
 % Audio Input/Recording Device Search
