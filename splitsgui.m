@@ -148,9 +148,9 @@ function playbacktoggle_Callback(hObject, ~, handles)
         set(handles.writerecpush, 'Visible', 'off');
         set(handles.writerectitle, 'Visible', 'off');
         
-        
-        set(handles.playtitle, 'Visible', 'on'); % set playback title box visibility 'on'
-        set(handles.searchplaypush, 'Visible', 'on'); % set playback button visibility 'on'
+        % set all playback features to 'visible'
+        set(handles.playtitle, 'Visible', 'on');
+        set(handles.searchplaypush, 'Visible', 'on');
          
 
 guidata(hObject, handles);
@@ -298,3 +298,38 @@ function searchplaypush_Callback(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 
+
+
+% --- Executes on button press in selectplaypush.
+function selectplaypush_Callback(hObject, eventdata, handles)
+% hObject    handle to selectplaypush (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+
+% --- Executes on button press in connectplaypush.
+function connectplaypush_Callback(hObject, eventdata, handles)
+% hObject    handle to connectplaypush (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+
+% --- Executes on button press in startplaypush.
+function startplaypush_Callback(hObject, eventdata, handles)
+% hObject    handle to startplaypush (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+
+% --- Executes on button press in stopplaypush.
+function stopplaypush_Callback(hObject, eventdata, handles)
+% hObject    handle to stopplaypush (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+
+% --- Executes on button press in displayplaypush.
+function displayplaypush_Callback(hObject, eventdata, handles)
+% hObject    handle to displayplaypush (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
