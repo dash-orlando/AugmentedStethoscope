@@ -19,5 +19,5 @@ function [audioplaydev] = audioplaysearch()
         audioplaydev.devices{i} = audioplayinfo.output(i).Name;
         audioplaydev.id(i) = audioplayinfo.output(i).ID;
     end % End of for-loop
-    disp('Audio recording devices found and stored within "audioplaydev"...');
+    disp('Audio playback devices found and stored within "audioplaydev"...');
 end % End of function
