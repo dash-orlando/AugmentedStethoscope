@@ -13,15 +13,17 @@
 function [audiodata] = exportaudio(audiodata)
 
     % the function sends a notification to the command window referring to the supported file extensions
-    disp('exportaudio supports the following file extensions :: ');
+    % disp('exportaudio supports the following file extensions :: ');
     supportedextensions = {'*.wav';'*.mp4';'*.m4a';'*.ogg';'*.flac'};
     
     % using uiputfile, the user is prompted to browse for the desired directory
     [filename, pathname] = uiputfile(supportedextensions,'Select Destination Directory');
-    
-    % audiowrite is then used to save the file into the specified format
-    signal = audiodata.signal;
-    fs = audiodata.fs;
-    audiowrite(fullfile(pathname,filename),signal,fs);
-    
-end
+    if filename == 0
+        disp('%%========== WARNING: User canceled writing process ==========%%');
+    else
+        % audiowrite is then used to save the file into the specified format
+        signal = audiodata.signal;
+        fs = audiodata.fs;
+        audiowrite(fullfile(pathname,filename),signal,fs);
+    end % End of if-statement
+end % End of function
