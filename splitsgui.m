@@ -216,6 +216,8 @@ function connectrecpush_Callback(hObject, ~, handles)
         % set recording controls to 'visible'
         set(handles.startrecpush, 'Visible', 'on');
         set(handles.stoprecpush, 'Visible', 'on');
+        set(handles.recstatus, 'Visible', 'on');
+        set(handles.recstatustitle, 'Visible', 'on');
     
     handles.audiorecobj = audiorecobj; % stores bluetooth object into handles structure
     handles.recparams.Fs = Fs; % store recording hardware parameters
@@ -276,6 +278,7 @@ function displayrecpush_Callback(hObject, ~, handles)
     Fs = handles.recparams.Fs;
     
         % functionality
+        set(handles.recstatus, 'String', 'Displaying Recording');
         signal = getaudiodata(audiorecobj);
         tmax = length(signal)/Fs; % calculating duration of recording
         time = 0:1/Fs:tmax-1/Fs; % creating time array
@@ -301,6 +304,7 @@ function writerecpush_Callback(hObject, ~, handles)
     audiorecdata.fs = handles.recparams.Fs;
     
         %functionality
+        set(handles.recstatus, 'String', 'Saving recording to disk');
         exportaudio(audiorecdata);
         
     %export variables to handles
