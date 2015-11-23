@@ -15,9 +15,14 @@ function [audiorecdev] = audiorecsearch()
     audiorecinfo = audiodevinfo;
     % [2] Storing device information in structure array
     Ndevices = length(audiorecinfo.input); % Number of audio input devices
-    for i = 1:Ndevices
-        audiorecdev.devices{i} = audiorecinfo.input(i).Name;
-        audiorecdev.id(i) = audiorecinfo.input(i).ID;
-    end % End of for-loop
-    disp('Audio recording devices found and stored within "audiorecdev"...');
+    if Ndevices == 0
+        disp('Error! No recording devices were found!');
+        disp('Ensure that the desired wireless device has been connected and not just paired');
+    elseif Ndevices ~= 0     
+        for i = 1:Ndevices
+            audiorecdev.devices{i} = audiorecinfo.input(i).Name;
+            audiorecdev.id(i) = audiorecinfo.input(i).ID;
+        end % End of for-loop
+        disp('Audio recording devices found and stored within "audiorecdev"...');
+    end % End of if-statement
 end % End of function
