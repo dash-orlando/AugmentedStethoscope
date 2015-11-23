@@ -48,18 +48,24 @@ guidata(hObject, handles);
 
 
 % BLUETOOH CONNECTION =================================================== %
+% This section contains all the functions pertaining to the connection to
+% the desired bluetooth device/module
 
 %
 % Bluetooth Device Search
 % The button executes the function "btsearch.m"
 function searchbtpush_Callback(hObject, ~, handles)
 
+    % importing variables from handles
+    
+        % executions
         [btdev] = btsearch(); % searches for available bluetooth devices
         
         Nbtdev = length(btdev.devices); % determining number of devices found
         outString = horzcat(num2str(Nbtdev),' devices were found'); % reporting number of devices on string
         set(handles.searchbtstatus, 'String', outString); % printing report string
     
+        % export variables to handles
     handles.btdev = btdev; % stores bluetooth device information into handles structure
     
 guidata(hObject, handles);
@@ -101,6 +107,9 @@ function connectbtpush_Callback(hObject, ~, handles)
 guidata(hObject, handles);
 
 % FEATURE TOGGLE ======================================================== %
+% This section contains the two toggle buttons that allow the user to
+% switch between the recoding and playback features of the graphical user
+% interface
 
 %
 % Recording
