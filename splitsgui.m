@@ -162,6 +162,9 @@ function playbacktoggle_Callback(hObject, ~, handles)
     % import variables
     
         % functionality
+        % set recording toggle button value to 0
+        set(handles.recordtoggle, 'Value', 0);
+        
         % set all recording features to 'hidden'
         set(handles.rectitle, 'Visible', 'off');
         set(handles.searchrecpush, 'Visible', 'off');
@@ -421,15 +424,11 @@ function connectplaypush_Callback(hObject, ~, handles)
         
         % set recording controls to 'visible'
         set(handles.startplaypush, 'Visible', 'on');
-        set(handles.startplaytitle, 'Visible', 'on');
         set(handles.singleplayradio, 'Visible', 'on');
         set(handles.singleplaytitle, 'Visible', 'on');
         set(handles.multipleplayradio, 'Visible', 'on');
         set(handles.multiplaynum, 'Visible', 'on');
-        %set(handles.stopplaypush, 'Visible', 'on');
-        %set(handles.stopplaytitle, 'Visible', 'on');
         set(handles.displayplaypush, 'Visible', 'on');
-        set(handles.displayplaytitle, 'Visible', 'on');
         
         % default selection
         set(handles.singleplayradio, 'Value', 1);
