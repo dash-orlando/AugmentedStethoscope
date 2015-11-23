@@ -135,7 +135,7 @@ function recordtoggle_Callback(hObject, ~, handles)
         set(handles.startplaypush, 'Visible', 'off');
         set(handles.singleplayradio, 'Visible', 'off');
         set(handles.singleplaytitle, 'Visible', 'off');
-        set(handles.multiplayradio, 'Visible', 'off');
+        set(handles.multipleplayradio, 'Visible', 'off');
         set(handles.multiplaynum, 'Visible', 'off');
         set(handles.playstatustitle, 'Visible', 'off');
         set(handles.playstatus, 'Visible', 'off');
@@ -360,7 +360,7 @@ function searchplaypush_Callback(hObject, ~, handles)
         
         Nplaydev = length(audioplaydev.devices);
         outString = horzcat(num2str(Nplaydev),' devices were found');
-        set(handles.searchrecstatus, 'String', outString);
+        set(handles.searchplaystatus, 'String', outString);
         
     % export to handles
     handles.audioplaydev = audioplaydev;
@@ -372,13 +372,16 @@ guidata(hObject, handles);
 % This button executes the 'audioplayselect' function
 function selectplaypush_Callback(hObject, ~, handles)
 
+    % import variables from handles
     audioplaydev = handles.audioplaydev;
 
-        [audioplaysel] = audiorecselect(audioplaydev);
+        % executions
+        [audioplaysel] = audioplayselect(audioplaydev);
         
-        outString = horzcat('User selected ',audiorecsel.device{1});
+        outString = horzcat('User selected ',audioplaysel.device{1});
         set(handles.selectplaystatus, 'String', outString);
     
+    % export variables to handles
     handles.audioplaysel = audioplaysel;
 
 guidata(hObject, handles);
