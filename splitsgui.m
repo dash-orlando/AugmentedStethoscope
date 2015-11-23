@@ -47,6 +47,8 @@ function varargout = splitsgui_OutputFcn(hObject, ~, handles)
 guidata(hObject, handles);
 
 
+% BLUETOOH CONNECTION =================================================== %
+
 %
 % Bluetooth Device Search
 % The button executes the function "btsearch.m"
@@ -97,6 +99,8 @@ function connectbtpush_Callback(hObject, ~, handles)
     handles.btobj = btobj; % stores bluetooth object into handles structure
 
 guidata(hObject, handles);
+
+% FEATURE TOGGLE ======================================================== %
 
 %
 % Recording
@@ -155,6 +159,10 @@ function playbacktoggle_Callback(hObject, ~, handles)
 
 guidata(hObject, handles);
 
+% RECORD ================================================================ %
+% This section contains all the functions pertaining to the recording
+% functionality of the SPLITS graphical user interface
+
 %
 % Audio Input/Recording Device Search
 % The button executes the function "audiorecsearch.m"
@@ -207,13 +215,9 @@ function connectrecpush_Callback(hObject, ~, handles)
         
         % set recording controls to 'visible'
         set(handles.startrecpush, 'Visible', 'on');
-        set(handles.startrectitle, 'Visible', 'on');
         set(handles.stoprecpush, 'Visible', 'on');
-        set(handles.stoprectitle, 'Visible', 'on');
         set(handles.displayrecpush, 'Visible', 'on');
-        set(handles.displayrectitle, 'Visible', 'on');
         set(handles.writerecpush, 'Visible', 'on');
-        set(handles.writerectitle, 'Visible', 'on');
     
     handles.audiorecobj = audiorecobj; % stores bluetooth object into handles structure
     handles.recparams.Fs = Fs; % store recording hardware parameters
@@ -263,11 +267,17 @@ function displayrecpush_Callback(hObject, ~, handles)
 
     % import variables from handles
     audiorecobj = handles.audiorecobj;
+    Fs = handles.recparams.Fs;
     
         % functionality
         signal = getaudiodata(audiorecobj);
+        tmax = length(signal)/Fs;
+        time = 0:1/Fs:tmax-1/Fs;
         figure,
-        plot(signal);
+        plot(time,signal);
+        xlabel('Time (sec.)');        
+        ylabel('Signal Amplitude (V)');
+        grid on
         
     % export variables to handles
     handles.signal = signal;
@@ -290,6 +300,11 @@ function writerecpush_Callback(hObject, ~, handles)
     %export variables to handles
 
 guidata(hObject, handles);
+
+
+% PLAYBACK ============================================================== %
+% This section contains all the functions pertaining to the playback
+% feature of the SPLITS graphical user interface
 
 %
 % Audio Output/Playback Device Search
@@ -437,6 +452,7 @@ function multiplaynum_Callback(hObject, ~, handles)
         % executions
         try
             numofreps = str2double(get(hObject,'String'));
+            disp(horzcat('User specified ',get(hObject,'String'),' loops'));
         catch
             disp('Error, input must only contain numbers!');
         end
