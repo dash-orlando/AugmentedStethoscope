@@ -119,10 +119,28 @@ function recordtoggle_Callback(hObject, ~, handles)
     % import variables
     
         % functionality
-        % set all playback features to 'hidden'
+        % set playback toggle button value to 0
         set(handles.playbacktoggle, 'Value', 0);
-        set(handles.searchplaypush, 'Visible', 'off');
+        
+        % set all playback features to 'hidden'
         set(handles.playtitle, 'Visible', 'off');
+        set(handles.searchplaypush, 'Visible', 'off');
+        set(handles.searchplaystatus, 'Visible', 'off');
+        set(handles.selectplaypush, 'Visible', 'off');
+        set(handles.selectplaystatus, 'Visible', 'off');
+        set(handles.importplaypush, 'Visible', 'off');
+        set(handles.importplaystatus, 'Visible', 'off');
+        set(handles.connectplaypush, 'Visible', 'off');
+        set(handles.connectplaystatus, 'Visible', 'off');
+        set(handles.startplaypush, 'Visible', 'off');
+        set(handles.singleplayradio, 'Visible', 'off');
+        set(handles.singleplaytitle, 'Visible', 'off');
+        set(handles.multiplayradio, 'Visible', 'off');
+        set(handles.multiplaynum, 'Visible', 'off');
+        set(handles.playstatustitle, 'Visible', 'off');
+        set(handles.playstatus, 'Visible', 'off');
+        set(handles.displayplaypush, 'Visible', 'off');
+        
         
         % set all recording features to 'visible'
         set(handles.rectitle, 'Visible', 'on');
@@ -153,17 +171,22 @@ function playbacktoggle_Callback(hObject, ~, handles)
         set(handles.connectrecpush, 'Visible', 'off');
         set(handles.connectrecstatus, 'Visible', 'off');
         set(handles.startrecpush, 'Visible', 'off');
-        set(handles.startrectitle, 'Visible', 'off');
         set(handles.stoprecpush, 'Visible', 'off');
-        set(handles.stoprectitle, 'Visible', 'off');
+        set(handles.recstatus, 'Visible', 'off');
+        set(handles.recstatustitle, 'Visible', 'off');
         set(handles.displayrecpush, 'Visible', 'off');
-        set(handles.displayrectitle, 'Visible', 'off');
         set(handles.writerecpush, 'Visible', 'off');
-        set(handles.writerectitle, 'Visible', 'off');
         
         % set all playback features to 'visible'
         set(handles.playtitle, 'Visible', 'on');
         set(handles.searchplaypush, 'Visible', 'on');
+        set(handles.searchplaystatus, 'Visible', 'on');
+        set(handles.selectplaypush, 'Visible', 'on');
+        set(handles.selectplaystatus, 'Visible', 'on');
+        set(handles.importplaypush, 'Visible', 'on');
+        set(handles.importplaystatus, 'Visible', 'on');
+        set(handles.connectplaypush, 'Visible', 'on');
+        set(handles.connectplaystatus, 'Visible', 'on');
          
 
 guidata(hObject, handles);
