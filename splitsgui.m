@@ -216,8 +216,6 @@ function connectrecpush_Callback(hObject, ~, handles)
         % set recording controls to 'visible'
         set(handles.startrecpush, 'Visible', 'on');
         set(handles.stoprecpush, 'Visible', 'on');
-        set(handles.displayrecpush, 'Visible', 'on');
-        set(handles.writerecpush, 'Visible', 'on');
     
     handles.audiorecobj = audiorecobj; % stores bluetooth object into handles structure
     handles.recparams.Fs = Fs; % store recording hardware parameters
@@ -239,6 +237,10 @@ function startrecpush_Callback(hObject, ~, handles)
         set(handles.recstatus, 'String', 'Begin recording');
         record(audiorecobj);
         
+        % setting display and write functions' visibility 'off'
+        set(handles.displayrecpush, 'Visible', 'off');
+        set(handles.writerecpush, 'Visible', 'off');
+        
     % export variables to guidata
 
 guidata(hObject, handles);
@@ -256,6 +258,10 @@ function stoprecpush_Callback(hObject, ~, handles)
         set(handles.recstatus, 'String', 'Recording stopped');
         stop(audiorecobj);
         
+        % setting display and write functions visible
+        set(handles.displayrecpush, 'Visible', 'on');
+        set(handles.writerecpush, 'Visible', 'on');
+
     % export variables to guidata
 
 guidata(hObject, handles);
@@ -271,9 +277,9 @@ function displayrecpush_Callback(hObject, ~, handles)
     
         % functionality
         signal = getaudiodata(audiorecobj);
-        tmax = length(signal)/Fs;
-        time = 0:1/Fs:tmax-1/Fs;
-        figure,
+        tmax = length(signal)/Fs; % calculating duration of recording
+        time = 0:1/Fs:tmax-1/Fs; % creating time array
+        figure, % plotting recording
         plot(time,signal);
         xlabel('Time (sec.)');        
         ylabel('Signal Amplitude (V)');
