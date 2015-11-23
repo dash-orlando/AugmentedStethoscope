@@ -16,8 +16,11 @@ function [audiorecdev] = audiorecsearch()
     % [2] Storing device information in structure array
     Ndevices = length(audiorecinfo.input); % Number of audio input devices
     if Ndevices == 0
-        disp('Error! No recording devices were found!');
-        disp('Ensure that the desired wireless device has been connected and not just paired');
+        disp('%%===============ERROR: No recording devices were found===============%%');
+        disp('>>Possible Solutions');
+        disp('>>[1] Input/Recording devices disconnected - Ensure Connection');
+        disp('>>[2] MATLAB internal error reading input devices - Restart MATLAB');
+        disp('%%====================================================================%%');
     elseif Ndevices ~= 0     
         for i = 1:Ndevices
             audiorecdev.devices{i} = audiorecinfo.input(i).Name;
