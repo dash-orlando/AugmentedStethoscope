@@ -457,20 +457,21 @@ function startplaypush_Callback(hObject, ~, handles)
     end
     
         % functionality
-        set(handles.recstatus, 'String', 'Begin recording');       
+        set(handles.recstatus, 'String', 'Begin recording');
+        
         singleradiostat = get(handles.singleplayradio, 'Value');
-        multipleradiostat = get(handles.multipleplayradio, 'Value');       
+        multipleradiostat = get(handles.multipleplayradio, 'Value');
+        
         if singleradiostat == 1 && multipleradiostat == 0          
-            disp('Audio file will be played once');
-            set(handles.playstatus, 'String', 'Audio file will play once');
+            disp('Audio file will be played once!');
             play(audioplayobj); % play recording once        
         elseif singleradiostat == 0 && multipleradiostat == 1      
-            disp(horzcat('Audio file will be played ',num2str(numofreps),' times'));
-            set(handles.playstatus, 'String', horzcat('Audio file will be played ',num2str(numofreps),' times'));
+            disp(horzcat('Audio file will be played ',numofreps,' times'));
             for i = 1:numofreps
                 play(audioplayobj);
             end         
         end
+            
         
         % set visibility of additional features
         set(handles.playstatustitle, 'Visible', 'on');
@@ -518,17 +519,16 @@ function multiplaynum_Callback(hObject, ~, handles)
     % import variables from handles
     
         % executions
-        numofreps = str2double(get(hObject,'String'));
-        if isnan(numofreps) == 1
-            disp('Error, input must only contain numbers!');
-        elseif isnan(numofreps) == 0
+        try
+            numofreps = str2double(get(hObject,'String'));
             disp(horzcat('User specified ',get(hObject,'String'),' loops'));
-            
-            % export variables to handles
-            handles.numofreps = numofreps;
-            
+        catch
+            disp('Error, input must only contain numbers!');
         end
         
+    % export variables to handles
+    handles.numofreps = numofreps;
+
 guidata(hObject, handles);
 
 %
