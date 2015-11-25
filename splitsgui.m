@@ -428,7 +428,8 @@ function connectplaypush_Callback(hObject, ~, handles)
         set(handles.singleplaytitle, 'Visible', 'on');
         set(handles.multipleplayradio, 'Visible', 'on');
         set(handles.multiplaynum, 'Visible', 'on');
-        set(handles.displayplaypush, 'Visible', 'on');
+        set(handles.playstatus, 'Visible', 'on');
+        set(handles.playstatustitle, 'Visible', 'on');
         
         % default selection
         set(handles.singleplayradio, 'Value', 1);
@@ -446,10 +447,31 @@ function startplaypush_Callback(hObject, ~, handles)
 
     % import variables from handles
     audioplayobj = handles.audioplayobj;
+    try
+        numofreps = handles.numofreps;
+    catch
+        disp('User has yet to specify the number of repetitions');
+        set(handles.playstatus, 'String', 'Specify number of repetitions!');
+        set(handles.multipleplayradio, 'Value', 0);
+        set(handles.singleplayradio, 'Value', 1);
+    end
     
         % functionality
-        set(handles.recstatus, 'String', 'Begin recording');
-        play(audioplayobj);
+        set(handles.recstatus, 'String', 'Begin recording');       
+        singleradiostat = get(handles.singleplayradio, 'Value');
+        multipleradiostat = get(handles.multipleplayradio, 'Value');       
+        if singleradiostat == 1 && multipleradiostat == 0          
+            disp('Audio file will be played once!');
+            play(audioplayobj); % play recording once        
+        elseif singleradiostat == 0 && multipleradiostat == 1      
+            disp(horzcat('Audio file will be played ',numofreps,' times'));
+            for i = 1:numofreps
+                play(audioplayobj);
+            end         
+        end
+        
+        % set visibility of additional features
+        set(handles.playstatustitle, 'Visible', 'on');
         
     % export variables to guidata
 
