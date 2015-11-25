@@ -1,3 +1,15 @@
+% SPLITS GRAPHICAL USER INTERFACE ======================================= %
+% This GUI was developed to control the SPLITS prototype. The SPLITS
+% prototype was develop in order to demonstrate certain key features to be
+% considered in the development of a final training stethoscope
+%
+% Fluvio L. Lobo Fenoglietto
+% 11-25-2015
+%
+
+% INITITLIZATION R0UTINES =============================================== %
+% Default code placed automatically by MATLAB
+
 function varargout = splitsgui(varargin)
 
 
@@ -18,10 +30,7 @@ if nargout
 else
     gui_mainfcn(gui_State, varargin{:});
 end
-% End initialization code - DO NOT EDIT
 
-
-% --- Executes just before splitsgui is made visible.
 function splitsgui_OpeningFcn(hObject, ~, handles, varargin)
 % This function has no output args, see OutputFcn.
 % hObject    handle to figure
@@ -35,17 +44,11 @@ handles.output = hObject;
 % Update handles structure
 guidata(hObject, handles);
 
-% UIWAIT makes splitsgui wait for user response (see UIRESUME)
-% uiwait(handles.figure1);
-
-
-% --- Outputs from this function are returned to the command line.
 function varargout = splitsgui_OutputFcn(hObject, ~, handles) 
 
     varargout{1} = handles.output;
 
 guidata(hObject, handles);
-
 
 % BLUETOOH CONNECTION =================================================== %
 % This section contains all the functions pertaining to the connection to
@@ -91,18 +94,23 @@ guidata(hObject, handles);
 % The button executes the function "btconnect.m"
 function connectbtpush_Callback(hObject, ~, handles)
 
+    % import variables from handles
     btdevsel = handles.btdevsel; % extracting selected bluetooth device info from handles structure
-
+        
+        % executions
         [btobj] = btconnect(btdevsel); % creates a bluetooth object from the selected bluetooth device
         
         outString = horzcat('Computer connected to ',btdevsel.device{1}); % reporting connection
         set(handles.connectbtstatus, 'String', outString); % printing report string
         
-        set(handles.recordtoggle, 'Visible', 'on'); % set visibility of 'record' toggle button to 'on' 
-        set(handles.or, 'Visible', 'on'); % set visibility of textbox toggle button to 'on' 
-        set(handles.playbacktoggle, 'Visible', 'on'); % set visibility of 'playback' toggle button to 'on'
+        % set visibility of gui features
+        set(handles.featurestoggletitle, 'Visible', 'on');
+        set(handles.recordtoggle, 'Visible', 'on'); 
+        set(handles.or, 'Visible', 'on');
+        set(handles.playbacktoggle, 'Visible', 'on');
     
-    handles.btobj = btobj; % stores bluetooth object into handles structure
+    % export variables to handles
+    handles.btobj = btobj;
 
 guidata(hObject, handles);
 
