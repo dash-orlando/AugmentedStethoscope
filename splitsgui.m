@@ -405,8 +405,14 @@ function importplaypush_Callback(hObject, ~, handles)
     % import variables from handles
     
         % executions
-        [audioplaydata] = importaudio();
         set(handles.importplaystatus, 'String', 'Accessing disk');
+        [audioplaydata] = importaudio();
+        if audioplaydata.audiofilename == 0
+            set(handles.importplaystatus, 'String', 'No file was selected');
+        else
+            set(handles.importplaystatus, 'String', horzcat(audioplaydata.audiofilename,' imported'));
+        end
+        
         
     % export variables to handles
     handles.audioplaydata = audioplaydata;
