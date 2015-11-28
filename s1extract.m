@@ -4,14 +4,12 @@
 % This function has been designed to allow for an expert to identify an S1
 % signal from an entire auscultation recording
 
-%function [s1] = s1extract(audiodata)
-
+function [s1] = s1extract(audiodata)
     % importing data from audiodata
     [stampedstring] = timeprefix('Importing audio signal from audiodata');
     disp(stampedstring);
     time = audiodata.time;
     signal = audiodata.signal;
-    
     % identifying s1 signal using cursors
     [stampedstring] = timeprefix('Plotting audio signal');
     disp(stampedstring);
@@ -21,54 +19,40 @@
     xlabel('Time (sec.)');
     ylabel('Apmplitude (V)');
     grid on
-    
     [stampedstring] = timeprefix('Waiting for user to close figure');
     disp(stampedstring);
-    waitfor(signalfig)
-    
+    waitfor(signalfig);
     % extracting cursor information
     if exist('cursor_info','var') == 1
-        
         [stampedstring] = timeprefix('Cursor information found');
         disp(stampedstring);
-        
         Npoints = length(cursor_info);
-        
         if Npoints == 2
-            
             [stampedstring] = timeprefix('Two points found');
             disp(stampedstring);
-            
+            % extracting point/datatip coordinates from cursor_info
             pointX(1,1) = cursor_info(1).Position(1);
             pointX(2,1) = cursor_info(2).Position(1);
-
+            % sorting points in ascending order
             pointXsorted = sort(pointX,'ascend');
-            
             % extracting section of signal between cursor points
             pindex(1,1) = find(time == pointXsorted(1,1));
             pindex(2,1) = find(time == pointXsorted(2,1));
-                
+            % storing S1 signal
             s1.time = time(pindex(1,1):pindex(2,1));
             s1.signal = signal(pindex(1,1):pindex(2,1));
-            
+            % plotting S1
             figure,
             plot(s1.time, s1.signal)
             xlabel('Time (sec.)');
             ylabel('Amplitude (V)');
             grid on
-            
         else
-            
             [stampedstring] = timeprefix(horzcat(num2str(Npoints),' points found. The program needs 2 points'));
-            disp(stampedstring);
-            
-        end
-        
-    else
-        
+            disp(stampedstring);           
+        end % End of if-statement -check for number of points exported
+    else 
         [stampedstring] = timeprefix('Cursor information was not exported to workspace');
-        disp(stampedstring);
-        
-    end
-                
-%end 
+        disp(stampedstring); 
+    end % End of if-statement -check for existance of cursor_info             
+end % End of function
