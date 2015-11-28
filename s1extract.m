@@ -4,7 +4,7 @@
 % This function has been designed to allow for an expert to identify an S1
 % signal from an entire auscultation recording
 
-function [s1] = s1extract(audiodata)
+%function [s1] = s1extract(audiodata)
 
     % importing data from audiodata
     [stampedstring] = timeprefix('Importing audio signal from audiodata');
@@ -27,7 +27,7 @@ function [s1] = s1extract(audiodata)
     waitfor(signalfig)
     
     % extracting cursor information
-    if exist('cursor_info') == 1
+    if exist('cursor_info','var') == 1
         
         [stampedstring] = timeprefix('Cursor information found');
         disp(stampedstring);
@@ -39,17 +39,36 @@ function [s1] = s1extract(audiodata)
             [stampedstring] = timeprefix('Two points found');
             disp(stampedstring);
             
-            pointX = zeros(Npoints,1);
-            for i = 1:Npoints
-                
-                pointX(i) = cursor_info(i).Position(i);
-                
-            end
-            
+            pointX(1,1) = cursor_info(1).Position(1);
+            pointX(2,1) = cursor_info(2).Position(1);
+
             pointXsorted = sort(pointX,'ascend');
             
             % extracting section of signal between cursor points
-            
-            pindex 
+            pindex(1,1) = find(time == pointXsorted(1,1));
+            pindex(2,1) = find(time == pointXsorted(2,1));
                 
-end 
+            s1.time = time(pindex(1,1):pindex(2,1));
+            s1.signal = signal(pindex(1,1):pindex(2,1));
+            
+            figure,
+            plot(s1.time, s1.signal)
+            xlabel('Time (sec.)');
+            ylabel('Amplitude (V)');
+            grid on
+            
+        else
+            
+            [stampedstring] = timeprefix(horzcat(num2str(Npoints),' points found. The program needs 2 points'));
+            disp(stampedstring);
+            
+        end
+        
+    else
+        
+        [stampedstring] = timeprefix('Cursor information was not exported to workspace');
+        disp(stampedstring);
+        
+    end
+                
+%end 
