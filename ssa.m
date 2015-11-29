@@ -4,14 +4,19 @@
 % Simple spectral analysis program for input signal, using FFT and basic
 % vector manipulations
 
-function [pfft] = ssa(signal,fs)
+function [psdx] = ssa(signal,fs)
 
-    Nsignal = length(signal);
-    
-    freq = (fs/Nsignal)*[0:Nsignal-1];
-    
-    pfft = abs(fft(signal));
+    Nsignal = length(signal);   
+    xdft = fft(signal);
+    xdft = xdft(1:N/2+1);
+    psdx = (1/(fs*N)) * abs(xdft).^2;
+    psdx(2:end-1) = 2*psdx(2:end-1);
+    freq = 0:fs/Nsignal:fs/2;
 
-    semilogx(freq(1:Nsignal/2),10*log10(pfft(1:Nsignal/2)))
+    plot(freq,10*log10(psdx))
+    grid on
+    title('Periodogram Using FFT')
+    xlabel('Frequency (Hz)')
+    ylabel('Power/Frequency (dB/Hz)')
 
 end
