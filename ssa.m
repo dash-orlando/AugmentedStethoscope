@@ -8,11 +8,10 @@ function [pfft] = ssa(signal,fs)
 
     Nsignal = length(signal);
     
-    freqbins = [0:Nsignal-1];
-    freqHz = freqbins.*(fs/Nsignal);
+    freq = (fs/Nsignal)*[0:Nsignal-1];
     
     pfft = abs(fft(signal));
 
-    semilogx(freqHz(1:Nsignal/2),10*log10(pfft(1:Nsignal/2)))
+    semilogx(freq(1:Nsignal/2),10*log10(pfft(1:Nsignal/2)))
 
 end
