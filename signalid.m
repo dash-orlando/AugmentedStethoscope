@@ -50,6 +50,7 @@ function [excision] = signalid(audiodata,extract,conv)
     corrindex = find(nCorr > conv);
     excision.signal = signal(corrindex:corrindex+Nextract-1);
     excision.time = time(corrindex:corrindex+Nextract-1);
+    excision.fs = audiodata.fs;
     
     % create dummy array for visualization
     nCplot = zeros(Nsignal,1);
