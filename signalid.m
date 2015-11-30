@@ -58,6 +58,7 @@ function [excision] = signalid(audiodata,extract,conv)
     end
     
     excision.compsignal = nCplot;
+    excision.comptime = audiodata.time;
     
 %     % plotting signal match
 %     % this section has been commented out in order to allow for
