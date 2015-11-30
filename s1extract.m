@@ -3,6 +3,8 @@
 %
 % This function has been designed to allow for an expert to identify an S1
 % signal from an entire auscultation recording
+%
+% Fluvio L Lobo Fenoglietto
 
 function [s1] = s1extract(audiodata)
     % importing data from audiodata
