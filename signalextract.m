@@ -12,6 +12,7 @@ function [extract] = signalextract(audiodata)
     disp(stampedstring);
     time = audiodata.time;
     signal = audiodata.signal;
+    fs = audiodata.fs;
     % identifying s1 signal using cursors
     [stampedstring] = timeprefix('Plotting audio signal');
     disp(stampedstring);
@@ -51,6 +52,7 @@ function [extract] = signalextract(audiodata)
             % storing S1 signal
             extract.time = time(pindex(1,1):pindex(2,1));
             extract.signal = signal(pindex(1,1):pindex(2,1));
+            extract.fs = fs;
             % plotting S1
             figure,
             plot(extract.time, extract.signal)
