@@ -9,15 +9,14 @@
 
 function [multiexcision] = multisignalid(audiodata,extract,conv,nmatch,vis)
 
+    % loop around the desired number of matches/identifications
     for i = 1:nmatch
-
+        % creating subdivision of output structure
         exid = strcat('ex',num2str(i));
-
+        % performing single-signal-identification
         [multiexcision.(exid)] = signalid(audiodata,extract,conv);
-
         % deleting excision from signal
         audiodata.signal = audiodata.signal - multiexcision.(exid).compsignal;
-
     end % end of for-loop
     
     [stampedstring] = timeprefix('Multi excision completed');
