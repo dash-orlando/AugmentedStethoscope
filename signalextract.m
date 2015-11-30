@@ -6,7 +6,7 @@
 %
 % Fluvio L Lobo Fenoglietto
 
-function [s1] = signalextract(audiodata)
+function [extract] = signalextract(audiodata)
     % importing data from audiodata
     [stampedstring] = timeprefix('Importing audio signal from audiodata');
     disp(stampedstring);
@@ -49,23 +49,23 @@ function [s1] = signalextract(audiodata)
             pindex(1,1) = find(time == pointXsorted(1,1));
             pindex(2,1) = find(time == pointXsorted(2,1));
             % storing S1 signal
-            s1.time = time(pindex(1,1):pindex(2,1));
-            s1.signal = signal(pindex(1,1):pindex(2,1));
+            extract.time = time(pindex(1,1):pindex(2,1));
+            extract.signal = signal(pindex(1,1):pindex(2,1));
             % plotting S1
             figure,
-            plot(s1.time, s1.signal)
+            plot(extract.time, extract.signal)
             xlabel('Time (sec.)');
             ylabel('Amplitude (V)');
             grid on
         else
             [stampedstring] = timeprefix(horzcat(num2str(Npoints),' points found. The program needs 2 points'));
             disp(stampedstring);
-            s1 = [];
+            extract = [];
         end % End of if-statement -check for number of points exported
     else 
         [stampedstring] = timeprefix('Cursor information was not exported to workspace');
         disp(stampedstring);
-        s1 = [];
+        extract = [];
     end % End of if-statement -check for existance of cursordata
 
 end
