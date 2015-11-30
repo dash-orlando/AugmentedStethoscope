@@ -48,13 +48,16 @@ function [excision] = signalid(audiodata,extract,conv)
 
     % excising region of correlation
     corrindex = find(nCorr > conv);
-    excision = signal(corrindex:corrindex+Nextract-1);
+    excision.signal = signal(corrindex:corrindex+Nextract-1);
+    excision.time = time(corrindex:corrindex+Nextract-1);
     
     % create dummy array for visualization
     nCplot = zeros(Nsignal,1);
     for i = corrindex:corrindex+Nextract-1
-        nCplot(i) = excision(i-corrindex+1,1);
+        nCplot(i) = excision.signal(i-corrindex+1,1);
     end
+    
+    excision.compsignal = nCplot;
     
     % plotting signal match
     figure,
