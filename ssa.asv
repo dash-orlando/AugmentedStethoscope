@@ -1,0 +1,27 @@
+%
+% Simple Spectral Analysis (SSA)
+%
+% Simple spectral analysis program for input signal, using FFT and basic
+% vector manipulations. The function has been designed to process any
+% signal with known sampling frequency
+%
+% Fluvio L Lobo Fenoglietto
+
+function [psdx,error] = ssa(signal,fs)
+
+    Nsignal = length(signal);   
+    xdft = fft(signal); % transformation of raw signal into Fourier space
+    xdft = xdft(1:Nsignal/2+1); % 
+    psdx = (1/(fs*Nsignal)) * abs(xdft).^2;
+    psdx(2:end-1) = 2*psdx(2:end-1);
+    freq = 0:fs/Nsignal:fs/2;
+
+    semilogx(freq,10*log10(psdx))
+    grid on
+    title('Periodogram Using FFT')
+    xlabel('Frequency (Hz)')
+    ylabel('Power/Frequency (dB/Hz)')
+    
+    error = max(psdx - periodogram(signal,rectwin(Nsignal),Nsignal,fs));
+
+end
