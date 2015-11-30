@@ -6,7 +6,7 @@
 %
 % Fluvio L Lobo Fenoglietto
 
-function [s1] = s1extract(audiodata)
+function [s1] = signalextract(audiodata)
     % importing data from audiodata
     [stampedstring] = timeprefix('Importing audio signal from audiodata');
     disp(stampedstring);
