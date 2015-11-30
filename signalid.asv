@@ -10,7 +10,6 @@
 function [excision] = signalid(audiodata,extract,conv)
 
     signal = audiodata.signal;
-    time = audiodata.time;
     extract = extract.signal;
     % conv = 0.96;
 
@@ -58,12 +57,11 @@ function [excision] = signalid(audiodata,extract,conv)
     
     % plotting signal match
     figure,
-    plot(time,signal,'b')
+    plot(signal,'b')
     hold on
-    plot(time,nCplot,'r')
+    plot(nCplot,'r')
     xlabel('Time (sec.)');
     ylabel('Amplitude (V)');
     legend('Signal','Extract');
-    grid on
-   
+    
 end % End of function
