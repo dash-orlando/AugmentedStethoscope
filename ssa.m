@@ -4,7 +4,7 @@
 % Simple spectral analysis program for input signal, using FFT and basic
 % vector manipulations
 
-function [psdx] = ssa(signal,fs)
+function [psdx,error] = ssa(signal,fs)
 
     Nsignal = length(signal);   
     xdft = fft(signal);
@@ -18,5 +18,7 @@ function [psdx] = ssa(signal,fs)
     title('Periodogram Using FFT')
     xlabel('Frequency (Hz)')
     ylabel('Power/Frequency (dB/Hz)')
+    
+    error = max(psdx - periodogram(signal,rectwin(Nsignal),Nsignal,fs));
 
 end
