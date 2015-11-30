@@ -9,7 +9,6 @@
 
 function [multiexcision] = multisignalid(audiodata,extract,conv,nmatch,vis)
 
-
     for i = 1:nmatch
 
         exid = strcat('ex',num2str(i));
@@ -20,8 +19,17 @@ function [multiexcision] = multisignalid(audiodata,extract,conv,nmatch,vis)
         audiodata.signal = audiodata.signal - multiexcision.(exid).compsignal;
 
     end % end of for-loop
+    
+    [stampedstring] = timeprefix('Multi excision completed');
+    disp(stampedstring);
+    [stampedstring] = timeprefix(horzcat(num2str(nmatch),' excisions performed'));
+    disp(stampedstring);
 
-    if strcmp(vis,'on')
+    if strcmp(vis,'on') == 1
+        
+        [stampedstring] = timeprefix('User enabled output visualization');
+        disp(stampedstring);
+        
         % plotting
         figure,
         
@@ -58,6 +66,12 @@ function [multiexcision] = multisignalid(audiodata,extract,conv,nmatch,vis)
             legend(legendlabels);
             axis([0 max(lasttimepoint)+1 min(audiodata.signal) max(audiodata.signal)]); 
             grid on
+            
+    elseif strcmp(vis,'off') == 1
+        
+        [stampedstring] = timeprefix('User disabled output visualization');
+        disp(stampedstring);
+        
     end % end of if-statement
 
 end % End of function
