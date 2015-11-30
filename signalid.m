@@ -59,14 +59,17 @@ function [excision] = signalid(audiodata,extract,conv)
     
     excision.compsignal = nCplot;
     
-    % plotting signal match
-    figure,
-    plot(time,signal,'b')
-    hold on
-    plot(time,nCplot,'r')
-    xlabel('Time (sec.)');
-    ylabel('Amplitude (V)');
-    legend('Signal','Extract');
-    grid on
+%     % plotting signal match
+%     % this section has been commented out in order to allow for
+%     visualization to be done externally. Uncomment this section for
+%     debugging of the signalid.m function
+%     figure,
+%     plot(time,signal,'b')
+%     hold on
+%     plot(time,nCplot,'r')
+%     xlabel('Time (sec.)');
+%     ylabel('Amplitude (V)');
+%     legend('Signal','Extract');
+%     grid on
    
 end % End of function
