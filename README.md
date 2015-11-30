@@ -1,2 +1,2 @@
-# -thebeat
+# thebeat
 Sound analysis and playback
