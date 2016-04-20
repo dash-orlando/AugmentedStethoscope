@@ -1,11 +1,11 @@
 Component,ID,Type ,Description,Justification,Link,Unit Cost,Quantity,Total Cost
-Bluetooth Modem BlueSMiRF Silver,WRL-12577,Antenna,Bluetooth,Needed to communicate wirelessly,https://www.sparkfun.com/products/12577,$24.95,1,$24.95
-FTDI 3.3V,DEV-09873,Serial,FTDI,Needed to communicate through USB,https://www.sparkfun.com/products/9873,$14.95,1,$14.95
-Micro LiPo Charger,ADA-1904,Charger,LiPo,Needed to charge LiPo batteries,https://www.adafruit.com/products/1904?gclid=Cj0KEQjw0dy4BRCuuL_e5MeqmNABEiQAq8iNI8Te_c8ZZLQL1GXPPP6WsEKhwO6wL8upT_vtj3gfhOwaAmpO8P8HAQ,$6.95,1,$6.95
-Triple Axis Accelerometer,SEN-09269,Sensor,Accelerometer,Needed to measure orientation,https://www.sparkfun.com/products/9269,$14.95,1,$14.95
-Arduino Pro Mini 328 3.3V 8MHz,DEV-11114,Micro-controller,Arduino,Needed to control sensors,https://www.sparkfun.com/products/11114,$9.95,1,$9.95
-,,,,,,,,$0.00
-,,,,,,,,$0.00
-,,,,,,,,$0.00
-,,,,,,,,$0.00
-,,,,,,,,$0.00
+Bluetooth Modem BlueSMiRF Silver,WRL-12577,Antenna,Bluetooth,Needed to communicate wirelessly,https://www.sparkfun.com/products/12577,$24.95 ,1.00,$24.95 
+FTDI 3.3V,DEV-09873,Serial,FTDI,Needed to communicate through USB,https://www.sparkfun.com/products/9873,$14.95 ,1.00,$14.95 
+Micro LiPo Charger,ADA-1904,Charger,LiPo,Needed to charge LiPo batteries,https://www.adafruit.com/products/1904?gclid=Cj0KEQjw0dy4BRCuuL_e5MeqmNABEiQAq8iNI8Te_c8ZZLQL1GXPPP6WsEKhwO6wL8upT_vtj3gfhOwaAmpO8P8HAQ,$6.95 ,1.00,$6.95 
+Triple Axis Accelerometer,SEN-09269,Sensor,Accelerometer,Needed to measure orientation,https://www.sparkfun.com/products/9269,$14.95 ,1.00,$14.95 
+Arduino Pro Mini 328 3.3V 8MHz,DEV-11114,Micro-controller,Arduino,Needed to control sensors,https://www.sparkfun.com/products/11114,$9.95 ,1.00,$9.95 
+,,,,,,,,$0.00 
+,,,,,,,,$0.00 
+,,,,,,,,$0.00 
+,,,,,,,,$0.00 
+,,,,,,Total,5.00,$71.75 
