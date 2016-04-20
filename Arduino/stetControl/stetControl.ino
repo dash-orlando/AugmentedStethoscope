@@ -35,11 +35,9 @@ double x;
 double y;
 double z;
 
-
 void setup(){
   Serial.begin(9600);
 }
-
 
 void loop(){
 
@@ -72,17 +70,4 @@ void loop(){
   
 } // End of void-loop
 
-int findMinVal(int xPin, int yPin, int zPin) {
-
-  int MinVal;
-  int Nreads = 100;
-  int analogArray[Nreads];
-
-  for (int i, i < Nreads, i ++) {
-
-    analogArray[i] = analogRead(
-    
-  }
-  
-} // End of findMinVal function
 
