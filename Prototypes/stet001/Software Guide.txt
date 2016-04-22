@@ -1,0 +1,10 @@
+Introduction
+The following guide has been designed to instruct the user on how to configure the software (scripts, functions, programs, etc.) that controls that control the hardware (electrical components, modules, sensors, etc.) that compose the prototype.
+Configuration of Bluetooth antenna
+All of the prototypes developed for this project transmit or relay sensor data wirelessly, via a Bluetooth antenna. Once the entire prototype has been connected
+Software Guide		04/20/2016
+Project: thebeat
+Prototype: stet001
+Fluvio L. Lobo Fenoglietto
+
+
