@@ -30,6 +30,7 @@ void setup() {
 
 void draw() {
   
-  
+  int Npins = 3;
+  readAnalogDataSimple(Nardus, Npins);
   
 } // End of draw loop
