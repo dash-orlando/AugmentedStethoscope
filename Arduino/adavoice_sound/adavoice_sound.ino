@@ -1,19 +1,9 @@
 /*
-This is a mash-up of the adavoice and wavface sketches.
-Using an Arduino, Wave Shield and some supporting components,
-creates a voice-changing mask with animated features.
-
-The BOM for the complete project is rather lengthy to put here, so
-please see this tutorial for info (and parts) for the voice changer:
-http://learn.adafruit.com/wave-shield-voice-changer
-And see this tutorial for info/parts for the face animation:
-http://learn.adafruit.com/animating-multiple-led-backpacks
-
-This version doesn't do WAV playback, as there's no keypad or
-buttons.  Just the voice.  Some WAV-related hooks have been left
-in place if you want to adapt it.  This will be difficult though,
-as RAM is VERY tight...we're using nearly the whole thing.
-*/
+ * adavoice_sound.ino
+ * This program has been adapted from adavoice and adavoice_sound to be independent from an SD card (not capable of playback) and from keyboards, LED panels, or other peripherals featured in adavoice demos.
+ * This program will be the foundation to our arduino-powered electronic stethoscope.
+ * Fluvio L. Lobo Fenoglietto 05/17/2016
+ */
 
 #include <WaveHC.h>
 #include <WaveUtil.h>
@@ -95,7 +85,6 @@ void setup() {
 void loop() {
 
 }
-
 
 //////////////////////////////////// PITCH-SHIFT CODE
 
