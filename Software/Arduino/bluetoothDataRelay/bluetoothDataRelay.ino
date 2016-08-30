@@ -5,6 +5,7 @@
  * 
  * Fluvio L Lobo Fenoglietoo 08/29/2016
  */
+#define HWSERIAL Serial2
 
 int ledPin = 13;
 
@@ -15,7 +16,7 @@ void setup() {
 
 void loop() {
 
-  Serial.print("hola");
-  Serial.print("\n");
+  Serial2.print("hola");
+  Serial2.print("\n");
   
 }
