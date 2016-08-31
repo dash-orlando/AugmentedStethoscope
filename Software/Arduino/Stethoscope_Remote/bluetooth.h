@@ -2,8 +2,8 @@
 #include        <SparkFunbc127.h>
 
 /// BT Connection States
-#define         BTTX        2
-#define         BTRX        3
+//#define         BTTX        2 // just pins
+//#define         BTRX        3 // just pins
 #define         INACTIVE    0
 #define         SEARCHING   1
 #define         NEGOTIATING 2
