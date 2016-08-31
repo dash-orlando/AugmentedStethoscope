@@ -5,23 +5,56 @@
  * 
  * Fluvio L Lobo Fenoglietoo 08/29/2016
  */
-char INBYTE;
-int  LED = 13; // LED on pin 13
 
-HardwareSerial bt = HardwareSerial();
+// Variable Definitions
+
+#define btSerial Serial2
+/* Here, the user may specify different serial ports
+ * Teensy 3.2 has the following ports available;
+ * Serial# :: RX#(pin) :: TX#(pin)
+ * ------------------------------
+ * Serial1 :: RX1(0)   :: TX1(1)
+ * Serial2 :: RX2(9)   :: TX2(10)
+ * Serial3 :: RX3(7)   :: TX2(8)
+ */
+
+int ledPin = 13; // Onboard LED Pin
+
+int state = 0;
+/* The variable "state" defines the modality or satet of the program
+ * state = # :: name :: definition
+ * state = 0 :: idle :: the program transmits identification data
+ * state = 1 :: 
+ */
+
 
 void setup() {
-  pinMode(LED, OUTPUT);
+
+  pinMode(ledPin, OUTPUT);
+  Serial.begin(9600);
+  btSerial.begin(115200);
   
-  bt.begin(115200);
-  bt.println(); 
-}
+} // End of void setup
 
 void loop() {
-  bt.println("Press 1 to turn Arduino pin 13 LED ON or 0 to turn it OFF:");
-  //while (!bt.available());   // stay here so long as COM port is empty   
-  //INBYTE = bt.read();        // read next available byte
-  //if( INBYTE == '0' ) digitalWrite(LED, LOW);  // if it's a 0 (zero) tun LED off
-  //if( INBYTE == '1' ) digitalWrite(LED, HIGH); // if it's a 1 (one) turn LED on
-  //delay(50);
-}
+
+  //btSerial.println("hola");
+  
+        int incomingByte;
+        
+  if (Serial.available() > 0) {
+    incomingByte = Serial.read();
+    Serial.print("USB received: ");
+    Serial.println(incomingByte, DEC);
+                btSerial.print("USB received:");
+                btSerial.println(incomingByte, DEC);
+  }
+  if (btSerial.available() > 0) {
+    incomingByte = btSerial.read();
+    Serial.print("UART received: ");
+    Serial.println(incomingByte, DEC);
+                btSerial.print("UART received:");
+                btSerial.println(incomingByte, DEC);
+  }
+  
+} // End of void loop
