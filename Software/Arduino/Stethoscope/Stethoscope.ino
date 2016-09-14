@@ -1,3 +1,14 @@
+/*
+ * Stethoscope
+ * 
+ * The following program has been built to control the statehoscope module
+ * 
+ * Michael Xynidis
+ * Fluvio L Lobo Fenoglietto
+ * 09/14/2016
+ */
+
+
 #define DEBUG true
 #define VERSION  0.04
 
