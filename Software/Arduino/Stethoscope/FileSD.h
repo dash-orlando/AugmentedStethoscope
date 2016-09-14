@@ -20,38 +20,45 @@ boolean sdCardCheck()
 
  // First, detect the card
   status = card.init(10); // Audio shield has SD card SD on pin 10
-  if (status) {
-    if ( DEBUG ) Serial.println("SD card is connected :-)");
-  } else {
-    if ( DEBUG ) Serial.println("SD card is not connected or unusable :-(");
+  if ( status )
+  {
+    if ( DEBUG ) Serial.println( "SD card is connected :-)" );
+  }
+  else
+  {
+    if ( DEBUG ) Serial.println( "SD card is not connected or unusable :-(" );
     return false;
   }
 
   type = card.type();
-  if ( (type == SD_CARD_TYPE_SD1) || (type == SD_CARD_TYPE_SD2)
-  || (DEBUG) ) {
-    Serial.println("Card type is SD");
-  } else if (type == SD_CARD_TYPE_SDHC) {
-    Serial.println("Card type is SDHC");
-  } else {
-    Serial.println("Card is an unknown type (maybe SDXC?)");
+  if ( ( type == SD_CARD_TYPE_SD1 ) || ( type == SD_CARD_TYPE_SD2 ) ) //|| ( DEBUG ) )
+  {
+    Serial.println( "Card type is SD" );
+  } 
+  else if ( type == SD_CARD_TYPE_SDHC ) 
+  {
+    Serial.println( "Card type is SDHC" );
+  }
+  else 
+  {
+    Serial.println( "Card is an unknown type (maybe SDXC?)" );
   }
 
   // Then look at the file system and print its capacity
-  status = volume.init(card);
-  if (!status)
+  status = volume.init( card );
+  if ( !status )
   {
 //    boboPrint( 0, 3, ">INOPERABLE SD CARD<" );
-    if ( DEBUG ) Serial.println("Unable to access the filesystem on this card. :-(");
+    if ( DEBUG ) Serial.println( "Unable to access the filesystem on this card. :-(" );
     return false;
   }
   else if ( DEBUG ) 
   {
     size = volume.blocksPerCluster() * volume.clusterCount();
     size = size * (512.0 / 1e6); // convert blocks to millions of bytes
-    Serial.print("File system space is ");
-    Serial.print(size);
-    Serial.println(" Mbytes.");
+    Serial.print( "File system space is " );
+    Serial.print( size );
+    Serial.println( " Mbytes." );
   }
   return true;
 }
@@ -59,11 +66,12 @@ boolean sdCardCheck()
 void printDirectory( File dir, int numTabs )
 {
   int filesize = 0;
+  Serial.println( "Directory of files on SD:" );
   while ( true )
   {
-    File entry  =  dir.openNextFile();
-    String s    = "";
- 
+    File    entry =  dir.openNextFile();
+    String  s     = "";
+
     if ( ! entry ) 
     {
       break;

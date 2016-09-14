@@ -66,7 +66,7 @@ void setLEDs( int error )
 {
   if ( error == 1 )
   {
-      if ( DEBUG ) Serial.println( "no blink" );
+      if ( DEBUG ) Serial.println( "LED state: ERROR" );
       while ( !sdCardCheck() )
       {
         digitalWrite( TX, HIGH );
@@ -83,7 +83,7 @@ void setLEDs( int error )
   }
   else
   {
-    if ( DEBUG ) Serial.println( "blink" );
+    if ( DEBUG ) Serial.println( "LED state: NO_ERROR" );
     for ( int i = 0; i < 4; i++ )
     {
       digitalWrite( TX, HIGH );

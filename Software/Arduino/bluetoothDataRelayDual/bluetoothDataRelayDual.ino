@@ -5,33 +5,47 @@
  * 
  * Fluvio L Lobo Fenoglietoo 08/29/2016
  */
-// hello world
-// set this to the hardware serial port you wish to use
-#define HWSERIAL Serial2
+
+//#include <definitions.ino>
+// Variables
+#define     HWSERIAL      Serial2
 
 void setup() {
   Serial.begin(9600);
-        HWSERIAL.begin(115200);
+  HWSERIAL.begin(115200);
+
+  Serial.println(ENQ);
+  //establishContact();
 }
 
 void loop() {
 
-  HWSERIAL.println("hola");
-  
-        int incomingByte;
+  String inString;
         
-  if (Serial.available() > 0) {
-    incomingByte = Serial.read();
-    Serial.print("USB received: ");
-    Serial.println(incomingByte, DEC);
-                HWSERIAL.print("USB received:");
-                HWSERIAL.println(incomingByte, DEC);
-  }
+//  if (Serial.available() > 0) {
+//    incomingByte = Serial.read();
+//    Serial.print("USB received: ");
+//    Serial.println(incomingByte, DEC);
+//                HWSERIAL.print("USB received:");
+//                HWSERIAL.println(incomingByte, DEC);
+//  }
   if (HWSERIAL.available() > 0) {
-    incomingByte = HWSERIAL.read();
-    Serial.print("UART received: ");
-    Serial.println(incomingByte, DEC);
-                HWSERIAL.print("UART received:");
-                HWSERIAL.println(incomingByte, DEC);
+    inString = HWSERIAL.read();
+    Serial.println(inString);
+    if (inString.equals("REC")) {
+      HWSERIAL.print("ACK");
+      HWSERIAL.print("\n");
+    }
   }
 }
+
+void establishContact()
+{
+  while ( Serial.available() <= 0 )
+  {
+    HWSERIAL.print("IDLE");                // send an initial string
+    HWSERIAL.print("\n");
+    delay( 300 );
+  }
+}
+
