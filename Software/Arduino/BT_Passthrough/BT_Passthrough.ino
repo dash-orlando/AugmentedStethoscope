@@ -1,60 +1,112 @@
 /*  Pass serial data bidirctionally between the USB com port and Bluetooth  */
 
-#define VERSION   0.01
-#define SPEED     115200
-#define BTooth    Serial2
+#include  "protocol.h"
+#define   VERSION     0.03
 
 
-//String  stethoscopeName = "RNBT-817D";
-String  stethoscopeName = "RNBT-96C4:";
-String  tempbuff        = "read: ";
-int     cnt             = 0;
+byte inByte   = 0x00;
+byte outByte  = 0x00;
 
 
 void setup()
 {
-  Serial.begin( SPEED );
-  while ( ! Serial ) ;                          // for Teensy to wait for the Monitor to open
-  Serial.println( "getting ready..." );         // *** debug ***
-  delay( 70 );                                  // *** debug ***
-
-  BTooth.begin( SPEED );                        // The Bluetooth Smirf defaults to 115200bps
-  BTooth.print( '$' );                          // Print three times individually
-  BTooth.print( '$' );
-  BTooth.print( '$' );                          // Enter command mode
-  Serial.println( BTooth.available() );         // *** debug ***
-  while ( BTooth.available() < 1 ) ;
-  cnt = BTooth.available();
-  Serial.print( cnt );                          // *** debug ***
-  Serial.println( " bytes came back." );        // *** debug ***
-  cnt += 5;                                     // *** debug ***
-  while ( BTooth.available() > 0 ) tempbuff += (char)BTooth.read(); // *** debug ***
-  Serial.println( tempbuff );                   // *** debug ***
-  for ( int i = 5; i < cnt; i++ )               // *** debug ***
-  {                                             // *** debug ***
-    Serial.print( '[' ); Serial.print( tempbuff[i], HEX ); Serial.print( ']' );
-  }                                             // *** debug ***
-  Serial.println( '\n' );                       // *** debug ***
-  delay( 100 );  // Short delay, wait for the Smirf to send back "CMD"
-//  BTooth.println( 'D' );
-//  BTooth.println( 'X' );
-  BTooth.println( 'h' );
-
-  pairWithBtDevice( stethoscopeName );
+  BTooth.begin( SPEED );                        // The Bluetooth Smirf defaults to 115200bps.
+  Serial.begin( SPEED );                        // Match Serial Monitor to BT--although Teensy always runs 155200.
+  setupBT();
+//  test( 1 );
 }
 
 
-boolean pairWithBtDevice( String btDevice )
+void test( int cnt )
 {
-  return true;
+  for ( int i = 0; i < cnt; i++ )
+  {
+    
+  }
+}
+
+
+void setupBT()
+{
+  while ( ! Serial ) ;                          // Make Teensy wait for the Serial Monitor to open.
+  if ( btCommandMode() )
+  {
+//*
+    if ( pairWithBtDevice( stethoscope[_817D].btMAC ) )
+    {
+      Serial.println( "*******************************************" );
+      Serial.println( "*******************************************" );
+      Serial.println( "********** Stethoscope Connected **********" );
+      Serial.println( "*******************************************" );
+      Serial.println( "*******************************************" );
+    } // */
+//    BTooth.flush();
+  }
 }
 
 
 void loop()
 {
-  if( BTooth.available() )                      // If data are received from bluetooth...
-    Serial.print( (char)BTooth.read() );        // ....print as characters on the serial monitor.
+  if( BTooth.available() != 0 )
+  {
+    Serial.print( BTooth.available() );
+    Serial.println( " bytes in the BT input queue" );
+  }
+  if( BTooth.available() > 0 )                  // If data are received from bluetooth...
+  {
+    Serial.print( "got a byte: [" );
+    inByte = BTooth.read();
+    Serial.print( (char)inByte );
+    Serial.print( "]-[" );
+    Serial.print( inByte, HEX );                // ....print as characters on the serial monitor.
+    Serial.println( ']' );
+    inByte = 0x00;
+  }
 
-  if( Serial.available() )                      // If characters are received from serial monitor...
-    BTooth.print( (char)Serial.read() );        // ....transmit on bluetooth.
+  if( Serial.available() > 0 )                  // If characters are received from serial monitor...
+  {
+    inByte = (char)Serial.read();
+    switch ( inByte )
+    {
+      case '0' :
+        outByte = ENQ;
+        break;
+      case '1' :
+        outByte = DC1_STRTREC;
+        break;
+      case '2' :
+        outByte = DC2_STPREC;
+        break;
+      case '3' :
+        outByte = DC3_STRTPLY;
+        break;
+      case '4' :
+        outByte = DC4_STPPLY;
+        break;
+      case '5' :
+        outByte = ESC;
+        break;
+      case 'd' :
+        Serial.println( "disconecting..." );
+        outByte = 0x00;
+        btCommandMode();
+        BTooth.println( btDisconnect );
+        waitBtResponse( respBtDisonnect );
+        break;
+      case 'c' :
+        Serial.println( "connecting..." );
+        outByte = 0x00;
+        setupBT();
+        break;
+      default :
+        outByte = 0x00;
+        break;
+    }
+    if ( outByte > 0x00 )
+    {
+      Serial.print( "Sending to BT: " ); Serial.print( outByte ); Serial.print( " / " ); Serial.println( outByte, HEX );
+      BTooth.write( outByte );                    // ....transmit on bluetooth.
+      delay( 100 );
+    }
+  }
 }
