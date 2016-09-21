@@ -6,45 +6,38 @@
  * Fluvio L Lobo Fenoglietoo 08/29/2016
  */
 
-//#include <definitions.ino>
-// Variables
-#define     HWSERIAL      Serial2
+
+#define     HWSERIAL      Serial1
+#define     ENQ           0x05
 
 void setup() {
   Serial.begin(9600);
   HWSERIAL.begin(115200);
 
-  Serial.println(ENQ);
-  //establishContact();
+  //Serial.println(ENQ);
+  establishContact();
 }
 
 void loop() {
 
   String inString;
+  //HWSERIAL.println("hola");
         
-//  if (Serial.available() > 0) {
-//    incomingByte = Serial.read();
-//    Serial.print("USB received: ");
-//    Serial.println(incomingByte, DEC);
-//                HWSERIAL.print("USB received:");
-//                HWSERIAL.println(incomingByte, DEC);
-//  }
-  if (HWSERIAL.available() > 0) {
-    inString = HWSERIAL.read();
+  if (Serial.available() > 0) {
+    inString = Serial.read();
+    Serial.print("USB received: ");
     Serial.println(inString);
-    if (inString.equals("REC")) {
-      HWSERIAL.print("ACK");
-      HWSERIAL.print("\n");
-    }
+  }
+  if (HWSERIAL.available() > 0) {
+    HWSERIAL.println("hola");
   }
 }
 
 void establishContact()
 {
-  while ( Serial.available() <= 0 )
+  while ( true )
   {
-    HWSERIAL.print("IDLE");                // send an initial string
-    HWSERIAL.print("\n");
+    HWSERIAL.println("hola");
     delay( 300 );
   }
 }
