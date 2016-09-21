@@ -22,6 +22,7 @@ serial_obj = serial.Serial(rfcomm_port,baud_rate)
 
 # 3- Read info. from RFCOMM Object
 for i in range(0,20):
+        serial_obj.write("12");
         inString = serial_obj.readline()
         print inString
 
