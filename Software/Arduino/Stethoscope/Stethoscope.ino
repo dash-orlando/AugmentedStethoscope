@@ -1,5 +1,5 @@
 #define DEBUG true
-#define VERSION  0.04
+#define VERSION  0.05
 
 #include  "TeensyAudio.h"
 #include  "FileSD.h"
@@ -31,8 +31,15 @@ void setup()
     setLEDs( GOODTOGO );                    // SD file system is happy and working
     rootDir = SD.open( "/" ); Serial.print( "rootDir: " ); Serial.println( rootDir );
     printDirectory( rootDir, 1 );
+    if ( SD.exists( "RECORD.RAW" ) )
+    {
+      SD.remove( "RECORD.RAW" );
+      Serial.println( "Deleting 'RECORD.RAW' for testing." );
+      rootDir = SD.open( "/" );
+      printDirectory( rootDir, 1 );
+    }
     readyState = READY;
-//    delay( 2000 );
+    delay( 2000 );
   }
   else
   {
@@ -50,7 +57,6 @@ void setup()
   digitalWrite( RX,  LOW );
   digitalWrite( LED_BUILTIN,  LOW );
 }
-
 
 void loop()
 {  // when using a microphone, continuously adjust gain
@@ -98,7 +104,6 @@ void loop()
       case ACK :
       case NAK :
       case CAN :
-      case ESC :
       break;
       
       //
@@ -212,6 +217,31 @@ void loop()
           Serial.println( "STPP-NAK" );
         }
       break;
+      //
+      //  *** Delete 'RECORD.RAW' file from SD card
+      //
+      case ESC :
+        if ( connectState == CONNECTED )
+        {
+          if ( SD.exists( "RECORD.RAW" ) )
+          {
+            SD.remove( "RECORD.RAW" );
+            Serial.println( "Deleting 'RECORD.RAW'." );
+            BTooth.write( ESC );
+            BTooth.write( ACK );
+            Serial.println( "ESC-ACK" );
+          }
+          else
+          {
+            Serial.println( "'RECORD.RAW' does not exist." );
+            BTooth.write( ESC );
+            BTooth.write( NAK );
+            Serial.println( "ESC-NAK" );
+          }
+          rootDir = SD.open( "/" );
+          printDirectory( rootDir, 1 );
+        }
+      break;
       default :
       break;
     }
@@ -220,5 +250,5 @@ void loop()
     Serial.print( "(post) recordState: ");   Serial.println( stateToText( recordState  ) );
   }
   inByte = 0x00;
-}
+} // */
 

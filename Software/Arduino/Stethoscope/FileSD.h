@@ -1,5 +1,3 @@
-#include  <SD.h>
-
   Sd2Card   card;
   SdVolume  volume;
   char      buffer[512];
@@ -11,9 +9,9 @@
 
 boolean sdCardCheck()
 {
-   // Configure SPI for the audio shield pins
-  SPI.setMOSI(7);  // Audio shield has MOSI on pin 7
-  SPI.setSCK(14);  // Audio shield has SCK on pin 14
+  // Configure SPI for the audio shield pins
+  SPI.setMOSI( 7 );  // Audio shield has MOSI on pin 7
+  SPI.setSCK( 14 );  // Audio shield has SCK on pin 14
 
   if ( DEBUG ) Serial.println( "SD Card Test" );
   if ( DEBUG ) Serial.println( "------------" );
@@ -60,6 +58,7 @@ boolean sdCardCheck()
     Serial.print( size );
     Serial.println( " Mbytes." );
   }
+  SD.begin( 10 );
   return true;
 }
 

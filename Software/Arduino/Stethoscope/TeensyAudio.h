@@ -1,8 +1,7 @@
-#include <Audio.h>
 #include <Wire.h>
 #include <SPI.h>
-//#include <SD.h>
-//#include <SerialFlash.h>
+#include <SD.h>
+#include <Audio.h>
 
 // GUItool: begin automatically generated code
 AudioInputI2S            i2s2;           //xy=195.1999969482422,142

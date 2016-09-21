@@ -3,17 +3,17 @@ enum State
   CONNECTED, DISCONNECTED, RECORDING, PLAYING, STANDBY, READY, NOTREADY
 };
 
-State connectState  = DISCONNECTED;
-State recordState   = STANDBY;
-State readyState;
+State     connectState  = DISCONNECTED;
+State     recordState   = STANDBY;
+State     readyState;
 
 
 File      frec;
-int       mode      = 0;                      // 0 = idle; 1 = record; 2 = play
-const int myInput   = AUDIO_INPUT_MIC;
+int       mode          = 0;                // 0 = idle; 1 = record; 2 = play
+const int myInput       = AUDIO_INPUT_MIC;
 
 
-String stateToText( int state )
+String stateToText( int state )             // for Serial monitor diagnostics
 {
   String value = "";
   switch ( state )
@@ -97,10 +97,15 @@ boolean stopRecording()
 
 boolean startPlaying()
 {
-  Serial.println( "startPlaying" );
-  playRaw1.play( "RECORD.RAW" );
-  recordState = PLAYING;
-  return true;
+  if ( SD.exists( "RECORD.RAW" ) )
+  {
+    Serial.println( "startPlaying" );
+    playRaw1.play( "RECORD.RAW" );
+    recordState = PLAYING;
+    return true;
+  }
+  else
+    return false;
 }
 
 
