@@ -1,6 +1,6 @@
 /// BT Configuration
 #define         SPEED       115200
-#define         BTooth      Serial2
+#define         BTooth      Serial1
 
 /// BT Connection States
 #define         BTTX                2

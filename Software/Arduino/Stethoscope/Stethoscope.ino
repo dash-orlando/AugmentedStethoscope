@@ -25,8 +25,8 @@ void setup()
 {
   buttonLEDSetup();
 
-  BTooth.setRX ( 26 );                      // comment out these two lines
-  BTooth.setTX ( 31 );                      // ...to NOT reassign Serial RX & TX pins
+  //BTooth.setRX ( 26 );                      // comment out these two lines
+  //BTooth.setTX ( 31 );                      // ...to NOT reassign Serial RX & TX pins
   BTooth.begin( SPEED );
   Serial.begin( SPEED );                    // for debugging
 
