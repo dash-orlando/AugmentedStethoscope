@@ -1,7 +1,7 @@
 /*
  * Stethoscope
  * 
- * The following program has been built to control the statehoscope module
+ * The following program has been built to control the stethoscope module
  * 
  * Michael Xynidis
  * Fluvio L Lobo Fenoglietto
@@ -91,6 +91,9 @@ void loop()
     Serial.print( "(pre) recordState: ");   Serial.println( stateToText( recordState  ) );
     switch ( inByte )
     {
+      //
+      //  *** Perform a systems check via remote trigger
+      //
       case CHK :
         if ( sdCardCheck() )
         {

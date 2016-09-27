@@ -1,19 +1,35 @@
-  Sd2Card   card;
-  SdVolume  volume;
-  char      buffer[512];
-  boolean   status;
-  int       type;
-  float     size;
-  File      rootDir;
+/*
+ * FileSD
+ * 
+ * The following program has been built to verify the presence and functionality of an SD card
+ * 
+ * Michael Xynidis
+ * Fluvio L Lobo Fenoglietto
+ * 09/27/2016
+ */
 
+// Import Libraries and/or Modules
+//#include "protocol.h"
 
+// Variables
+Sd2Card   card;
+SdVolume  volume;
+char      buffer[512];
+boolean   status;
+int       type;
+float     size;
+File      rootDir;
+
+// Functions
 boolean sdCardCheck()
 {
   // Configure SPI for the audio shield pins
   SPI.setMOSI( 7 );  // Audio shield has MOSI on pin 7
   SPI.setSCK( 14 );  // Audio shield has SCK on pin 14
 
-  if ( DEBUG ) Serial.println( "SD Card Test" );
+  //if ( DEBUG )
+  Serial1.println( "SD Card Test" );
+  //BTooth.println( "SD Card Test" );
   if ( DEBUG ) Serial.println( "------------" );
 
  // First, detect the card
