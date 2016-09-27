@@ -8,9 +8,6 @@
  * 09/27/2016
  */
 
-// Import Libraries and/or Modules
-//#include "protocol.h"
-
 // Variables
 Sd2Card   card;
 SdVolume  volume;
@@ -27,25 +24,24 @@ boolean sdCardCheck()
   SPI.setMOSI( 7 );  // Audio shield has MOSI on pin 7
   SPI.setSCK( 14 );  // Audio shield has SCK on pin 14
 
-  //if ( DEBUG )
+  
+  Serial.println( "SD Card Test" );
   Serial1.println( "SD Card Test" );
-  //BTooth.println( "SD Card Test" );
-  if ( DEBUG ) Serial.println( "------------" );
 
  // First, detect the card
   status = card.init(10); // Audio shield has SD card SD on pin 10
   if ( status )
   {
-    if ( DEBUG ) Serial.println( "SD card is connected :-)" );
+    Serial.println( "SD card is connected" );
   }
   else
   {
-    if ( DEBUG ) Serial.println( "SD card is not connected or unusable :-(" );
+    Serial.println( "SD card is not connected or unusable" );
     return false;
   }
 
   type = card.type();
-  if ( ( type == SD_CARD_TYPE_SD1 ) || ( type == SD_CARD_TYPE_SD2 ) ) //|| ( DEBUG ) )
+  if ( ( type == SD_CARD_TYPE_SD1 ) || ( type == SD_CARD_TYPE_SD2 ) )
   {
     Serial.println( "Card type is SD" );
   } 
@@ -62,11 +58,11 @@ boolean sdCardCheck()
   status = volume.init( card );
   if ( !status )
   {
-//    boboPrint( 0, 3, ">INOPERABLE SD CARD<" );
-    if ( DEBUG ) Serial.println( "Unable to access the filesystem on this card. :-(" );
+    // boboPrint( 0, 3, ">INOPERABLE SD CARD<" );
+    Serial.println( "Unable to access the filesystem on this card" );
     return false;
   }
-  else if ( DEBUG ) 
+  else 
   {
     size = volume.blocksPerCluster() * volume.clusterCount();
     size = size * (512.0 / 1e6); // convert blocks to millions of bytes
