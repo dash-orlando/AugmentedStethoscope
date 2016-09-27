@@ -11,6 +11,7 @@
 #define         ACQUIRED            3
 
 /// ASCII Byte Codes -- used for communication protocol
+#define         CHK                 0x01      // System Check: "Run system check and report"        [resp: --- | ---]
 #define         ENQ                 0x05      // Enquiry: "Are you ready for commands?";            [resp: ACK | NAK]
 #define         EOT                 0x04      // End of Transmission: "Done; you may disconnect."   [resp: ACK | NAK]
 #define         ACK                 0x06      // Positive Acknowledgement: "Command/Action successful."
