@@ -20,54 +20,41 @@
 
 byte      inByte = 0x00;
 
-
 void setup()
 {
-  //buttonLEDSetup();
+  buttonLEDSetup();
 
-  //BTooth.setRX ( 26 );                      // comment out these two lines
-  //BTooth.setTX ( 31 );                      // ...to NOT reassign Serial RX & TX pins
-  BTooth.begin( SPEED );
-  Serial.begin( SPEED );                    // for debugging
+  // Serial Communication Initialization
+  Serial.begin( SPEED );                                                                            // USB Serial Communication
+  Serial1.begin( SPEED );                                                                           // RF/Bluetooth Serial Communication
 
-//  if ( DEBUG )
-//  {
-//    // Start the HW serial port for console messages
-//    while ( !Serial ) ;                     // for debugging
-//    Serial.println( "//Setup complete" );   // for debugging
-//  }
-//  delay( 50 );
-//  if ( sdCardCheck() )
-//  {
-//    setLEDs( GOODTOGO );                    // SD file system is happy and working
-//    rootDir = SD.open( "/" ); Serial.print( "rootDir: " ); Serial.println( rootDir );
-//    printDirectory( rootDir, 1 );
-//    if ( SD.exists( "RECORD.RAW" ) )
-//    {
-//      SD.remove( "RECORD.RAW" );
-//      Serial.println( "Deleting 'RECORD.RAW' for testing." );
-//      rootDir = SD.open( "/" );
-//      printDirectory( rootDir, 1 );
-//    }
-//    readyState = READY;
-//    delay( 2000 );
-//  }
-//  else
-//  {
-//    setLEDs( ERRORS );                      // SD file system is unhappy; loop until...
-//    setLEDs( GOODTOGO );                    // SD file system is happy again
-//    readyState = NOTREADY;
-//  }
-  digitalWrite( REC, HIGH );
-  digitalWrite( TX,  HIGH );
-  digitalWrite( RX,  HIGH );
-  digitalWrite( LED_BUILTIN,  HIGH );
-  delay( 5000 );
-  digitalWrite( REC, LOW );
-  digitalWrite( TX,  LOW );
-  digitalWrite( RX,  LOW );
-  digitalWrite( LED_BUILTIN,  LOW );
-}
+  // SD Reader and Card Check
+  if ( sdCardCheck() )
+  {
+    setLEDs( GOODTOGO );                                                                            // SD file system is happy and working
+    rootDir = SD.open( "/" );
+    Serial.print( "rootDir: " );
+    Serial.println( rootDir );
+    printDirectory( rootDir, 1 );
+    if ( SD.exists( "RECORD.RAW" ) )
+    {
+      SD.remove( "RECORD.RAW" );
+      Serial.println( "Deleting 'RECORD.RAW' for testing." );
+      rootDir = SD.open( "/" );
+      printDirectory( rootDir, 1 );
+    }
+    readyState = READY;
+    // delay( 1000 );
+  }
+  else
+  {
+    setLEDs( ERRORS );                                                                              // SD file system is unhappy; loop until...
+    setLEDs( GOODTOGO );                                                                            // SD file system is happy again
+    readyState = NOTREADY;
+  }
+
+  
+} // End of setup()
 
 void loop()
 {  // when using a microphone, continuously adjust gain
