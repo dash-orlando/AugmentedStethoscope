@@ -22,8 +22,6 @@ byte      inByte = 0x00;
 
 void setup()
 {
-  buttonLEDSetup();
-
   // Serial Communication Initialization
   Serial.begin( SPEED );                                                                            // USB Serial Communication
   Serial1.begin( SPEED );                                                                           // RF/Bluetooth Serial Communication
@@ -31,7 +29,6 @@ void setup()
   // SD Reader and Card Check
   if ( sdCardCheck() )
   {
-    setLEDs( GOODTOGO );                                                                            // SD file system is happy and working
     rootDir = SD.open( "/" );
     Serial.print( "rootDir: " );
     Serial.println( rootDir );
@@ -44,16 +41,11 @@ void setup()
       printDirectory( rootDir, 1 );
     }
     readyState = READY;
-    // delay( 1000 );
   }
   else
   {
-    setLEDs( ERRORS );                                                                              // SD file system is unhappy; loop until...
-    setLEDs( GOODTOGO );                                                                            // SD file system is happy again
     readyState = NOTREADY;
   }
-
-  
 } // End of setup()
 
 void loop()
@@ -84,8 +76,9 @@ void loop()
       case CHK :
         if ( sdCardCheck() )
         {
-          setLEDs( GOODTOGO );                    // SD file system is happy and working
-          rootDir = SD.open( "/" ); Serial.print( "rootDir: " ); Serial.println( rootDir );
+          rootDir = SD.open( "/" );
+          Serial.print( "rootDir: " );
+          Serial.println( rootDir );
           printDirectory( rootDir, 1 );
           if ( SD.exists( "RECORD.RAW" ) )
           {
@@ -95,20 +88,19 @@ void loop()
             printDirectory( rootDir, 1 );
           }
             readyState = READY;
-            BTooth.write( ENQ );
             BTooth.write( ACK );
             delay( 2000 );
         }
         else
         {
-          setLEDs( ERRORS );                      // SD file system is unhappy; loop until...
-          setLEDs( GOODTOGO );                    // SD file system is happy again
-          BTooth.write( ENQ );
           BTooth.write( NAK );
           readyState = NOTREADY;
         }
       break;
-      
+
+      //
+      //  *** Check system status
+      //
       case ENQ :
         if ( readyState == READY )
         {
