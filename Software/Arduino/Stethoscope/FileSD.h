@@ -26,7 +26,7 @@ boolean sdCardCheck()
 
   
   Serial.println( "SD Card Test" );
-  Serial1.println( "SD Card Test" );
+  //Serial1.println( "SD Card Test" );
 
  // First, detect the card
   status = card.init(10); // Audio shield has SD card SD on pin 10

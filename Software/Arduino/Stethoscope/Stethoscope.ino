@@ -105,20 +105,15 @@ void loop()
         if ( readyState == READY )
         {
           connectState  = CONNECTED;
-          Serial.println( "received: ENQ" );
-          Serial.print( "sending: ENQ..." );
-          Serial.print( ENQ );
-          BTooth.write( ENQ ); 
-          Serial.print( "...done.\nsending: ACK..." );
-          Serial.print( ACK );
+          Serial.println( "received: ENQ..." );
+          Serial.print( "sending: ACK..." );
           BTooth.write( ACK );
           Serial.println( "...done." );
         }
         else
         {
-          BTooth.write( ENQ ); 
+          Serial.println( "sending: NAK" ); 
           BTooth.write( NAK );
-          Serial.println( "sending: ENQ-NAK" );
         }
       break;
       case EOT :
