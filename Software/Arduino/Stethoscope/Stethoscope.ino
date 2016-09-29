@@ -102,17 +102,16 @@ void loop()
       //  *** Check system status
       //
       case ENQ :
+        Serial.println( "received: ENQ..." );
         if ( readyState == READY )
         {
           connectState  = CONNECTED;
-          Serial.println( "received: ENQ..." );
-          Serial.print( "sending: ACK..." );
+          Serial.println( "sending: ACK..." );
           BTooth.write( ACK );
-          Serial.println( "...done." );
         }
         else
         {
-          Serial.println( "sending: NAK" ); 
+          Serial.println( "sending: NAK..." ); 
           BTooth.write( NAK );
         }
       break;
@@ -126,27 +125,26 @@ void loop()
       //  *** Start RECORDing by remote command
       //
       case DC1_STRTREC :
+        Serial.println( "received: DC1_STRTREC..." );
         if ( ( connectState == CONNECTED ) && ( recordState == STANDBY ) )
         {
           if ( startRecording() )
           {
-            BTooth.write( DC1_STRTREC );
+            Serial.println( "sending: ACK..." );
             BTooth.write( ACK );
             digitalWrite( REC, HIGH );
-            Serial.println( "REC-ACK" );
+            
           }
           else
           {
-            BTooth.write( DC1_STRTREC );
+            Serial.println( "sending: NAK..." );
             BTooth.write( NAK );
-            Serial.println( "REC-NAK" );
           }
         }
         else
         {
-          BTooth.write( DC1_STRTREC );
+          Serial.println( "sending: NAK..." );
           BTooth.write( NAK );
-          Serial.println( "REC-NAK2" );
         }
       break;
 
@@ -154,27 +152,25 @@ void loop()
       //  *** Stop RECORDing by remote command
       //
       case DC2_STPREC :
+        Serial.println( "received: DC2_STPREC..." );
         if ( ( connectState == CONNECTED ) && ( recordState == RECORDING ) )
         {
           if ( stopRecording() )
           {
-            BTooth.write( DC2_STPREC );
+            Serial.println( "sending: ACK..." );
             BTooth.write( ACK );
             digitalWrite( REC, LOW );
-            Serial.println( "STPR-ACK" );
           }
           else
           {
-            BTooth.write( DC2_STPREC );
+            Serial.println( "sending: NAK..." );
             BTooth.write( NAK );
-            Serial.println( "STPR-NAK" );
           }
         }
         else
         {
-          BTooth.write( DC2_STPREC );
+          Serial.println( "sending: NAK..." );
           BTooth.write( NAK );
-          Serial.println( "STPR-NAK2" );
         }
       break;
 
@@ -182,27 +178,24 @@ void loop()
       //  *** Start PLAYing by remote command
       //
       case DC3_STRTPLY :
+        Serial.println( "received: DC3_STRTPLY..." );
         if ( ( connectState == CONNECTED ) && ( recordState == STANDBY ) )
         {
           if ( startPlaying() )
           {
-            BTooth.write( DC3_STRTPLY );
+            Serial.println( "sending: ACK..." );
             BTooth.write( ACK );
-            flashLEDs( 5000, LOW, LOW );
-            Serial.println( "PLY-ACK" );
           }
           else
           {
-            BTooth.write( DC3_STRTPLY );
+            Serial.println( "sending: NAK..." );
             BTooth.write( NAK );
-            Serial.println( "PLY-NAK" );
           }
         }
         else
         {
-          BTooth.write( DC3_STRTPLY );
+          Serial.println( "sending: NAK..." );
           BTooth.write( NAK );
-          Serial.println( "PLY-NAK2" );
         }
       break;
 
@@ -210,27 +203,24 @@ void loop()
       //  *** Stop PLAYing by remote command
       //
       case DC4_STPPLY :
+        Serial.println( "received: DC4_STPPLY..." );
         if ( ( connectState == CONNECTED ) && ( recordState == PLAYING ) )
         {
           if ( stopPlaying() )
           {
-            BTooth.write( DC4_STPPLY );
+            Serial.println( "sending: ACK..." );
             BTooth.write( ACK );
-            stopLEDs();
-            Serial.println( "STPP-ACK" );
           }
           else
           {
-            BTooth.write( DC4_STPPLY );
+            Serial.println( "sending: NAK..." );
             BTooth.write( NAK );
-            Serial.println( "STPP-NAK" );
           }
         }
         else
         {
-          BTooth.write( DC4_STPPLY );
+          Serial.println( "sending: NAK..." );
           BTooth.write( NAK );
-          Serial.println( "STPP-NAK" );
         }
       break;
       //
