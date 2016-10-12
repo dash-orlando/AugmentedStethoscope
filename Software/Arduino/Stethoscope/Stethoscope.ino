@@ -24,7 +24,7 @@ void setup()
 {
   // Serial Communication Initialization
   Serial.begin( SPEED );                                                                            // USB Serial Communication
-  Serial1.begin( SPEED );                                                                           // RF/Bluetooth Serial Communication
+  BTooth.begin( SPEED );                                                                            // RF/Bluetooth Serial Communication
 
   // SD Reader and Card Check
   if ( sdCardCheck() )
