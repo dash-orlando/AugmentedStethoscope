@@ -1,0 +1,21 @@
+*Pick And Place List
+*Company=
+*Author=
+*eMail=
+*
+*Project=STET002
+*Date=10:15:08
+*CreatedBy=Fritzing 0.9.2b.11.19.8d2d5970658f0bed09c661c9ea9a515b5f40f44c
+*
+*
+*Coordinates in mm, always center of component
+*Origin 0/0=Lower left corner of PCB
+*Rotation in degree (0-360, math. pos.)
+*
+*No;Value;Package;X;Y;Rotation;Side;Name
+1;;THT;31.4873;-38.1071;90;Bottom;J2
+2;;THT;31.4873;-25.4071;90;Bottom;J4
+3;;THT;26.4073;-17.7871;90;Bottom;J5
+4;;THT;31.4873;-22.8671;90;Bottom;J3
+5;;THT;4.81725;-52.0771;0;Bottom;J6
+6;;THT;31.4873;-40.6471;90;Bottom;J1
