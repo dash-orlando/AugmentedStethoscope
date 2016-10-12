@@ -256,5 +256,5 @@ void loop()
     Serial.print( "(post) recordState: ");   Serial.println( stateToText( recordState  ) );
   }
   inByte = 0x00;
-} // */
+}
 
