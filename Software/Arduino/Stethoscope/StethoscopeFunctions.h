@@ -141,7 +141,7 @@ boolean startRecording()
   frec  = SD.open( "RECORD.RAW", FILE_WRITE );
   Serial.println( frec );
   hRate = SD.open( "HRATE.DAT",  FILE_WRITE );
-  Serial.println( frec );
+  Serial.println( hRate );
   if ( frec )
   {
     queue1.begin();

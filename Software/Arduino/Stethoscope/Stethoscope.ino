@@ -24,6 +24,9 @@ void setup()
   Serial.begin( SPEED );                                                                            // USB Serial Communication
   BTooth.begin( SPEED );                                                                            // RF/Bluetooth Serial Communication
 
+  // Setup Audio Board
+  SetupAudioBoard();
+
   // SD Reader and Card Check
   if ( sdCardCheck() )
   {
@@ -264,6 +267,7 @@ void loop()
     //
     case 1 :
 
+      Serial.println("Continue Recording...");
       continueRecording();
 
     break;
