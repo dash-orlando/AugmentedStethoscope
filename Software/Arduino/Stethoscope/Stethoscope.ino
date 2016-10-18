@@ -8,14 +8,12 @@
  * 09/14/2016
  */
 
-
-#define DEBUG false
 #define VERSION  0.05
 
 #include  "TeensyAudio.h"
 #include  "FileSD.h"
-#include  "SignalProcessing.h"
-#include  "buttonsAndLeds.h"
+#include  "states.h"
+#include  "StethoscopeFunctions.h"
 #include  "protocol.h"
 
 byte      inByte = 0x00;
@@ -132,8 +130,7 @@ void loop()
           {
             Serial.println( "sending: ACK..." );
             BTooth.write( ACK );
-            digitalWrite( REC, HIGH );
-            
+            mode = 1;
           }
           else
           {
@@ -159,7 +156,7 @@ void loop()
           {
             Serial.println( "sending: ACK..." );
             BTooth.write( ACK );
-            digitalWrite( REC, LOW );
+            mode = 0;
           }
           else
           {
@@ -185,6 +182,7 @@ void loop()
           {
             Serial.println( "sending: ACK..." );
             BTooth.write( ACK );
+            mode = 2;
           }
           else
           {
@@ -210,6 +208,7 @@ void loop()
           {
             Serial.println( "sending: ACK..." );
             BTooth.write( ACK );
+            mode = 0;
           }
           else
           {
@@ -255,6 +254,31 @@ void loop()
     Serial.print( "(post) connectState: ");  Serial.println( stateToText( connectState ) );
     Serial.print( "(post) recordState: ");   Serial.println( stateToText( recordState  ) );
   }
+
+  // Operation mode switch
+
+  switch (mode)
+  {
+    //
+    // *** Continue Recording
+    //
+    case 1 :
+
+      continueRecording();
+
+    break;
+
+    //
+    // *** Continue Playing
+    //
+    case 2 :
+      
+      continuePlaying();
+
+    break;
+    
+  }
+  
   inByte = 0x00;
 }
 
