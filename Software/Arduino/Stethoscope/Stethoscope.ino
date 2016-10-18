@@ -34,13 +34,13 @@ void setup()
     Serial.print( "rootDir: " );
     Serial.println( rootDir );
     printDirectory( rootDir, 1 );
-    if ( SD.exists( "RECORD.RAW" ) )
-    {
-      SD.remove( "RECORD.RAW" );
-      Serial.println( "Deleting 'RECORD.RAW' for testing." );
-      rootDir = SD.open( "/" );
-      printDirectory( rootDir, 1 );
-    }
+//    if ( SD.exists( "RECORD.RAW" ) )
+//    {
+//      SD.remove( "RECORD.RAW" );
+//      Serial.println( "Deleting 'RECORD.RAW' for testing." );
+//      rootDir = SD.open( "/" );
+//      printDirectory( rootDir, 1 );
+//    }
     readyState = READY;
   }
   else

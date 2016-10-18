@@ -27,7 +27,7 @@ boolean       captured      = false;
 
 int           ndx           = 0;
 static int    heartRate     = 0;
-const int     myInput       = AUDIO_INPUT_MIC;
+//const int     myInput       = AUDIO_INPUT_MIC;
 unsigned int  hrSample[3]   = { 0, 0, 0 };
 
 String        lineOut       = "";
@@ -175,8 +175,8 @@ void continueRecording()
     //write HR and time to file at each heart beat
     if ( beat )
     {
-      lineOut = heartRate + "," + String( timeStamp, DEC ) + "\r\n";
-      hRate.println( lineOut );
+      lineOut = String( heartRate, DEC ) + "," + String( timeStamp, DEC ) + "\r\n";
+      hRate.print( lineOut );
     }
   }
 }
