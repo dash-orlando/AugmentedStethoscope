@@ -175,6 +175,32 @@ void loop()
       break;
 
       //
+      //  *** Send Recording 
+      //
+      case DC2_STPREC :
+        Serial.println( "received: DC2_STPREC..." );
+        if ( ( connectState == CONNECTED ) && ( recordState == RECORDING ) )
+        {
+          if ( stopRecording() )
+          {
+            Serial.println( "sending: ACK..." );
+            BTooth.write( ACK );
+            mode = 0;
+          }
+          else
+          {
+            Serial.println( "sending: NAK..." );
+            BTooth.write( NAK );
+          }
+        }
+        else
+        {
+          Serial.println( "sending: NAK..." );
+          BTooth.write( NAK );
+        }
+      break;
+
+      //
       //  *** Start PLAYing by remote command
       //
       case DC3_STRTPLY :
