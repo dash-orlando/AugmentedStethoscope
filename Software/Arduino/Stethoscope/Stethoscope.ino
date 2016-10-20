@@ -15,6 +15,8 @@
 #include  "StethoscopeFunctions.h"
 #include  "protocol.h"
 #include  "FileSD.h"
+#include  "operationFunctions.h"
+
 
 byte      inByte = 0x00;
 
@@ -75,28 +77,7 @@ void loop()
       //  *** Perform a systems check via remote trigger
       //
       case CHK :
-        if ( sdCardCheck() )
-        {
-          rootDir = SD.open( "/" );
-          Serial.print( "rootDir: " );
-          Serial.println( rootDir );
-          printDirectory( rootDir, 1 );
-          if ( SD.exists( "RECORD.RAW" ) )
-          {
-            SD.remove( "RECORD.RAW" );
-            Serial.println( "Deleting 'RECORD.RAW' for testing." );
-            rootDir = SD.open( "/" );
-            printDirectory( rootDir, 1 );
-          }
-            readyState = READY;
-            BTooth.write( ACK );
-            delay( 2000 );
-        }
-        else
-        {
-          BTooth.write( NAK );
-          readyState = NOTREADY;
-        }
+        systemCheck();
       break;
 
       //
@@ -123,10 +104,13 @@ void loop()
       break;
       
       //
-      //  *** Start RECORDing by remote command
+      //  *** Access Operation Functions
       //
-      case DC1_STRTREC :
-        Serial.println( "received: DC1_STRTREC..." );
+      case DC1 :
+        Serial.println( "received: DC1..." );
+        Serial.println( "accessing device operation functions..." );
+
+        
         if ( ( connectState == CONNECTED ) && ( recordState == STANDBY ) )
         {
           if ( startRecording() )
@@ -146,137 +130,138 @@ void loop()
           Serial.println( "sending: NAK..." );
           BTooth.write( NAK );
         }
+        
       break;
 
-      //
-      //  *** Stop RECORDing by remote command
-      //
-      case DC2_STPREC :
-        Serial.println( "received: DC2_STPREC..." );
-        if ( ( connectState == CONNECTED ) && ( recordState == RECORDING ) )
-        {
-          if ( stopRecording() )
-          {
-            Serial.println( "sending: ACK..." );
-            BTooth.write( ACK );
-            mode = 0;
-          }
-          else
-          {
-            Serial.println( "sending: NAK..." );
-            BTooth.write( NAK );
-          }
-        }
-        else
-        {
-          Serial.println( "sending: NAK..." );
-          BTooth.write( NAK );
-        }
-      break;
-
-      //
-      //  *** Send Recording 
-      //
-      case DC2_SNDWAV :
-        Serial.println( "received: DC2_STPREC..." );
-        if ( ( connectState == CONNECTED ) && ( recordState == RECORDING ) )
-        {
-          if ( stopRecording() )
-          {
-            Serial.println( "sending: ACK..." );
-            BTooth.write( ACK );
-            mode = 0;
-          }
-          else
-          {
-            Serial.println( "sending: NAK..." );
-            BTooth.write( NAK );
-          }
-        }
-        else
-        {
-          Serial.println( "sending: NAK..." );
-          BTooth.write( NAK );
-        }
-      break;
-
-      //
-      //  *** Start PLAYing by remote command
-      //
-      case DC3_STRTPLY :
-        Serial.println( "received: DC3_STRTPLY..." );
-        if ( ( connectState == CONNECTED ) && ( recordState == STANDBY ) )
-        {
-          if ( startPlaying() )
-          {
-            Serial.println( "sending: ACK..." );
-            BTooth.write( ACK );
-            mode = 2;
-          }
-          else
-          {
-            Serial.println( "sending: NAK..." );
-            BTooth.write( NAK );
-          }
-        }
-        else
-        {
-          Serial.println( "sending: NAK..." );
-          BTooth.write( NAK );
-        }
-      break;
-
-      //
-      //  *** Stop PLAYing by remote command
-      //
-      case DC4_STPPLY :
-        Serial.println( "received: DC4_STPPLY..." );
-        if ( ( connectState == CONNECTED ) && ( recordState == PLAYING ) )
-        {
-          if ( stopPlaying() )
-          {
-            Serial.println( "sending: ACK..." );
-            BTooth.write( ACK );
-            mode = 0;
-          }
-          else
-          {
-            Serial.println( "sending: NAK..." );
-            BTooth.write( NAK );
-          }
-        }
-        else
-        {
-          Serial.println( "sending: NAK..." );
-          BTooth.write( NAK );
-        }
-      break;
-      //
-      //  *** Delete 'RECORD.RAW' file from SD card
-      //
-      case ESC :
-        if ( connectState == CONNECTED )
-        {
-          if ( SD.exists( "RECORD.RAW" ) )
-          {
-            Serial.println( "Sending 'RECORD.RAW'." );
-            delay( 6000 );                                            // ...optional; in case time is needed to start host receive
-            sendFileSerial( SD.open( "RECORD.RAW" ) );                // <--**** new function that sends WAV over Serial
-            BTooth.write( ESC );
-            BTooth.write( ACK );
-            Serial.println( "ESC-ACK" );
-          }
-          else
-          {
-            Serial.println( "'RECORD.RAW' does not exist." );
-            BTooth.write( ESC );
-            BTooth.write( NAK );
-            Serial.println( "ESC-NAK" );
-          }
-          rootDir = SD.open( "/" );
-          printDirectory( rootDir, 1 );
-        }
-      break;
+//      //
+//      //  *** Stop RECORDing by remote command
+//      //
+//      case DC2_STPREC :
+//        Serial.println( "received: DC2_STPREC..." );
+//        if ( ( connectState == CONNECTED ) && ( recordState == RECORDING ) )
+//        {
+//          if ( stopRecording() )
+//          {
+//            Serial.println( "sending: ACK..." );
+//            BTooth.write( ACK );
+//            mode = 0;
+//          }
+//          else
+//          {
+//            Serial.println( "sending: NAK..." );
+//            BTooth.write( NAK );
+//          }
+//        }
+//        else
+//        {
+//          Serial.println( "sending: NAK..." );
+//          BTooth.write( NAK );
+//        }
+//      break;
+//
+//      //
+//      //  *** Send Recording 
+//      //
+//      case DC2_SNDWAV :
+//        Serial.println( "received: DC2_STPREC..." );
+//        if ( ( connectState == CONNECTED ) && ( recordState == RECORDING ) )
+//        {
+//          if ( stopRecording() )
+//          {
+//            Serial.println( "sending: ACK..." );
+//            BTooth.write( ACK );
+//            mode = 0;
+//          }
+//          else
+//          {
+//            Serial.println( "sending: NAK..." );
+//            BTooth.write( NAK );
+//          }
+//        }
+//        else
+//        {
+//          Serial.println( "sending: NAK..." );
+//          BTooth.write( NAK );
+//        }
+//      break;
+//
+//      //
+//      //  *** Start PLAYing by remote command
+//      //
+//      case DC3_STRTPLY :
+//        Serial.println( "received: DC3_STRTPLY..." );
+//        if ( ( connectState == CONNECTED ) && ( recordState == STANDBY ) )
+//        {
+//          if ( startPlaying() )
+//          {
+//            Serial.println( "sending: ACK..." );
+//            BTooth.write( ACK );
+//            mode = 2;
+//          }
+//          else
+//          {
+//            Serial.println( "sending: NAK..." );
+//            BTooth.write( NAK );
+//          }
+//        }
+//        else
+//        {
+//          Serial.println( "sending: NAK..." );
+//          BTooth.write( NAK );
+//        }
+//      break;
+//
+//      //
+//      //  *** Stop PLAYing by remote command
+//      //
+//      case DC4_STPPLY :
+//        Serial.println( "received: DC4_STPPLY..." );
+//        if ( ( connectState == CONNECTED ) && ( recordState == PLAYING ) )
+//        {
+//          if ( stopPlaying() )
+//          {
+//            Serial.println( "sending: ACK..." );
+//            BTooth.write( ACK );
+//            mode = 0;
+//          }
+//          else
+//          {
+//            Serial.println( "sending: NAK..." );
+//            BTooth.write( NAK );
+//          }
+//        }
+//        else
+//        {
+//          Serial.println( "sending: NAK..." );
+//          BTooth.write( NAK );
+//        }
+//      break;
+//      //
+//      //  *** Delete 'RECORD.RAW' file from SD card
+//      //
+//      case ESC :
+//        if ( connectState == CONNECTED )
+//        {
+//          if ( SD.exists( "RECORD.RAW" ) )
+//          {
+//            Serial.println( "Sending 'RECORD.RAW'." );
+//            delay( 6000 );                                            // ...optional; in case time is needed to start host receive
+//            sendFileSerial( SD.open( "RECORD.RAW" ) );                // <--**** new function that sends WAV over Serial
+//            BTooth.write( ESC );
+//            BTooth.write( ACK );
+//            Serial.println( "ESC-ACK" );
+//          }
+//          else
+//          {
+//            Serial.println( "'RECORD.RAW' does not exist." );
+//            BTooth.write( ESC );
+//            BTooth.write( NAK );
+//            Serial.println( "ESC-NAK" );
+//          }
+//          rootDir = SD.open( "/" );
+//          printDirectory( rootDir, 1 );
+//        }
+//      break;
       default :
       break;
     }

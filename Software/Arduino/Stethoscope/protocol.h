@@ -26,7 +26,7 @@
 #define         DC1_CHK             0x01          //                   System Check: "Run system check and report"              [resp: ACK | NAK]
 
 #define         DC2                 0x12          // Device Command 2: Communication Functions                                  [resp: ACK | NAK]
-#define         DC2_SNDWAV          0x12,0x01     //                   Send .WAV file (audio recording) via serial port   
+#define         DC2_SNDWAV          0x01          //                   Send .WAV file (audio recording) via serial port         [resp: ACK | NAK]  
 
 #define         DC3                 0x13          // Device Command 3: Device-Specific Functions                                [resp: ACK | NAK]
 #define         DC3_STRTREC         0x01          //                   Start Recording                                          [resp: ACK | NAK]
@@ -35,6 +35,25 @@
 #define         DC3_STPPLY          0x04          //                   Stop Playback                                            [resp: ACK | NAK]
 
 #define         DC4                 0x14          // Device Command 4: Simulated Output                                         [resp: ACK | NAK]
+
+
+
+
+
+// Function Calls
+
+boolean dc1( byte inByte )
+{
+  boolean state = false;
+  switch ( inByte )
+  {
+    case DC1_CHK:
+    break;
+  }
+  return state;
+}
+
+
 
 
 
