@@ -177,7 +177,7 @@ void loop()
       //
       //  *** Send Recording 
       //
-      case DC2_STPREC :
+      case DC2_SNDWAV :
         Serial.println( "received: DC2_STPREC..." );
         if ( ( connectState == CONNECTED ) && ( recordState == RECORDING ) )
         {
