@@ -11,10 +11,10 @@
 #define VERSION  0.05
 
 #include  "TeensyAudio.h"
-#include  "FileSD.h"
 #include  "states.h"
 #include  "StethoscopeFunctions.h"
 #include  "protocol.h"
+#include  "FileSD.h"
 
 byte      inByte = 0x00;
 
@@ -233,8 +233,9 @@ void loop()
         {
           if ( SD.exists( "RECORD.RAW" ) )
           {
-            SD.remove( "RECORD.RAW" );
-            Serial.println( "Deleting 'RECORD.RAW'." );
+            Serial.println( "Sending 'RECORD.RAW'." );
+            delay( 6000 );                                            // ...optional; in case time is needed to start host receive
+            sendFileSerial( SD.open( "RECORD.RAW" ) );                // <--**** new function that sends WAV over Serial
             BTooth.write( ESC );
             BTooth.write( ACK );
             Serial.println( "ESC-ACK" );

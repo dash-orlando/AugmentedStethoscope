@@ -184,4 +184,60 @@ void loadDirectory( File dir )
   fileCount = 0;
 }
 
+void sendFileSerial( File  file )
+{
+//  File  file              = SD.open( filename );
+
+  int   dataSize          = file.size();
+  int   headerSize        =    44;
+  int   dataChunkSize     = dataSize + headerSize - 8;
+
+  int   subDataChunkSize  =    16;
+  byte  format            =   0x1;                                //PCM
+  byte  channels          =   0x1;                                //mono
+  int   sampleRate        = 44100;
+  int   bytesPerSample    =     4;
+  int   bitsPerSample     =    16;
+
+  byte  b;
+  bool  reading           = true;
+
+  BTooth.write( "RIFF" );                                         // 00 - RIFF
+  for( int n = 0; n < 4; ++n )
+    BTooth.write( (byte)((dataChunkSize >> (n * 8)) & 0xFF) );    // 04 - how big is the rest of this file?
+  BTooth.write( "WAVE" );                                         // 08 - WAVE
+  BTooth.write( "fmt ");                                          // 12 - fmt
+  for( int n = 0; n < 4; ++n )
+    BTooth.write( (byte)((subDataChunkSize >> (n * 8)) & 0xFF) ); // 16 - size of this chunk
+  for( int n = 0; n < 2; ++n )
+    BTooth.write( (byte)((format >> (n * 8)) & 0xFF) );           // 20 - what is the audio format? 1 for PCM = Pulse Code Modulation
+  for( int n = 0; n < 2; ++n )
+    BTooth.write( (byte)((channels >> (n * 8)) & 0xFF) );         // 22 - mono or stereo? 1 or 2? (or 5 or ???)
+  for( int n = 0; n < 4; ++n )
+    BTooth.write( (byte)((sampleRate >> (n * 8)) & 0xFF) );       // 24 - samples per second (numbers per second)
+  for( int n = 0; n < 4; ++n )
+    BTooth.write( (byte)(((sampleRate * bytesPerSample) >> (n * 8)) & 0xFF) ); // 28 - bytes per second
+  for( int n = 0; n < 2; ++n )
+    BTooth.write( (byte)(((bytesPerSample) >> (n * 8)) & 0xFF) ); // 32 - # of bytes in one sample, for all channels
+  for( int n = 0; n < 2; ++n )
+    BTooth.write( (byte)((bitsPerSample >> (n * 8)) & 0xFF) );    // 34 - how many bits in a sample(number)? usually 16 or 24
+  BTooth.write("data");                       // 36 - data
+  for( int n = 0; n < 4; ++n )
+    BTooth.write( (byte)((dataSize >> (n * 8)) & 0xFF) );         // 40 - how big is this data chunk
+
+  // 44 - the actual data itself
+  do
+  {
+    if( file.available() )
+    {
+      b = file.read();
+      BTooth.write( b );
+    }
+    else reading = false;
+  }
+  while( reading );
+
+  file.close();
+ }
+
 
