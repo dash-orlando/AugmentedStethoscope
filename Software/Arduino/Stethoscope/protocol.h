@@ -23,8 +23,7 @@
 
 // Device Control Commands
 #define         DC1                 0x11          // Device Control 1: Diagnostic Functions                                     [resp: ACK | NAK]
-#define         DC1_STATUSENQ       0x00          //                   Enquiry: "Are you ready for commands?";                  [resp: ACK | NAK]
-#define         DC1_SDCHECK         0x01          //                   System Check: "Run system check and report"              [resp: ACK | NAK]
+#define         DC1_SDCHECK         0x00          //                   System Check: "Run system check and report"              [resp: ACK | NAK]
 //                                  0xFF          (255 DEC)
 
 #define         DC2                 0x12          // Device Control 2: Operational Functions                                    [resp: ACK | NAK]
@@ -40,21 +39,6 @@
 //                                  0xFF          (255 DEC)
 
 #define         DC4                 0x14          // Device Control 4: Simulation Functions                                     [resp: ACK | NAK]
-
-
-// Function Calls
-
-boolean dc1( byte inByte )
-{
-  boolean state = false;
-  switch ( inByte )
-  {
-    case DC1_CHK:
-    break;
-  }
-  return state;
-}
-
 
 
 

@@ -1,26 +1,25 @@
-/* include the "include statement in void loop(),
+/*
+ * parseBtByte.h
+ * 
+ * The following script has been designed to control the byte-parsing of the main loop
+ * 
+ * Michael Xynidis
+ * Fluvio L Lobo Fenoglietto
+ * 10/27/2016
+ */
 
-	#include  "parseBtByte.h"
+//
+// *** Imports and Includes
+//
+#include  "DiagnosticFunctions.h"
+#include  "OperationalFunctions.h"
+#include  "DeviceSpecificFunctions.h"
 
-   and modify void loop() as follows:
-
-void loop()
-{  // when using a microphone, continuously adjust gain
-  if ( myInput == AUDIO_INPUT_MIC ) adjustMicLevel();
-
-  // if we get a valid byte, read analog from BT:
-  if ( BTooth.available() > 0 ) parseBtByte( "RECORD.RAW" );
-
-  // If playing or recording, carry on...
-  if ( mode == 1 ) continueRecording();
-  if ( mode == 2 ) continuePlaying();
-  
-  // Clear the input byte variable
-  inByte = 0x00;								// this line of code may be unnecessary
-}
-
-*/
-
+//
+// *** displayByte
+//     This function translates and displays byte information on a connected serial monitor
+//     Serial monitors may be enabled for diagnostics
+//
 
 void displayByte( byte byteValue )
 {
@@ -31,8 +30,10 @@ void displayByte( byte byteValue )
   Serial.println( ']' );
 }
 
-// Place functions here...
-
+//
+// *** parseBtByte
+//     This function parses incoming bytes (or byte sequences) and calls/executes functions associated with such bytes
+//
 
 void parseBtByte( String fn )
 {
@@ -55,7 +56,7 @@ void parseBtByte( String fn )
         Serial.println( "received: ENQ..." );
         if ( readyState == READY )
         {
-          connectState  = CONNECTED;
+          connectState  = CONNECTED;                                                                  // The ENQ command has to always be sent first
           Serial.println( "sending: ACK..." );
           BTooth.write( ACK );
         }
@@ -71,15 +72,17 @@ void parseBtByte( String fn )
       case CAN :
       break;
       
+	  // Diagnostic Functions
       case DC1 :
         if ( BTooth.available() > 0 )
         {
-          inByte = BTooth.read();                     // get incoming byte
-          displayByte( inByte );                      // display on serial monitor
+          inByte = BTooth.read();                     										                            // get incoming byte
+          displayByte( inByte );                      										                            // display on serial monitor
           switch ( inByte )
           {
             case 0x00 :
-              //  DC1_00();
+              // DC1_SDCHECK
+				      sdCheck();
             break;
             case 0x01 :
               //  DC1_01();
@@ -92,15 +95,18 @@ void parseBtByte( String fn )
           }
         }
       break;
+      
+      // Operational Functions
       case DC2 :
         if ( BTooth.available() > 0 )
         {
-          inByte = BTooth.read();                     // get incoming byte
-          displayByte( inByte );                      // display on serial monitor
+          inByte = BTooth.read();                     										                              // get incoming byte
+          displayByte( inByte );                      										                              // display on serial monitor
           switch ( inByte )
           {
             case 0x00 :
-              //  DC2_00();
+              // DC2_SENDWAV Send .WAV File
+              sendWav(fn);
             break;
             case 0x01 :
               //  DC2_01();
@@ -113,20 +119,31 @@ void parseBtByte( String fn )
           }
         }
       break;
+
+      // Device-Specific Functions
       case DC3 :
         if ( BTooth.available() > 0 )
         {
-          inByte = BTooth.read();                     // get incoming byte
-          displayByte( inByte );                      // display on serial monitor
+          inByte = BTooth.read();                     										                                // get incoming byte
+          displayByte( inByte );                      										                                // display on serial monitor
           switch ( inByte )
           {
             case 0x00 :
-              //  DC3_00();
+              // DC3_STARTREC     Start Recording
+              startRecording();
             break;
             case 0x01 :
-              //  DC3_01();
+              // DC3_STOPREC      Stop Recording
+              stopRecording();
             break;
-
+            case 0x02 :
+              // DC3_STARTPLAY    Start Playing
+              startPlaying();
+            break;
+            case 0x03 :
+              // DC3_STOPPLAY     Stop Playing
+              stopPlaying();
+            break;
             // ...
 
             default :
@@ -137,8 +154,8 @@ void parseBtByte( String fn )
       case DC4 :
         if ( BTooth.available() > 0 )
         {
-          inByte = BTooth.read();                     // get incoming byte
-          displayByte( inByte );                      // display on serial monitor
+          inByte = BTooth.read();                     										                                // get incoming byte
+          displayByte( inByte );                      										                                // display on serial monitor
           switch ( inByte )
           {
             case 0x00 :

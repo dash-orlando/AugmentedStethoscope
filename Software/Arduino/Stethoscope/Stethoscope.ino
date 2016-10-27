@@ -12,10 +12,9 @@
 
 #include  "TeensyAudio.h"
 #include  "states.h"
-#include  "StethoscopeFunctions.h"
+//#include  "StethoscopeFunctions.h"
 #include  "protocol.h"
 #include  "FileSD.h"
-#include  "operationFunctions.h"
 #include  "parseBtByte.h"
 
 
