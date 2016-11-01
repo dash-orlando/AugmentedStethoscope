@@ -14,6 +14,7 @@
 #include  "DiagnosticFunctions.h"
 #include  "OperationalFunctions.h"
 #include  "DeviceSpecificFunctions.h"
+#include  "SimulationFunctions.h"
 
 //
 // *** displayByte

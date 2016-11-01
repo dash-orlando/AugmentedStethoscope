@@ -12,11 +12,9 @@
 
 #include  "TeensyAudio.h"
 #include  "states.h"
-//#include  "StethoscopeFunctions.h"
 #include  "protocol.h"
 #include  "FileSD.h"
 #include  "parseBtByte.h"
-
 
 byte      inByte = 0x00;
 
