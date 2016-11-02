@@ -129,18 +129,18 @@ void waveAmplitudePeaks()
 //
 boolean startRecording()
 {
-  Serial.println( "startRecording" );
-  if ( SD.exists( "RECORD.RAW" ) )          // if the file exists on the SD...
+  Serial.println( "EXECUTING startRecording()" );                                                               // Identification of function executed
+  if ( SD.exists( "RECORD.RAW" ) )                                                                              // Check for existence of RECORD.RAW
   {
-    SD.remove( "RECORD.RAW" );              // delete it
+    SD.remove( "RECORD.RAW" );                                                                                  // If found, delete RECORD.RAW
   }
-  if ( SD.exists( "HRATE.DAT" ) )           // if the file exists on the SD...
+  if ( SD.exists( "HRATE.DAT" ) )                                                                               // Check for existence of HRATE.DAT
   {
-    SD.remove( "HRATE.DAT" );               // delete it
+    SD.remove( "HRATE.DAT" );                                                                                   // If found, delete HRATE.DAT
   }
-  frec  = SD.open( "RECORD.RAW", FILE_WRITE );
+  frec  = SD.open( "RECORD.RAW", FILE_WRITE );                                                                  // Create and open RECORD.RAW file
   Serial.println( frec );
-  hRate = SD.open( "HRATE.DAT",  FILE_WRITE );
+  hRate = SD.open( "HRATE.DAT",  FILE_WRITE );                                                                  // Create and open HRATE.DAT file
   Serial.println( hRate );
   if ( frec )
   {
