@@ -147,9 +147,13 @@ boolean startRecording()
     queue1.begin();
     recordState = RECORDING;
     timeStamp   = 0;
+    Serial.println( "Stethoscope Began RECORDING" );                                                            // Function execution confirmation over USB serial
+    BTooth.write( ACK );                                                                                        // ACKnowledgement sent back through bluetooth serial
     return true;
   }
   else
+    Serial.println( "Stethoscope CANNOT Begin RECORDING" );                                                     // Function execution failed, notification over USB serial
+    BTooth.write( NAK );                                                                                        // Negative AcKnowledgement sent back through bluetooth serial
     return false;
 }
 
