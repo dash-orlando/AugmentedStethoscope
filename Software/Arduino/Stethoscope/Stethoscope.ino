@@ -11,6 +11,7 @@
 #define VERSION  0.05
 
 #include  "TeensyAudio.h"
+#include  "Config.h"
 #include  "states.h"
 #include  "protocol.h"
 #include  "FileSD.h"
@@ -26,6 +27,9 @@ void setup()
 
   // Setup Audio Board
   SetupAudioBoard();
+
+  // Configuration File
+  SessionInit( "01" );
 
   // SD Reader and Card Check
   if ( sdCardCheck() )

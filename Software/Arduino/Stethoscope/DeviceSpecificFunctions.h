@@ -130,17 +130,24 @@ void waveAmplitudePeaks()
 boolean startRecording()
 {
   Serial.println( "EXECUTING startRecording()" );                                                               // Identification of function executed
-  if ( SD.exists( "RECORD.RAW" ) )                                                                              // Check for existence of RECORD.RAW
+  
+  char  fileRec[ses.fileRec.length()+1];                                                                        // Conversion from string to character array
+  ses.fileRec.toCharArray( fileRec, sizeof( fileRec ) );
+
+  char  fileDat[ses.fileDat.length()+1];                                                                        // Conversion from string to character array
+  ses.fileDat.toCharArray( fileDat, sizeof( fileDat ) );
+  
+  if ( SD.exists( fileRec ) )                                                                                   // Check for existence of RECORD.RAW
   {
-    SD.remove( "RECORD.RAW" );                                                                                  // If found, delete RECORD.RAW
+    SD.remove( fileRec );                                                                                       // If found, delete RECORD.RAW
   }
-  if ( SD.exists( "HRATE.DAT" ) )                                                                               // Check for existence of HRATE.DAT
+  if ( SD.exists( fileDat ) )                                                                                   // Check for existence of HRATE.DAT
   {
-    SD.remove( "HRATE.DAT" );                                                                                   // If found, delete HRATE.DAT
+    SD.remove( fileDat );                                                                                       // If found, delete HRATE.DAT
   }
-  frec  = SD.open( "RECORD.RAW", FILE_WRITE );                                                                  // Create and open RECORD.RAW file
+  frec  = SD.open( fileRec, FILE_WRITE );                                                                       // Create and open RECORD.RAW file
   Serial.println( frec );
-  hRate = SD.open( "HRATE.DAT",  FILE_WRITE );                                                                  // Create and open HRATE.DAT file
+  hRate = SD.open( fileDat,  FILE_WRITE );                                                                      // Create and open HRATE.DAT file
   Serial.println( hRate );
   if ( frec )
   {
@@ -211,14 +218,22 @@ boolean stopRecording()
 //
 boolean startPlaying()
 {
-  if ( SD.exists( "RECORD.RAW" ) )
+  Serial.println( "EXECUTING startPlaying()" );                                                                 // Identification of function executed
+                                                                      
+  char  fileRec[ses.fileRec.length()+1];                                                                        // Conversion from string to character array
+  ses.fileRec.toCharArray( fileRec, sizeof( fileRec ) );
+  
+  if ( SD.exists( fileRec ) )
   {
-    Serial.println( "startPlaying" );
-    playRaw1.play( "RECORD.RAW" );
+    playRaw1.play( fileRec );
     recordState = PLAYING;
+    Serial.println( "Stethoscope Began PLAYING" );                                                              // Function execution confirmation over USB serial
+    BTooth.write( ACK );                                                                                        // ACKnowledgement sent back through bluetooth serial
     return true;
   }
   else
+    Serial.println( "Stethoscope CANNOT begin PLAYING" );                                                       // Function execution confirmation over USB serial
+    BTooth.write( NAK );                                                                                        // Negative AcKnowledgement sent back through bluetooth serial
     return false;
 }
 
