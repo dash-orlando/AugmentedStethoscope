@@ -8,6 +8,8 @@
  * 10/20/2016
  */
 
+/// Device Identification Variables
+byte STE[] = {0x53,0x54,0x45};                    // Stethoscope
 
 /// BT Configuration
 #define         SPEED       115200
@@ -23,7 +25,8 @@
 
 // Device Control Commands
 #define         DC1                 0x11          // Device Control 1: Diagnostic Functions                                     [resp: ACK | NAK]
-#define         DC1_SDCHECK         0x00          //                   System Check: "Run system check and report"              [resp: ACK | NAK]
+#define         DC1_DEVICEID        0x00          //                   Device Identification                                    [resp: Device Code]
+#define         DC1_SDCHECK         0x01          //                   System Check: "Run system check and report"              [resp: ACK | NAK]
 //                                  0xFF          (255 DEC)
 
 #define         DC2                 0x12          // Device Control 2: Operational Functions                                    [resp: ACK | NAK]

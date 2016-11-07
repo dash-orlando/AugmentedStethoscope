@@ -82,12 +82,13 @@ void parseBtByte( String fn )
           displayByte( inByte );                      										                            // display on serial monitor
           switch ( inByte )
           {
+            case DC1_DEVICEID :
+              // DC1_DEVICEID : Device Identification
+              deviceID(STE);
+            break;
             case DC1_SDCHECK :
               // DC1_SDCHECK
 				      sdCheck();
-            break;
-            case 0x01 :
-              //  DC1_01();
             break;
 
             // ...

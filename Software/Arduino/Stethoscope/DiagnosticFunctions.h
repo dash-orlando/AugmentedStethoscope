@@ -7,6 +7,25 @@
  * Fluvio Lobo Fenoglietto
  * 10/26/2016
  */
+
+ //
+ // *** Device Identification
+ //
+ void deviceID(byte deviceHexCode[])
+ {
+   int Nchars = sizeof(deviceHexCode);
+   for ( int i = 0; i < Nchars; i ++ )
+   {
+    Serial.print( "sending: [" );
+    Serial.print( (char)deviceHexCode[i] );
+    Serial.print( "][" );
+    Serial.print( deviceHexCode[i], HEX );
+    Serial.println( ']' );
+    BTooth.write( deviceHexCode[i] );
+   } // End of for-loop
+  
+ } // End of deviceID()
+
  
  //
  // *** System Check
