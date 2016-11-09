@@ -220,12 +220,12 @@ boolean startPlaying()
 {
   Serial.println( "EXECUTING startPlaying()" );                                                                 // Identification of function executed
                                                                       
-  char  fileRec[ses.fileRec.length()+1];                                                                        // Conversion from string to character array
-  ses.fileRec.toCharArray( fileRec, sizeof( fileRec ) );
-  
-  if ( SD.exists( fileRec ) )
+  char  filePly[ses.filePly.length()+1];                                                                        // Conversion from string to character array
+  ses.filePly.toCharArray( filePly, sizeof( filePly ) );
+
+  if ( SD.exists( filePly ) )
   {
-    playRaw1.play( fileRec );
+    playRaw1.play( filePly );
     recordState = PLAYING;
     Serial.println( "Stethoscope Began PLAYING" );                                                              // Function execution confirmation over USB serial
     BTooth.write( ACK );                                                                                        // ACKnowledgement sent back through bluetooth serial

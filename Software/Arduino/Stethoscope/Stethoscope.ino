@@ -30,7 +30,7 @@ void setup()
 
   // Configuration File
   SessionInit( "01" );
-
+  
   // SD Reader and Card Check
   if ( sdCardCheck() )
   {

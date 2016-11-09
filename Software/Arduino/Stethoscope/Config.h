@@ -19,11 +19,11 @@ void SessionInit( String SID )
     /* ...load the data into the configuration */
     /*    object:                              */
     
-    Session    ses = (Session)
+    ses = (Session)
                   {
                       SID,
-                      "RECORD.RAW",                // from XML file
-                      "",                        // from XML file
+                      "RECORD.RAW",              // from XML file
+                      "NORMAL.RAW",              // from XML file
                       "HRATE.DAT"                // from XML file
                   };
 }
