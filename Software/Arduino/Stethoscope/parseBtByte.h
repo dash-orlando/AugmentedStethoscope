@@ -141,7 +141,7 @@ void parseBtByte( String fn )
             break;
             case 0x02 :
               // DC3_STARTPLAY    Start Playing
-              startPlaying();
+              startPlaying(ses.filePly1);
             break;
             case 0x03 :
               // DC3_STOPPLAY     Stop Playing
@@ -154,6 +154,8 @@ void parseBtByte( String fn )
           }
         }
       break;
+
+      // Simulation Functions
       case DC4 :
         if ( BTooth.available() > 0 )
         {
@@ -161,8 +163,9 @@ void parseBtByte( String fn )
           displayByte( inByte );                      										                                // display on serial monitor
           switch ( inByte )
           {
-            case 0x00 :
-              //  DC4_00();
+            case DC4_NORMALHB :
+              // DC4_NORMALHB : Playback of Normal Heart Beat
+              normalHBPlayback();
             break;
             case 0x01 :
               //  DC4_01();

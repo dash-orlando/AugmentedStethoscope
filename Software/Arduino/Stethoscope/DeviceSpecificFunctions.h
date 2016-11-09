@@ -216,13 +216,17 @@ boolean stopRecording()
 //
 // *** Start Playing
 //
-boolean startPlaying()
+boolean startPlaying(String fileName)
 {
   Serial.println( "EXECUTING startPlaying()" );                                                                 // Identification of function executed
-                                                                      
-  char  filePly[ses.filePly.length()+1];                                                                        // Conversion from string to character array
-  ses.filePly.toCharArray( filePly, sizeof( filePly ) );
 
+  mixer2.gain(0,0.0);                                                                                           // Set the microphone channel 0 to mute (gain value = 0)
+  mixer2.gain(1,0.0);                                                                                           // Set the microphone channel 1 to mute (gain value = 0)
+  mixer2.gain(2,0.25);                                                                                           // Set the gain of the playback audio signal
+
+  char  filePly[fileName.length()+1];                                                                           // Conversion from string to character array
+  fileName.toCharArray( filePly, sizeof( filePly ) );
+  
   if ( SD.exists( filePly ) )
   {
     playRaw1.play( filePly );

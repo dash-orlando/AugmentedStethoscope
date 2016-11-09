@@ -4,7 +4,7 @@ struct Session
 {
     String    sessionID;
     String    fileRec;
-    String    filePly;
+    String    filePly1;
     String    fileDat;
 };
 

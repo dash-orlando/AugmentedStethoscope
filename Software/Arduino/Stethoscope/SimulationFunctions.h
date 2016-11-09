@@ -7,3 +7,14 @@
  * Fluvio Lobo Fenoglietto
  * 10/27/2016
  */
+
+ //
+ // *** Normal Heart Beat
+ //
+ void normalHBPlayback()
+ {
+  
+  startPlaying(ses.filePly1);                                                         // Playback of a normal heart beat
+  
+ } // End of normalHBPlayback() function
+ 
