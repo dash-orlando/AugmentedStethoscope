@@ -5,6 +5,7 @@ struct Session
     String    sessionID;
     String    fileRec;
     String    filePly1;
+    String    filePly2;
     String    fileDat;
 };
 
@@ -22,8 +23,9 @@ void SessionInit( String SID )
     ses = (Session)
                   {
                       SID,
-                      "RECORD.RAW",              // from XML file
-                      "NORMAL.RAW",              // from XML file
-                      "HRATE.DAT"                // from XML file
+                      "RECORD.RAW",              // 
+                      "NORMAL.RAW",              // Normal Heart Beat
+                      "EMUR.RAW",                // Early Systolic Heart Murmur
+                      "HRATE.DAT"                // 
                   };
 }

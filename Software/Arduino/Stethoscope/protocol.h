@@ -43,6 +43,7 @@ byte STE[] = {0x53,0x54,0x45};                    // Stethoscope
 
 #define         DC4                 0x14          // Device Control 4: Simulation Functions                                     [resp: ACK | NAK]
 #define         DC4_NORMALHB        0x00          //                   Playback of Normal Heart Beat                            [resp: ACK | NAK]
+#define         DC4_ESHMURMUR       0x01          //                   Playback of Early Systolic Heart Murmur                  [resp: ACK | NAK]
 //                                  0xFF          (255 DEC)
 
 

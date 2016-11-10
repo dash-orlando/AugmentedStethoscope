@@ -167,8 +167,9 @@ void parseBtByte( String fn )
               // DC4_NORMALHB : Playback of Normal Heart Beat
               normalHBPlayback();
             break;
-            case 0x01 :
-              //  DC4_01();
+            case DC4_ESHMURMUR :
+              // DC4_ESHMURMUR : Playback of Early Systolic Heart Murmur
+              earlyHMPlayback();
             break;
 
             // ...

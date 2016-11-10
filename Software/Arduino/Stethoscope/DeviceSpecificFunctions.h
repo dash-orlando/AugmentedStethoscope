@@ -222,7 +222,7 @@ boolean startPlaying(String fileName)
 
   mixer2.gain(0,0.0);                                                                                           // Set the microphone channel 0 to mute (gain value = 0)
   mixer2.gain(1,0.0);                                                                                           // Set the microphone channel 1 to mute (gain value = 0)
-  mixer2.gain(2,0.25);                                                                                           // Set the gain of the playback audio signal
+  mixer2.gain(2,0.5);                                                                                           // Set the gain of the playback audio signal
 
   char  filePly[fileName.length()+1];                                                                           // Conversion from string to character array
   fileName.toCharArray( filePly, sizeof( filePly ) );

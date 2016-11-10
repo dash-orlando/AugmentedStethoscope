@@ -17,4 +17,14 @@
   startPlaying(ses.filePly1);                                                         // Playback of a normal heart beat
   
  } // End of normalHBPlayback() function
- 
+
+
+ //
+ // *** Early Systolic Heart Mumur
+ //
+ void earlyHMPlayback()
+ {
+  
+  startPlaying(ses.filePly2);                                                         // Playback of a normal heart beat
+  
+ } // End of normalHBPlayback() function
