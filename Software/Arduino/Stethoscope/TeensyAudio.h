@@ -33,7 +33,7 @@ void SetupAudioBoard()
 
   // Enable the audio shield, select input, and enable output
   sgtl5000_1.enable();
-  sgtl5000_1.volume( 0.5 );
+  sgtl5000_1.volume( 0.25 );
   sgtl5000_1.inputSelect( myInput );
   sgtl5000_1.micGain( 50 );
 
@@ -43,8 +43,8 @@ void SetupAudioBoard()
 
   mixer1.gain(0,0);                                                            // Set gain of mixer1, channel0 to 0
   mixer1.gain(1,0);                                                            // Set gain of mixer1, channel1 to 1
-  //mixer2.gain(0,0.25);                                                         // Set gain of mixer2, channel0 to 0.25 - Microphone on
-  //mixer2.gain(1,0.25);                                                         // Set gain of mixer2, channel0 to 0.25 - Microphone on
+  mixer2.gain(0,0.5);                                                          // Set gain of mixer2, channel0 to 0.25 - Microphone on
+  mixer2.gain(1,0.5);                                                          // Set gain of mixer2, channel0 to 0.25 - Microphone on
   mixer2.gain(2,0);                                                            // Set gain of mixer2, channel2 to 0
   
 }
