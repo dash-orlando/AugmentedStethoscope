@@ -131,20 +131,20 @@ void parseBtByte( String fn )
           displayByte( inByte );                      										                                // display on serial monitor
           switch ( inByte )
           {
-            case 0x00 :
-              // DC3_STARTREC     Start Recording
+            case DC3_STARTREC :
+              // DC3_STARTREC : Start Recording
               startRecording();
             break;
-            case 0x01 :
-              // DC3_STOPREC      Stop Recording
+            case DC3_STOPREC :
+              // DC3_STOPREC : Stop Recording
               stopRecording();
             break;
-            case 0x02 :
-              // DC3_STARTPLAY    Start Playing
+            case DC3_STARTPLAY :
+              // DC3_STARTPLAY : Start Playing
               startPlaying(ses.filePly1);
             break;
-            case 0x03 :
-              // DC3_STOPPLAY     Stop Playing
+            case DC3_STOPPLAY :
+              // DC3_STOPPLAY : Stop Playing
               stopPlaying();
             break;
             // ...
