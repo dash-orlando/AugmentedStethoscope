@@ -153,6 +153,7 @@ boolean startRecording()
   {
     queue1.begin();
     recordState = RECORDING;
+    mode = 1;                                                                                                   // Change value of operation mode for continous recording
     timeStamp   = 0;
     Serial.println( "Stethoscope Began RECORDING" );                                                            // Function execution confirmation over USB serial
     BTooth.write( ACK );                                                                                        // ACKnowledgement sent back through bluetooth serial
@@ -210,6 +211,7 @@ boolean stopRecording()
     hRate.close();
   }
   recordState = STANDBY;
+  mode = 0;                                                                                                     // Change operation mode to normal operation or idle
   return true;
 }
 
@@ -231,6 +233,7 @@ boolean startPlaying(String fileName)
   {
     playRaw1.play( filePly );
     recordState = PLAYING;
+    mode = 2;                                                                                                   // Change operation mode to continue playing audio
     Serial.println( "Stethoscope Began PLAYING" );                                                              // Function execution confirmation over USB serial
     BTooth.write( ACK );                                                                                        // ACKnowledgement sent back through bluetooth serial
     return true;
@@ -249,7 +252,6 @@ void continuePlaying()
   if ( !playRaw1.isPlaying() )
   {
     playRaw1.stop();
-    mode = 0;
   }
 }
 
@@ -261,5 +263,22 @@ boolean stopPlaying()
   Serial.println( "stopPlaying" );
   if ( recordState == PLAYING ) playRaw1.stop();
   recordState = STANDBY;
+  mode = 0;                                                                                                     // Change operation mode to normal operation or idle
   return true;
 }
+
+//
+// *** Continue Microphone Stream
+//
+boolean continueMicStream()
+{
+  mixer1.gain(0,0);                                                                                             // Set gain of mixer1, channel0 to 0
+  mixer1.gain(1,0);                                                                                             // Set gain of mixer1, channel1 to 1
+  mixer2.gain(0,0.5);                                                                                           // Set gain of mixer2, channel0 to 0.25 - Microphone on
+  mixer2.gain(1,0.5);                                                                                           // Set gain of mixer2, channel0 to 0.25 - Microphone on
+  mixer2.gain(2,0);                                                                                             // Set gain of mixer2, channel2 to 0
+  readyState = READY;
+  return true;
+  
+} // End of continueMicStream()
+

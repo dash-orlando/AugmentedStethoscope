@@ -61,6 +61,7 @@ void loop()
   if ( BTooth.available() > 0 ) parseBtByte( "RECORD.RAW" );
 
   // If playing or recording, carry on...
+  if ( mode == 0 ) continueMicStream();
   if ( mode == 1 ) continueRecording();
   if ( mode == 2 ) continuePlaying();
   
