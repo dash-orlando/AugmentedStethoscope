@@ -48,12 +48,6 @@ void waveAmplitudePeaks()
 {
   float   vol         = analogRead( 15 ) / 1024.0;
   float   sensitivity = 1.0 - vol;
-//
-//if ( recordState != RECORDING ) break; 
-
-//
-// Assume sound is coming from mic at this point.
-//
 
   if ( msecs > 40 )
   {
@@ -122,7 +116,7 @@ void waveAmplitudePeaks()
       Serial.println( heartRate );
     }
   }
-} // */
+} // End of waveAmplitudePeaks()
 
 //
 // *** Start Recording
@@ -172,26 +166,21 @@ void continueRecording()
 {
   if ( queue1.available() >= 2 )
   {
-    byte buffer[512];
-    // Fetch 2 blocks from the audio library and copy
-    // into a 512 byte buffer.  The Arduino SD library
-    // is most efficient when full 512 byte sector size
-    // writes are used.
+    byte buffer[512];                                                                                           // Fetch 2 blocks from the audio library and copy into a 512 byte buffer.
+                                                                                                                // The Arduino SD library is most efficient when full 512 byte sector size writes are used.
     memcpy( buffer, queue1.readBuffer(), 256 );
     queue1.freeBuffer();
     memcpy( buffer + 256, queue1.readBuffer(), 256 );
-    queue1.freeBuffer();
-    // write all 512 bytes to the SD card
+    queue1.freeBuffer();                                                                                        // write all 512 bytes to the SD card
     frec.write( buffer, 512 );
-    waveAmplitudePeaks();
-    //write HR and time to file at each heart beat
+    waveAmplitudePeaks();                                                                                       // write HR and time to file at each heart beat
     if ( beat )
     {
       lineOut = String( heartRate, DEC ) + "," + String( timeStamp, DEC ) + "\r\n";
       hRate.print( lineOut );
     }
   }
-}
+} // End of continueRecording()
 
 //
 // *** Stop Recording
@@ -267,6 +256,11 @@ boolean stopPlaying()
   return true;
 }
 
+
+//
+// *** Start Audio Stream
+
+
 //
 // *** Continue Microphone Stream
 //
@@ -282,3 +276,33 @@ boolean continueMicStream()
   
 } // End of continueMicStream()
 
+
+//
+// *** Continue Tracking for Peaks
+//
+boolean continueTracking()
+{
+  mixer1.gain(0,0);                                                                                             // Set gain of mixer1, channel0 to 0
+  mixer1.gain(1,0);                                                                                             // Set gain of mixer1, channel1 to 1
+  mixer2.gain(0,0.5);                                                                                           // Set gain of mixer2, channel0 to 0.25 - Microphone on
+  mixer2.gain(1,0.5);                                                                                           // Set gain of mixer2, channel0 to 0.25 - Microphone on
+  mixer2.gain(2,0);                                                                                             // Set gain of mixer2, channel2 to 0
+
+  byte buffer[512];                                                                                           // Fetch 2 blocks from the audio library and copy into a 512 byte buffer.
+                                                                                                                // The Arduino SD library is most efficient when full 512 byte sector size writes are used.
+    memcpy( buffer, queue1.readBuffer(), 256 );
+    queue1.freeBuffer();
+    memcpy( buffer + 256, queue1.readBuffer(), 256 );
+    queue1.freeBuffer();                                                                                        // write all 512 bytes to the SD card
+    frec.write( buffer, 512 );
+    waveAmplitudePeaks();                                                                                       // write HR and time to file at each heart beat
+    if ( beat )
+    {
+      lineOut = String( heartRate, DEC ) + "," + String( timeStamp, DEC ) + "\r\n";
+      hRate.print( lineOut );
+    }
+  
+  readyState = READY;
+  return true;
+  
+} // End of continueMicStream()
