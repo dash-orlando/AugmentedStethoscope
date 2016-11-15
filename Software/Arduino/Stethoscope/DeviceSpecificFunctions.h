@@ -286,7 +286,6 @@ boolean startMicStream()
     BTooth.write( NAK );                                                                                        // Negative AcKnowledgement sent back through bluetooth serial
     return false;
   }
-  
 } // End of startMicStream()
 
 //
@@ -305,31 +304,61 @@ boolean continueMicStream()
 } // End of continueMicStream()
 
 //
-// *** Continue Tracking for Peaks
+// *** Tracking Microphone Stream for Peaks
+//     This function uses the wave peak detection tool to find and track peaks within the microphone stream
+//     The function does not record data to a file, rather displays the information through the serial ports
+//     Note that the function acts as an alternative to startMicStream()
 //
-boolean continueTracking()
+boolean trackingMicStream()
 {
-  mixer1.gain(0,0);                                                                                             // Set gain of mixer1, channel0 to 0
-  mixer1.gain(1,0);                                                                                             // Set gain of mixer1, channel1 to 1
-  mixer2.gain(0,0.5);                                                                                           // Set gain of mixer2, channel0 to 0.25 - Microphone on
-  mixer2.gain(1,0.5);                                                                                           // Set gain of mixer2, channel0 to 0.25 - Microphone on
-  mixer2.gain(2,0);                                                                                             // Set gain of mixer2, channel2 to 0
+  Serial.println( "EXECUTING trackingMicStream()" );
+  if ( recordState == RECORDING ) stopRecording();                                                              // Stop recording if recording
+  if ( recordState == PLAYING ) stopPlaying();                                                                  // Stop playback if playing
 
-  byte buffer[512];                                                                                           // Fetch 2 blocks from the audio library and copy into a 512 byte buffer.
+  if ( myInput == AUDIO_INPUT_MIC )
+  {
+    mixer1.gain(0,0);                                                                                           // Set gain of mixer1, channel0 to 0
+    mixer1.gain(1,0);                                                                                           // Set gain of mixer1, channel1 to 1
+    mixer2.gain(0,0.5);                                                                                         // Set gain of mixer2, channel0 to 0.5 - Microphone on
+    mixer2.gain(1,0.5);                                                                                         // Set gain of mixer2, channel0 to 0.5 - Microphone on
+    mixer2.gain(2,0);                                                                                           // Set gain of mixer2, channel2 to 0
+    queue2.begin();
+    recordState = STREAMING;
+    mode = 3;                                                                                                   // Change operation mode to continue streaming audio
+    Serial.println( "Stethoscope Began TRACKING MIC STREAM" );                                                  // Function execution confirmation over USB serial
+    BTooth.write( ACK );                                                                                        // ACKnowledgement sent back through bluetooth serial
+    return true;
+  }
+  else
+  {
+    Serial.println( "Stethoscope CANNOT begin TRACKING MIC STREAM" );                                           // Function execution confirmation over USB serial
+    BTooth.write( NAK );                                                                                        // Negative AcKnowledgement sent back through bluetooth serial
+    return false;
+  }
+} // End of trackingMicStream()
+
+//
+// *** Continue Tracking Microphone Stream
+//     This is the companion function to trackingMicStream()
+//     The function continues the tracking of audio peaks
+//
+boolean continueTrackingMicStream()
+{
+  if ( queue2.available() >= 2 )
+  {
+    byte buffer[512];                                                                                           // Fetch 2 blocks from the audio library and copy into a 512 byte buffer.
                                                                                                                 // The Arduino SD library is most efficient when full 512 byte sector size writes are used.
-    memcpy( buffer, queue1.readBuffer(), 256 );
-    queue1.freeBuffer();
-    memcpy( buffer + 256, queue1.readBuffer(), 256 );
-    queue1.freeBuffer();                                                                                        // write all 512 bytes to the SD card
+    memcpy( buffer, queue2.readBuffer(), 256 );
+    queue2.freeBuffer();
+    memcpy( buffer + 256, queue2.readBuffer(), 256 );
+    queue2.freeBuffer();                                                                                        // write all 512 bytes to the SD card
     frec.write( buffer, 512 );
     waveAmplitudePeaks();                                                                                       // write HR and time to file at each heart beat
     if ( beat )
     {
       lineOut = String( heartRate, DEC ) + "," + String( timeStamp, DEC ) + "\r\n";
-      hRate.print( lineOut );
+      Serial.println( lineOut );
     }
-  
-  readyState = READY;
-  return true;
-  
-} // End of continueMicStream()
+  }
+} // End of continueTrackingMicStream()
+

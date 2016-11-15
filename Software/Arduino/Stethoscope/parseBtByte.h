@@ -150,6 +150,9 @@ void parseBtByte( String fn )
             case DC3_STARTSTREAM :
               // DC3_STARTSTREAM : Start Microphone Stream
               startMicStream();
+            case DC3_TRACKSTREAM :
+              // DC3_TRACKSTREAM : Start Tracking Microphone Stream for Peaks
+              trackingMicStream();
             // ...
 
             default :

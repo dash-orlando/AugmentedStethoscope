@@ -64,6 +64,7 @@ void loop()
   if ( mode == 0 ) continueMicStream();
   if ( mode == 1 ) continueRecording();
   if ( mode == 2 ) continuePlaying();
+  if ( mode == 3 ) continueTrackingMicStream();
   
   // Clear the input byte variable
   inByte = 0x00;                // this line of code may be unnecessary
