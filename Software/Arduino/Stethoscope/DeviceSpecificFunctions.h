@@ -344,6 +344,7 @@ boolean trackingMicStream()
 //
 boolean continueTrackingMicStream()
 {
+  Serial.println( "EXECUTING continueTrackingMicStream()" );                                                    // Terminal message indicating function execution
   if ( queue2.available() >= 2 )
   {
     byte buffer[512];                                                                                           // Fetch 2 blocks from the audio library and copy into a 512 byte buffer.
@@ -359,6 +360,8 @@ boolean continueTrackingMicStream()
       lineOut = String( heartRate, DEC ) + "," + String( timeStamp, DEC ) + "\r\n";
       Serial.println( lineOut );
     }
+    return true;
   }
+  return false;
 } // End of continueTrackingMicStream()
 
