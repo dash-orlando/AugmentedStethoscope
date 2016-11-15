@@ -213,7 +213,7 @@ boolean startPlaying(String fileName)
 
   mixer2.gain(0,0.0);                                                                                           // Set the microphone channel 0 to mute (gain value = 0)
   mixer2.gain(1,0.0);                                                                                           // Set the microphone channel 1 to mute (gain value = 0)
-  mixer2.gain(2,0.5);                                                                                           // Set the gain of the playback audio signal
+  mixer2.gain(2,1);                                                                                           // Set the gain of the playback audio signal
 
   char  filePly[fileName.length()+1];                                                                           // Conversion from string to character array
   fileName.toCharArray( filePly, sizeof( filePly ) );
@@ -258,8 +258,36 @@ boolean stopPlaying()
 
 
 //
-// *** Start Audio Stream
+// *** Start Microphone Stream
+//     This function re-configures the stethoscope do stream data from the microphone to the speakers
+//
+boolean startMicStream()
+{
+  Serial.println( "EXECUTING startMicStream()" );
+  if ( recordState == RECORDING ) stopRecording();                                                              // Stop recording if recording
+  if ( recordState == PLAYING ) stopPlaying();                                                                  // Stop playback if playing
 
+  if ( myInput == AUDIO_INPUT_MIC )
+  {
+    mixer1.gain(0,0);                                                                                           // Set gain of mixer1, channel0 to 0
+    mixer1.gain(1,0);                                                                                           // Set gain of mixer1, channel1 to 1
+    mixer2.gain(0,0.5);                                                                                         // Set gain of mixer2, channel0 to 0.5 - Microphone on
+    mixer2.gain(1,0.5);                                                                                         // Set gain of mixer2, channel0 to 0.5 - Microphone on
+    mixer2.gain(2,0);                                                                                           // Set gain of mixer2, channel2 to 0
+    recordState = STREAMING;
+    mode = 0;                                                                                                   // Change operation mode to continue streaming audio
+    Serial.println( "Stethoscope Began STREAMING" );                                                            // Function execution confirmation over USB serial
+    BTooth.write( ACK );                                                                                        // ACKnowledgement sent back through bluetooth serial
+    return true;
+  }
+  else
+  {
+    Serial.println( "Stethoscope CANNOT begin STREAMING" );                                                     // Function execution confirmation over USB serial
+    BTooth.write( NAK );                                                                                        // Negative AcKnowledgement sent back through bluetooth serial
+    return false;
+  }
+  
+} // End of startMicStream()
 
 //
 // *** Continue Microphone Stream
@@ -268,14 +296,13 @@ boolean continueMicStream()
 {
   mixer1.gain(0,0);                                                                                             // Set gain of mixer1, channel0 to 0
   mixer1.gain(1,0);                                                                                             // Set gain of mixer1, channel1 to 1
-  mixer2.gain(0,0.5);                                                                                           // Set gain of mixer2, channel0 to 0.25 - Microphone on
-  mixer2.gain(1,0.5);                                                                                           // Set gain of mixer2, channel0 to 0.25 - Microphone on
+  mixer2.gain(0,0.5);                                                                                           // Set gain of mixer2, channel0 to 0.5 - Microphone on
+  mixer2.gain(1,0.5);                                                                                           // Set gain of mixer2, channel0 to 0.5 - Microphone on
   mixer2.gain(2,0);                                                                                             // Set gain of mixer2, channel2 to 0
-  readyState = READY;
+  recordState = STREAMING;
   return true;
   
 } // End of continueMicStream()
-
 
 //
 // *** Continue Tracking for Peaks

@@ -147,6 +147,9 @@ void parseBtByte( String fn )
               // DC3_STOPPLAY : Stop Playing
               stopPlaying();
             break;
+            case DC3_STARTSTREAM :
+              // DC3_STARTSTREAM : Start Microphone Stream
+              startMicStream();
             // ...
 
             default :
