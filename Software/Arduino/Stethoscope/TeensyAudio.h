@@ -3,7 +3,11 @@
 #include <SD.h>
 #include <Audio.h>
 
-const int        myInput    = AUDIO_INPUT_MIC;
+const int                myInput          = AUDIO_INPUT_MIC;
+float                    mixer1ON         = 0.50;
+float                    mixer1OFF        = 0.00;
+float                    mixer2ON         = 0.50;
+float                    mixer2OFF        = 0.00;
 
 // GUItool: begin automatically generated code
 AudioInputI2S            i2s2;                                                  //xy=431,201
@@ -44,10 +48,10 @@ void SetupAudioBoard()
   SPI.setMOSI( 7 );                                                             // Audio shield has MOSI on pin 7
   SPI.setSCK( 14 );                                                             // Audio shield has SCK on pin 14
 
-  mixer1.gain(0,0);                                                             // Set gain of mixer1, channel0 to 0
-  mixer1.gain(1,0);                                                             // Set gain of mixer1, channel1 to 1
-  mixer2.gain(0,10);                                                           // Set gain of mixer2, channel0 to 0.25 - Microphone on
-  mixer2.gain(1,10);                                                           // Set gain of mixer2, channel0 to 0.25 - Microphone on
-  mixer2.gain(2,0);                                                             // Set gain of mixer2, channel2 to 0
+  mixer1.gain(0,mixer1OFF);                                                     // Set gain of mixer1, channel0 to 0
+  mixer1.gain(1,mixer1OFF);                                                     // Set gain of mixer1, channel1 to 1
+  mixer2.gain(0,mixer2ON);                                                      // Set gain of mixer2, channel0 to 0.25 - Microphone on
+  mixer2.gain(1,mixer2ON);                                                      // Set gain of mixer2, channel0 to 0.25 - Microphone on
+  mixer2.gain(2,mixer2OFF);                                                     // Set gain of mixer2, channel2 to 0
   
-}
+} // End of SetupAudioBoard()

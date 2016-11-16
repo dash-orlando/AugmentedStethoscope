@@ -40,7 +40,8 @@ byte STE[] = {0x53,0x54,0x45};                    // Stethoscope
 #define         DC3_STARTPLAY       0x02          //                   Start Playback                                           [resp: ACK | NAK]
 #define         DC3_STOPPLAY        0x03          //                   Stop Playback                                            [resp: ACK | NAK]
 #define         DC3_STARTSTREAM     0x04          //                   Start Microphone Stream                                  [resp: ACK | NAK]
-#define         DC3_TRACKSTREAM     0x05          //                   Start Tracking Microphone Stream for Peaks               [resp: ACK | NAK]
+#define         DC3_STARTTRACKING   0x05          //                   Start Tracking Microphone Stream for Peaks               [resp: ACK | NAK]
+#define         DC3_STOPTRACKING    0x06          //                   Stop Tracking Microphone Stream for Peaks               [resp: ACK | NAK]
 //                                  0xFF          (255 DEC)
 
 #define         DC4                 0x14          // Device Control 4: Simulation Functions                                     [resp: ACK | NAK]
