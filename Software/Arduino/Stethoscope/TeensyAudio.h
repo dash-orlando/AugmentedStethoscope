@@ -36,9 +36,9 @@ void SetupAudioBoard()
 
   // Enable the audio shield, select input, and enable output
   sgtl5000_1.enable();
-  sgtl5000_1.volume( 0.25 );
+  sgtl5000_1.volume( 0.80 );
   sgtl5000_1.inputSelect( myInput );
-  sgtl5000_1.micGain( 50 );
+  sgtl5000_1.micGain( 35 );
 
  // Configure SPI for the audio shield pins
   SPI.setMOSI( 7 );                                                             // Audio shield has MOSI on pin 7
