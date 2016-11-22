@@ -10,9 +10,21 @@
  * 10/27/2016
  */
  
+#include <SerialFrame.h>
+
 //
 // *** Variables
 //
+
+Frame txFr = (Frame)
+  {
+    123,
+    STETHOSCOPE,
+    HEARTRATE,
+    "Giasou Cosmos"
+  };
+
+SerialFrame sf1 = SerialFrame();
 
 File          frec;
 File          hRate;
@@ -147,7 +159,7 @@ boolean startRecording()
   {
     queue1.begin();
     recordState = RECORDING;
-    mode = 1;                                                                                                   // Change value of operation mode for continous recording
+    mode        = 1;                                                                                            // Change value of operation mode for continous recording
     timeStamp   = 0;
     Serial.println( "Stethoscope Began RECORDING" );                                                            // Function execution confirmation over USB serial
     BTooth.write( ACK );                                                                                        // ACKnowledgement sent back through bluetooth serial
@@ -200,20 +212,20 @@ boolean stopRecording()
     hRate.close();
   }
   recordState = STANDBY;
-  mode = 0;                                                                                                     // Change operation mode to normal operation or idle
+  mode        = 0;                                                                                              // Change operation mode to normal operation or idle
   return true;
 }
 
 //
 // *** Start Playing
 //
-boolean startPlaying(String fileName)
+boolean startPlaying( String fileName )
 {
   Serial.println( "EXECUTING startPlaying()" );                                                                 // Identification of function executed
 
-  mixer2.gain(0,0.0);                                                                                           // Set the microphone channel 0 to mute (gain value = 0)
-  mixer2.gain(1,0.0);                                                                                           // Set the microphone channel 1 to mute (gain value = 0)
-  mixer2.gain(2,1);                                                                                           // Set the gain of the playback audio signal
+  mixer2.gain( 0, 0.0 );                                                                                        // Set the microphone channel 0 to mute (gain value = 0)
+  mixer2.gain( 1, 0.0 );                                                                                        // Set the microphone channel 1 to mute (gain value = 0)
+  mixer2.gain( 2, 1.0 );                                                                                        // Set the gain of the playback audio signal
 
   char  filePly[fileName.length()+1];                                                                           // Conversion from string to character array
   fileName.toCharArray( filePly, sizeof( filePly ) );
@@ -258,56 +270,55 @@ boolean stopPlaying()
 
 
 //
-// *** Start Microphone Stream
-//     This function re-configures the stethoscope do stream data from the microphone to the speakers
+// *** Start Microphone Passthrough Mode
+//     This function re-configures the stethoscope to pass audio through the microphone to the speakers
 //
-boolean startMicStream()
+boolean startAudioPassThru()
 {
-  Serial.println( "EXECUTING startMicStream()" );
+  Serial.println( "EXECUTING startAudioPassThru()" );
   if ( recordState == RECORDING ) stopRecording();                                                              // Stop recording if recording
-  if ( recordState == PLAYING ) stopPlaying();                                                                  // Stop playback if playing
+  if ( recordState == PLAYING )   stopPlaying();                                                                // Stop playback if playing
 
   if ( myInput == AUDIO_INPUT_MIC )
   {
-    mixer1.gain(0,0);                                                                                           // Set gain of mixer1, channel0 to 0
-    mixer1.gain(1,0);                                                                                           // Set gain of mixer1, channel1 to 1
-    mixer2.gain(0,0.5);                                                                                         // Set gain of mixer2, channel0 to 0.5 - Microphone on
-    mixer2.gain(1,0.5);                                                                                         // Set gain of mixer2, channel0 to 0.5 - Microphone on
-    mixer2.gain(2,0);                                                                                           // Set gain of mixer2, channel2 to 0
-    recordState = STREAMING;
-    mode = 0;                                                                                                   // Change operation mode to continue streaming audio
-    Serial.println( "Stethoscope Began STREAMING" );                                                            // Function execution confirmation over USB serial
+    mixer1.gain( 0, mixer1OFF );                                                                                // Set gain of mixer1, channel0 to 0
+    mixer1.gain( 1, mixer1OFF );                                                                                // Set gain of mixer1, channel1 to 1
+    mixer2.gain( 0, mixer2ON  );                                                                                // Set gain of mixer2, channel0 to 0.5 - Microphone on
+    mixer2.gain( 1, mixer2ON  );                                                                                // Set gain of mixer2, channel0 to 0.5 - Microphone on
+    mixer2.gain( 2, mixer2OFF );                                                                                // Set gain of mixer2, channel2 to 0
+    recordState = PASSTHRU;
+    mode = 0;                                                                                                   // Change operation mode to continue audio passthrough
+    Serial.println( "Stethoscope switched Audio Passthrough mode." );                                           // Function execution confirmation over USB serial
     BTooth.write( ACK );                                                                                        // ACKnowledgement sent back through bluetooth serial
     return true;
   }
   else
   {
-    Serial.println( "Stethoscope CANNOT begin STREAMING" );                                                     // Function execution confirmation over USB serial
+    Serial.println( "Stethoscope CANNOT switch to Audio Passthrough mode." );                                   // Function execution confirmation over USB serial
     BTooth.write( NAK );                                                                                        // Negative AcKnowledgement sent back through bluetooth serial
     return false;
   }
 } // End of startMicStream()
 
 //
-// *** Continue Microphone Stream
+// *** Continue Microphone Passthrough Mode
 //
-boolean continueMicStream()
+boolean continueAudioPassThru()
 {
-  mixer1.gain(0,mixer1OFF);                                                                                             // Set gain of mixer1, channel0 to 0
-  mixer1.gain(1,mixer1OFF);                                                                                             // Set gain of mixer1, channel1 to 1
-  mixer2.gain(0,mixer2ON);                                                                                           // Set gain of mixer2, channel0 to 0.5 - Microphone on
-  mixer2.gain(1,mixer2ON);                                                                                           // Set gain of mixer2, channel0 to 0.5 - Microphone on
-  mixer2.gain(2,mixer2OFF);                                                                                             // Set gain of mixer2, channel2 to 0
-  recordState = STREAMING;
+  mixer1.gain( 0, mixer1OFF );                                                                                  // Set gain of mixer1, channel0 to 0
+  mixer1.gain( 1, mixer1OFF );                                                                                  // Set gain of mixer1, channel1 to 1
+  mixer2.gain( 0, mixer2ON  );                                                                                  // Set gain of mixer2, channel0 to 0.5 - Microphone on
+  mixer2.gain( 1, mixer2ON  );                                                                                  // Set gain of mixer2, channel0 to 0.5 - Microphone on
+  mixer2.gain( 2, mixer2OFF );                                                                                  // Set gain of mixer2, channel2 to 0
+  recordState = PASSTHRU;
   return true;
-  
-} // End of continueMicStream()
+} // End of continueAudioPassThru()
 
 //
-// *** Start Tracking Microphone Stream for Peaks
-//     This function uses the wave peak detection tool to find and track peaks within the microphone stream
-//     The function does not record data to a file, rather displays the information through the serial ports
-//     Note that the function acts as an alternative to startMicStream()
+// *** Start Detecting Heartbeat Peaks from Microphone Audio.
+//     This function uses the wave peak detection tool to find and measure heartbeat/rate from the microphone audio.
+//     The function does not record data to a file, rather is needed to send information for remote display via serial port communication.
+//     Note that the function acts as an alternative to startMicStream().
 //
 boolean startTrackingMicStream()
 {
@@ -316,21 +327,22 @@ boolean startTrackingMicStream()
   if ( recordState == PLAYING ) stopPlaying();                                                                  // Stop playback if playing
   if ( myInput == AUDIO_INPUT_MIC )
   {
-    mixer1.gain(0,mixer1OFF);                                                                                   // Set gain of mixer1, channel0 to 0
-    mixer1.gain(1,mixer1OFF);                                                                                   // Set gain of mixer1, channel1 to 1
-    mixer2.gain(0,mixer2ON);                                                                                    // Set gain of mixer2, channel0 to 0.5 - Microphone on
-    mixer2.gain(1,mixer2ON);                                                                                    // Set gain of mixer2, channel0 to 0.5 - Microphone on
-    mixer2.gain(2,mixer2OFF);                                                                                   // Set gain of mixer2, channel2 to 0
+    mixer1.gain( 0, mixer1OFF );                                                                                // Set gain of mixer1, channel0 to 0
+    mixer1.gain( 1, mixer1OFF );                                                                                // Set gain of mixer1, channel1 to 1
+    mixer2.gain( 0, mixer2ON  );                                                                                // Set gain of mixer2, channel0 to 0.5 - Microphone on
+    mixer2.gain( 1, mixer2ON  );                                                                                // Set gain of mixer2, channel0 to 0.5 - Microphone on
+    mixer2.gain( 2, mixer2OFF );                                                                                // Set gain of mixer2, channel2 to 0
     queue2.begin();
-    recordState = TRACKING;
+    recordState = DETECTING;
     mode = 3;                                                                                                   // Change operation mode to continue streaming audio
-    Serial.println( "Stethoscope Began TRACKING MIC STREAM" );                                                  // Function execution confirmation over USB serial
+    sf1.StartSend( STRING, 1000 );                                                                              // Begin transmitting heartrate data as a String
+    Serial.println( "Stethoscope will START DETECTING heartbeat from MIC audio." );                             // Function execution confirmation over USB serial
     BTooth.write( ACK );                                                                                        // ACKnowledgement sent back through bluetooth serial
     return true;
   }
   else
   {
-    Serial.println( "Stethoscope CANNOT begin TRACKING MIC STREAM" );                                           // Function execution confirmation over USB serial
+    Serial.println( "Stethoscope CANNOT START DETECTING heartbeat from MIC audio." );                           // Function execution confirmation over USB serial
     BTooth.write( NAK );                                                                                        // Negative AcKnowledgement sent back through bluetooth serial
     return false;
   }
@@ -343,47 +355,36 @@ boolean startTrackingMicStream()
 //
 boolean continueTrackingMicStream()
 {
-  if ( queue2.available() >= 2 )
-  {
-    byte buffer[512];                                                                                           // Fetch 2 blocks from the audio library and copy into a 512 byte buffer.
-                                                                                                                // The Arduino SD library is most efficient when full 512 byte sector size writes are used.
-    memcpy( buffer, queue2.readBuffer(), 256 );
-    queue2.freeBuffer();
-    memcpy( buffer + 256, queue2.readBuffer(), 256 );
-    queue2.freeBuffer();                                                                                        // write all 512 bytes to the SD card
-    frec.write( buffer, 512 );
     waveAmplitudePeaks();                                                                                       // write HR and time to file at each heart beat
     if ( beat )
     {
-      lineOut = String( heartRate, DEC ) + "," + String( timeStamp, DEC ) + "\r\n";
-      Serial.println( lineOut );
+      txFr = sf1.Get();                                                                                         // get values from existing TX data frame
+      txFr.DataString = String( heartRate );                                                                    // update data-string value with heartrate
+      sf1.Set( txFr );                                                                                          // set TX data frame with new heartate value
     }
-    return true;
-  }
-  return false;
+  return true;
 } // End of continueTrackingMicStream()
 
 
 //
-// *** Stop Tracking Microphone Stream for Peaks
-//     This function uses the wave peak detection tool to find and track peaks within the microphone stream
-//     The function does not record data to a file, rather displays the information through the serial ports
-//     Note that the function acts as an alternative to startMicStream()
+// *** Stop Detecting Heartbeat Peaks from Microphone Audio.
+//     This function terminates startTrackingMicStream().
 //
 boolean stopTrackingMicStream()
 {
   Serial.println( "EXECUTING stopTrackingMicStream()" );
-  if ( recordState == TRACKING )
+  if ( recordState == DETECTING )
   {
-    recordState = STREAMING;
+    recordState = PASSTHRU;
     mode = 0;                                                                                                   // Change operation mode to continue streaming audio
-    Serial.println( "Stethoscope will STOP TRACKING MIC STREAM" );                                              // Function execution confirmation over USB serial
+    sf1.StopSend( STRING );                                                                                     // Terminate transmitting heartrate data as a String
+    Serial.println( "Stethoscope will STOP DETECTING heartbeat from MIC audio." );                              // Function execution confirmation over USB serial
     BTooth.write( ACK );                                                                                        // ACKnowledgement sent back through bluetooth serial
     return true;
   }
   else
   {
-    Serial.println( "Stethoscope CANNOT STOP TRACKING MIC STREAM" );                                            // Function execution confirmation over USB serial
+    Serial.println( "Stethoscope CANNOT STOP DETECTING heartbeat from MIC audio." );                            // Function execution confirmation over USB serial
     BTooth.write( NAK );                                                                                        // Negative AcKnowledgement sent back through bluetooth serial
     return false;
   }

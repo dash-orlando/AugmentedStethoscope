@@ -54,20 +54,21 @@ void setup()
 } // End of setup()
 
 void loop()
-{  // when using a microphone, continuously adjust gain
+{ // when using a microphone, continuously adjust gain
+/*  Instead of the following line of code, Mic Level will be hard-coded in SetupAudioBoard()
   if ( myInput == AUDIO_INPUT_MIC ) adjustMicLevel();
+ */
 
   // if we get a valid byte, read analog from BT:
   if ( BTooth.available() > 0 ) parseBtByte( "RECORD.RAW" );
 
   // If playing or recording, carry on...
-  if ( mode == 0 ) continueMicStream();
   if ( mode == 1 ) continueRecording();
   if ( mode == 2 ) continuePlaying();
-  if ( mode == 3 ) continueTrackingMicStream();
+  if ( mode == 3 ) continueTrackingMicStream(); //  <--- refactor name
+  if ( mode == 4 ) continueAudioPassThru();     //  <--- I don't think this is necessary
   
   // Clear the input byte variable
-  inByte = 0x00;                // this line of code may be unnecessary
+  inByte = 0x00;                                // this line of code may be unnecessary
 }
-
 
