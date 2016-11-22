@@ -21,7 +21,7 @@ Frame txFr = (Frame)
     123,
     STETHOSCOPE,
     HEARTRATE,
-    "Giasou Cosmos"
+    "0"
   };
 
 SerialFrame sf1 = SerialFrame();
@@ -56,19 +56,20 @@ void adjustMicLevel()
 //
 // *** Wave Amplitude Peaks
 //
-void waveAmplitudePeaks()
+void waveAmplitudePeaks( int p )
 {
-  float   vol         = analogRead( 15 ) / 1024.0;
-  float   sensitivity = 1.0 - vol;
+  //float   vol         = analogRead( 15 ) / 1024.0;
+  float   sensitivity = 0.6; //1.0 - vol;
 
   if ( msecs > 40 )
   {
-    if ( peak1.available() )
+    if ( peak2.available() )
     {
       msecs             = 0;
       float peakNumber  = 0.0;
 
-      peakNumber        = peak1.read();
+      if ( p == 1 ) peakNumber = peak1.read();
+      else if ( p == 2 ) peakNumber = peak2.read();
 
       int   leftPeak    = peakNumber  * 30.0;
       int   count;
@@ -123,7 +124,7 @@ void waveAmplitudePeaks()
  
       if ( beat ) Serial.print( "* " );
       Serial.print( "Sens: " );
-      Serial.print( vol );
+      Serial.print( "0.6" ); //vol );
       Serial.print( "\tHR: " );
       Serial.println( heartRate );
     }
@@ -185,7 +186,7 @@ void continueRecording()
     memcpy( buffer + 256, queue1.readBuffer(), 256 );
     queue1.freeBuffer();                                                                                        // write all 512 bytes to the SD card
     frec.write( buffer, 512 );
-    waveAmplitudePeaks();                                                                                       // write HR and time to file at each heart beat
+    waveAmplitudePeaks( 1 );                                                                                       // write HR and time to file at each heart beat
     if ( beat )
     {
       lineOut = String( heartRate, DEC ) + "," + String( timeStamp, DEC ) + "\r\n";
@@ -336,7 +337,7 @@ boolean startTrackingMicStream()
     recordState = DETECTING;
     mode = 3;                                                                                                   // Change operation mode to continue streaming audio
     sf1.StartSend( STRING, 1000 );                                                                              // Begin transmitting heartrate data as a String
-    Serial.println( "Stethoscope will START DETECTING heartbeat from MIC audio." );                             // Function execution confirmation over USB serial
+    Serial.println( "Stethoscope STARTed DETECTING heartbeat from MIC audio." );                                // Function execution confirmation over USB serial
     BTooth.write( ACK );                                                                                        // ACKnowledgement sent back through bluetooth serial
     return true;
   }
@@ -355,7 +356,7 @@ boolean startTrackingMicStream()
 //
 boolean continueTrackingMicStream()
 {
-    waveAmplitudePeaks();                                                                                       // write HR and time to file at each heart beat
+    waveAmplitudePeaks( 2 );                                                                                       // write HR and time to file at each heart beat
     if ( beat )
     {
       txFr = sf1.Get();                                                                                         // get values from existing TX data frame

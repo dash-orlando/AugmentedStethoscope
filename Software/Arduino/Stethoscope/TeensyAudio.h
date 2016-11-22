@@ -23,15 +23,17 @@ float                    mixer2OFF        = 0.00;
 float                    cornerFreq       = 1500.00;                            // Hz
 
 /// Audio Shield Variables
-AudioPlaySdRaw           playRaw1;                                              //xy=320,399
-AudioInputI2S            i2s2;                                                  //xy=325,200
-AudioMixer4              mixer2;                                                //xy=600,348
-AudioMixer4              mixer1;                                                //xy=620,144
-AudioFilterStateVariable filter1;                                               //xy=810,446
-AudioAnalyzePeak         peak1;                                                 //xy=827,163
-AudioRecordQueue         queue1;                                                //xy=835,100
-AudioOutputI2S           i2s1;                                                  //xy=1002,435
-AudioRecordQueue         queue2;                                                //xy=1011,302
+// GUItool: begin automatically generated code
+AudioPlaySdRaw           playRaw1;       //xy=562.5,537
+AudioInputI2S            i2s2;           //xy=567.5,338
+AudioMixer4              mixer2;         //xy=842.5,486
+AudioMixer4              mixer1;         //xy=862.5,282
+AudioFilterStateVariable filter1;        //xy=1052.5,584
+AudioAnalyzePeak         peak1;          //xy=1069.5,301
+AudioRecordQueue         queue1;         //xy=1077.5,238
+AudioAnalyzePeak         peak2;          //xy=1222.5999969482423,656.1999969482422
+AudioOutputI2S           i2s1;           //xy=1244.5,573
+AudioRecordQueue         queue2;         //xy=1253.5,440
 AudioConnection          patchCord1(playRaw1, 0, mixer2, 2);
 AudioConnection          patchCord2(i2s2, 0, mixer1, 0);
 AudioConnection          patchCord3(i2s2, 0, mixer2, 0);
@@ -43,7 +45,9 @@ AudioConnection          patchCord8(mixer1, queue1);
 AudioConnection          patchCord9(filter1, 0, i2s1, 0);
 AudioConnection          patchCord10(filter1, 0, i2s1, 1);
 AudioConnection          patchCord11(filter1, 0, queue2, 0);
-AudioControlSGTL5000     sgtl5000_1;                                            //xy=485,557
+AudioConnection          patchCord12(filter1, 0, peak2, 0);
+AudioControlSGTL5000     sgtl5000_1;     //xy=733.5000152587891,638.0000152587891
+// GUItool: end automatically generated code
 
 /// Functions
 void SetupAudioBoard()

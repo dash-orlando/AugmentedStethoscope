@@ -3,7 +3,7 @@
  * 
  * The following program has been built to control the stethoscope module
  * 
- * Michael Xynidis
+ * Michael A Xynidis
  * Fluvio L Lobo Fenoglietto
  * 09/14/2016
  */
@@ -66,7 +66,7 @@ void loop()
   if ( mode == 1 ) continueRecording();
   if ( mode == 2 ) continuePlaying();
   if ( mode == 3 ) continueTrackingMicStream(); //  <--- refactor name
-  if ( mode == 4 ) continueAudioPassThru();     //  <--- I don't think this is necessary
+  if ( mode == 4 ) continueAudioPassThru();     //  <--- 
   
   // Clear the input byte variable
   inByte = 0x00;                                // this line of code may be unnecessary
