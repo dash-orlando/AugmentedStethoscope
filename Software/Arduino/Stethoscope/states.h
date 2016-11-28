@@ -73,5 +73,5 @@ String stateToText( int state )             // for Serial monitor diagnostics
  *
  */
 
-int			mode	= 0;
+int			mode	= 4;
 

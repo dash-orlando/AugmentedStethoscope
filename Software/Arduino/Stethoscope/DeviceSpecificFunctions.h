@@ -10,7 +10,7 @@
  * 10/27/2016
  */
  
-#include <SerialFrame.h>
+#include "SerialFrame.h"
 
 //
 // *** Variables
@@ -75,8 +75,8 @@ void waveAmplitudePeaks( int p )
       int   count;
       char  fillChar    = ' ';
 
-      for ( count = 0; count < 30 - leftPeak; count++ )
-        Serial.print( " " );
+      for ( count = 0; count < 30 - leftPeak; count++ );
+        //Serial.print( " " );
 
       if ( peakNumber >= sensitivity )
       {
@@ -107,26 +107,26 @@ void waveAmplitudePeaks( int p )
       }
  
       while ( count++ < 30 )
-        Serial.print( fillChar );
+        //Serial.print( fillChar );
 
-      Serial.print( "||" );
+      //Serial.print( "||" );
 
       if ( peakNumber >= sensitivity )
         fillChar = '>';
       else
         fillChar = ' ';
  
-      for ( count = 0; count < leftPeak; count++ )
-        Serial.print( fillChar );
+      for ( count = 0; count < leftPeak; count++ );
+        //Serial.print( fillChar );
 
-      while ( count++ < 30 )
-        Serial.print( " " );
+      while ( count++ < 30 );
+        //Serial.print( " " );
  
-      if ( beat ) Serial.print( "* " );
-      Serial.print( "Sens: " );
-      Serial.print( "0.6" ); //vol );
-      Serial.print( "\tHR: " );
-      Serial.println( heartRate );
+      //if ( beat ) Serial.print( "* " );
+      //Serial.print( "Sens: " );
+      //Serial.print( "0.6" ); //vol );
+      //Serial.print( "\tHR: " );
+      //Serial.println( heartRate );
     }
   }
 } // End of waveAmplitudePeaks()
@@ -299,7 +299,7 @@ boolean startAudioPassThru()
     BTooth.write( NAK );                                                                                        // Negative AcKnowledgement sent back through bluetooth serial
     return false;
   }
-} // End of startMicStream()
+} // End of startAudioPassThru()
 
 //
 // *** Continue Microphone Passthrough Mode
@@ -356,7 +356,7 @@ boolean startTrackingMicStream()
 //
 boolean continueTrackingMicStream()
 {
-    waveAmplitudePeaks( 2 );                                                                                       // write HR and time to file at each heart beat
+    waveAmplitudePeaks( 2 );                                                                                    // write HR and time to file at each heart beat
     if ( beat )
     {
       txFr = sf1.Get();                                                                                         // get values from existing TX data frame
@@ -377,7 +377,7 @@ boolean stopTrackingMicStream()
   if ( recordState == DETECTING )
   {
     recordState = PASSTHRU;
-    mode = 0;                                                                                                   // Change operation mode to continue streaming audio
+    mode = 4;                                                                                                   // Change operation mode to continue streaming audio
     sf1.StopSend( STRING );                                                                                     // Terminate transmitting heartrate data as a String
     Serial.println( "Stethoscope will STOP DETECTING heartbeat from MIC audio." );                              // Function execution confirmation over USB serial
     BTooth.write( ACK );                                                                                        // ACKnowledgement sent back through bluetooth serial
