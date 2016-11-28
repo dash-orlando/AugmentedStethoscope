@@ -122,6 +122,10 @@ void SerialFrame::stringOut( void )
 	String s = saDataString;
 
 	for ( int i = 0; i < (int)s.length(); i++ )
-		Serial.write( (byte)s[i] );
-	Serial.write( '\00' );
+	{
+		Serial.write( s[i] );									// Print String to Serial Port - Serial is associated with the USB connection and serial monitors
+		Serial1.write( s[i] );								// Print String to Serial1 Port	- Serial1 is associated with the Bluetooth connection
+	}
+	Serial.write( '\n' );
+	Serial1.write( '\n' );
 }
