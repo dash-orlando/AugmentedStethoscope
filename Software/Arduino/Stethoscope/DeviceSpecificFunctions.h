@@ -265,7 +265,7 @@ boolean stopPlaying()
   Serial.println( "stopPlaying" );
   if ( recordState == PLAYING ) playRaw1.stop();
   recordState = STANDBY;
-  mode = 0;                                                                                                     // Change operation mode to normal operation or idle
+  mode = 4;                                                                                                     // Change operation mode to normal operation or idle
   return true;
 }
 
@@ -288,7 +288,7 @@ boolean startAudioPassThru()
     mixer2.gain( 1, mixer2ON  );                                                                                // Set gain of mixer2, channel0 to 0.5 - Microphone on
     mixer2.gain( 2, mixer2OFF );                                                                                // Set gain of mixer2, channel2 to 0
     recordState = PASSTHRU;
-    mode = 0;                                                                                                   // Change operation mode to continue audio passthrough
+    mode = 4;                                                                                                   // Change operation mode to continue audio passthrough
     Serial.println( "Stethoscope switched Audio Passthrough mode." );                                           // Function execution confirmation over USB serial
     BTooth.write( ACK );                                                                                        // ACKnowledgement sent back through bluetooth serial
     return true;
