@@ -137,6 +137,12 @@ void waveAmplitudePeaks( int p )
 boolean startRecording()
 {
   Serial.println( "EXECUTING startRecording()" );                                                               // Identification of function executed
+
+  mixer1.gain( 0, mixer1ON  );                                                                                  // Set gain of mixer1, channel0 to 0
+  mixer1.gain( 1, mixer1ON  );                                                                                  // Set gain of mixer1, channel1 to 1
+  mixer2.gain( 0, mixer2ON  );                                                                                  // Set gain of mixer2, channel0 to 0.5 - Microphone on
+  mixer2.gain( 1, mixer2ON  );                                                                                  // Set gain of mixer2, channel0 to 0.5 - Microphone on
+  mixer2.gain( 2, mixer2OFF );                                                                                  // Set gain of mixer2, channel2 to 0
   
   char  fileRec[ses.fileRec.length()+1];                                                                        // Conversion from string to character array
   ses.fileRec.toCharArray( fileRec, sizeof( fileRec ) );
@@ -211,9 +217,11 @@ boolean stopRecording()
     }
     frec.close();
     hRate.close();
+    Serial.println( "Stethoscope Will STOP RECORDING" );                                                            // Function execution confirmation over USB serial
+    BTooth.write( ACK );
   }
   recordState = STANDBY;
-  mode        = 0;                                                                                              // Change operation mode to normal operation or idle
+  mode        = 4;                                                                                              // Change operation mode to normal operation or idle
   return true;
 }
 
