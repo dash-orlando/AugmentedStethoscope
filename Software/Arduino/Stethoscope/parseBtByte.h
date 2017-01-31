@@ -5,7 +5,7 @@
  * 
  * Michael Xynidis
  * Fluvio L Lobo Fenoglietto
- * 10/27/2016
+ * 01/31/2017
  */
 
 //
@@ -75,123 +75,58 @@ void parseBtByte( String fn )
       break;
       
 	  // Diagnostic Functions
-      case DC1 :
-        if ( BTooth.available() > 0 )
-        {
-          inByte = BTooth.read();                     										                            // get incoming byte
-          displayByte( inByte );                      										                            // display on serial monitor
-          switch ( inByte )
-          {
-            case DC1_DEVICEID :
-              // DC1_DEVICEID : Device Identification
-              deviceID(STE);
-            break;
-            case DC1_SDCHECK :
-              // DC1_SDCHECK
-				      sdCheck();
-            break;
-
-            // ...
-
-            default :
-              Serial.println( "DC1: 2nd byte not recieved" );
-          }
-        }
+      case DEVICEID :
+		// DC1_DEVICEID : Device Identification
+		deviceID(STE);
       break;
-      
-      // Operational Functions
-      case DC2 :
-        if ( BTooth.available() > 0 )
-        {
-          inByte = BTooth.read();                     										                              // get incoming byte
-          displayByte( inByte );                      										                              // display on serial monitor
-          switch ( inByte )
-          {
-            case 0x00 :
-              // DC2_SENDWAV Send .WAV File
-              sendWav(fn);
-            break;
-            case 0x01 :
-              //  DC2_01();
-            break;
-
-            // ...
-
-            default :
-              Serial.println( "DC2: 2nd byte not recieved" );
-          }
-        }
+      case SDCHECK :
+        // DC1_SDCHECK
+		sdCheck();
+	  break;
+      case SENDWAV :
+        // SENDWAV : Send .WAV File
+        sendWav(fn);
       break;
-
-      // Device-Specific Functions
-      case DC3 :
-        if ( BTooth.available() > 0 )
-        {
-          inByte = BTooth.read();                     										                                // get incoming byte
-          displayByte( inByte );                      										                                // display on serial monitor
-          switch ( inByte )
-          {
-            case DC3_STARTREC :
-              // DC3_STARTREC : Start Recording
-              startRecording();
-            break;
-            case DC3_STOPREC :
-              // DC3_STOPREC : Stop Recording
-              stopRecording();
-            break;
-            case DC3_STARTPLAY :
-              // DC3_STARTPLAY : Start Playing
-              startPlaying(ses.filePly1);
-            break;
-            case DC3_STOPPLAY :
-              // DC3_STOPPLAY : Stop Playing
-              stopPlaying();
-            break;
-            case DC3_STARTPASSTHRU :
-              // DC3_STARTPASSTHRU : Start Audio Passthrough from Mic
-              startAudioPassThru();
-            break;
-            case DC3_STARTTRACKING :
-              // DC3_STARTTRACKING : Start Tracking Microphone Stream for Peaks
-              startTrackingMicStream();
-            break;
-            case DC3_STOPTRACKING :
-              // DC3_STOPTRACKING : Stop Tracking Microphone Stream for Peaks
-              stopTrackingMicStream();
-            break;
-            // ...
-
-            default :
-              Serial.println( "DC3: 2nd byte not recieved" );
-          }
-        }
+      case DELVOLATILE :
+        //  DELVOLATILE : Delete Volatile Directory
       break;
-
-      // Simulation Functions
-      case DC4 :
-        if ( BTooth.available() > 0 )
-        {
-          inByte = BTooth.read();                     										                                // get incoming byte
-          displayByte( inByte );                      										                                // display on serial monitor
-          switch ( inByte )
-          {
-            case DC4_NORMALHB :
-              // DC4_NORMALHB : Playback of Normal Heart Beat
-              normalHBPlayback();
-            break;
-            case DC4_ESHMURMUR :
-              // DC4_ESHMURMUR : Playback of Early Systolic Heart Murmur
-              earlyHMPlayback();
-            break;
-
-            // ...
-
-            default :
-              Serial.println( "DC4: 2nd byte not recieved" );
-          }
-        }
+	  case STARTREC :
+        // STARTREC : Start Recording
+        startRecording();
       break;
-
+	  case STOPREC :
+	    // DC3_STOPREC : Stop Recording
+	    stopRecording();
+	  break;
+	  case STARTPLAY :
+	    // STARTPLAY : Start Playing
+	    startPlaying(ses.filePly1);
+	  break;
+	  case STOPPLAY :
+	    // STOPPLAY : Stop Playing
+	    stopPlaying();
+	  break;
+	  case STARTPASSTHRU :
+	    // STARTPASSTHRU : Start Audio Passthrough from Mic
+	    startAudioPassThru();
+	  break;
+	  case STARTTRACKING :
+	    // STARTTRACKING : Start Tracking Microphone Stream for Peaks
+	    startTrackingMicStream();
+	  break;
+	  case STOPTRACKING :
+	    // STOPTRACKING : Stop Tracking Microphone Stream for Peaks
+	    stopTrackingMicStream();
+	  break;
+      case NORMALHB :
+        // DC4_NORMALHB : Playback of Normal Heart Beat
+        normalHBPlayback();
+      break;
+      case ESHMURMUR :
+        // ESHMURMUR : Playback of Early Systolic Heart Murmur
+        earlyHMPlayback();
+      break;
+	  
       default :
         Serial.print( (char)inByte );
       break;
