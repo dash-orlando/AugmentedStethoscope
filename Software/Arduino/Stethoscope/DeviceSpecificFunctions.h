@@ -59,7 +59,7 @@ void adjustMicLevel()
 void waveAmplitudePeaks( int p )
 {
   //float   vol         = analogRead( 15 ) / 1024.0;
-  float   sensitivity = 0.6; //1.0 - vol;
+  float   sensitivity = 0.25; //1.0 - vol;
 
   if ( msecs > 40 )
   {
@@ -76,7 +76,7 @@ void waveAmplitudePeaks( int p )
       char  fillChar    = ' ';
 
       for ( count = 0; count < 30 - leftPeak; count++ );
-        //Serial.print( " " );
+        Serial.print( " " );
 
       if ( peakNumber >= sensitivity )
       {
@@ -107,9 +107,9 @@ void waveAmplitudePeaks( int p )
       }
  
       while ( count++ < 30 )
-        //Serial.print( fillChar );
+        Serial.print( fillChar );
 
-      //Serial.print( "||" );
+      Serial.print( "||" );
 
       if ( peakNumber >= sensitivity )
         fillChar = '>';
@@ -117,16 +117,16 @@ void waveAmplitudePeaks( int p )
         fillChar = ' ';
  
       for ( count = 0; count < leftPeak; count++ );
-        //Serial.print( fillChar );
+        Serial.print( fillChar );
 
       while ( count++ < 30 );
-        //Serial.print( " " );
+        Serial.print( " " );
  
-      //if ( beat ) Serial.print( "* " );
-      //Serial.print( "Sens: " );
-      //Serial.print( "0.6" ); //vol );
-      //Serial.print( "\tHR: " );
-      //Serial.println( heartRate );
+      if ( beat ) Serial.print( "* " );
+      Serial.print( "Sens: " );
+      Serial.print( "0.6" ); //vol );
+      Serial.print( "\tHR: " );
+      Serial.println( heartRate );
     }
   }
 } // End of waveAmplitudePeaks()
