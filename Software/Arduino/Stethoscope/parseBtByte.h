@@ -68,21 +68,19 @@ void parseBtByte( String fn )
           BTooth.write( NAK );
         }
       break;
-      case EOT :
       case ACK :
       case NAK :
-      case CAN :
       break;
       
 	  // Diagnostic Functions
       case DEVICEID :
-		// DC1_DEVICEID : Device Identification
-		deviceID(STE);
+        // DC1_DEVICEID : Device Identification
+		    deviceID(STE);
       break;
       case SDCHECK :
         // DC1_SDCHECK
-		sdCheck();
-	  break;
+		    sdCheck();
+	    break;
       case SENDWAV :
         // SENDWAV : Send .WAV File
         sendWav(fn);
@@ -90,43 +88,43 @@ void parseBtByte( String fn )
       case DELVOLATILE :
         //  DELVOLATILE : Delete Volatile Directory
       break;
-	  case STARTREC :
+	    case STARTREC :
         // STARTREC : Start Recording
         startRecording();
       break;
-	  case STOPREC :
-	    // DC3_STOPREC : Stop Recording
-	    stopRecording();
-	  break;
-	  case STARTPLAY :
-	    // STARTPLAY : Start Playing
-	    startPlaying(ses.filePly1);
-	  break;
-	  case STOPPLAY :
-	    // STOPPLAY : Stop Playing
-	    stopPlaying();
-	  break;
-	  case STARTPASSTHRU :
-	    // STARTPASSTHRU : Start Audio Passthrough from Mic
-	    startAudioPassThru();
-	  break;
-	  case STARTTRACKING :
-	    // STARTTRACKING : Start Tracking Microphone Stream for Peaks
-	    startTrackingMicStream();
-	  break;
-	  case STOPTRACKING :
-	    // STOPTRACKING : Stop Tracking Microphone Stream for Peaks
-	    stopTrackingMicStream();
-	  break;
+	    case STOPREC :
+  	    // STOPREC : Stop Recording
+  	    stopRecording();
+  	  break;
+  	  case STARTPLAY :
+  	    // STARTPLAY : Start Playing
+  	    startPlaying(ses.filePly1);
+  	  break;
+  	  case STOPPLAY :
+  	    // STOPPLAY : Stop Playing
+  	    stopPlaying();
+  	  break;
+  	  case STARTPASSTHRU :
+  	    // STARTPASSTHRU : Start Audio Passthrough from Mic
+  	    startAudioPassThru();
+  	  break;
+  	  case STARTTRACKING :
+  	    // STARTTRACKING : Start Tracking Microphone Stream for Peaks
+  	    startTrackingMicStream();
+  	  break;
+  	  case STOPTRACKING :
+  	    // STOPTRACKING : Stop Tracking Microphone Stream for Peaks
+  	    stopTrackingMicStream();
+  	  break;
       case NORMALHB :
-        // DC4_NORMALHB : Playback of Normal Heart Beat
+        // NORMALHB : Playback of Normal Heart Beat
         normalHBPlayback();
       break;
       case ESHMURMUR :
         // ESHMURMUR : Playback of Early Systolic Heart Murmur
         earlyHMPlayback();
       break;
-	  
+      
       default :
         Serial.print( (char)inByte );
       break;
