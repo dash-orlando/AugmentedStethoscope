@@ -20,6 +20,7 @@ float                    mixer1ON         = 1.00;
 float                    mixer1OFF        = 0.00;
 float                    mixer2ON         = 1.00;
 float                    mixer2OFF        = 0.00;
+float                    mixerLvL         = 1.00;
 float                    cornerFreq       = 750.00;                            // Hz
 
 /// Audio Shield Variables

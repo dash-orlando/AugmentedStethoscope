@@ -282,6 +282,66 @@ boolean stopPlaying()
   return true;
 }
 
+//
+// *** Start Blending
+// Start Blending is a variant of the Start Playing/Playback function.
+// Instead of muting one channel, the function progressively attenuates one channel while strengthening an overlaying signal.
+boolean startBlending( String fileName )
+{
+  Serial.println( "EXECUTING startBlending()" );                                                                // Identification of function executed
+
+  mixer2.gain( 0, 1.0 );                                                                                        // Keep the microphone channel 0 at its normal gain value
+  mixer2.gain( 1, 1.0 );                                                                                        // Keep the microphone channel 1 at its normal gain value
+  mixer2.gain( 2, 0.0 );                                                                                        // Set the gain of the playback audio signal to mute for starter
+
+  char  filePly[fileName.length()+1];                                                                           // Conversion from string to character array
+  fileName.toCharArray( filePly, sizeof( filePly ) );
+  
+  if ( SD.exists( filePly ) )
+  {
+    playRaw1.play( filePly );
+    recordState = PLAYING;
+    mode = 5;                                                                                                   // Change operation mode to continue blending audio
+    Serial.println( "Stethoscope Began PLAYING" );                                                              // Function execution confirmation over USB serial
+    BTooth.write( ACK );                                                                                        // ACKnowledgement sent back through bluetooth serial
+    return true;
+  }
+  else
+    Serial.println( "Stethoscope CANNOT begin PLAYING" );                                                       // Function execution confirmation over USB serial
+    BTooth.write( NAK );                                                                                        // Negative AcKnowledgement sent back through bluetooth serial
+    return false;
+}
+
+//
+// *** Continue Blending
+//
+void continueBlending() 
+{
+  if ( !playRaw1.isPlaying() )
+  {
+    playRaw1.stop();
+  }
+  if ( mixerLvL > 0.10 )
+  {
+    mixerLvL = mixerLvL - 0.05;
+    mixer2.gain( 0, mixerLvL );
+    mixer2.gain( 1, mixerLvL );
+    mixer2.gain( 2, (1 - mixerLvL) );
+    Serial.println(mixerLvL);
+  }
+}
+
+//
+// *** Stop Blending
+//
+boolean stopBlending()
+{
+  Serial.println( "stopBlending" );
+  if ( recordState == PLAYING ) playRaw1.stop();
+  recordState = STANDBY;
+  mode = 4;                                                                                                     // Change operation mode to normal operation or idle
+  return true;
+}
 
 //
 // *** Start Microphone Passthrough Mode
