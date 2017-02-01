@@ -126,7 +126,7 @@ void parseBtByte( String fn )
       break;
       case STARTBLEND :
         // STARTBLEND : Start Blending of Early Systolic Heart Murmur
-        startBlending();
+        startBlending(ses.filePly1);
       break;
       case STOPBLEND :
         // STOPBLEND : Stop Blending of Early Systolic Heart Murmur

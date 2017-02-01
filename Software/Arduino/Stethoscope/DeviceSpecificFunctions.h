@@ -319,17 +319,16 @@ boolean startBlending( String fileName )
 //
 void continueBlending() 
 {
-  Serial.println( mixerLvL );
   if ( !playRaw1.isPlaying() )
   {
     playRaw1.stop();
   }
   if ( mixerLvL > 0.10 )
   {
-    mixerLvL = mixerLvL - 0.05;
-    //mixer2.gain( 0, mixerLvL );
-    //mixer2.gain( 1, mixerLvL );
-    //mixer2.gain( 2, (1 - mixerLvL) );
+    mixerLvL = mixerLvL - 0.000005;
+    mixer2.gain( 0, mixerLvL );
+    mixer2.gain( 1, mixerLvL );
+    mixer2.gain( 2, (1 - mixerLvL) );
     Serial.println(mixerLvL);
   }
 }
@@ -343,6 +342,8 @@ boolean stopBlending()
   if ( recordState == PLAYING ) playRaw1.stop();
   recordState = STANDBY;
   mode = 4;                                                                                                     // Change operation mode to normal operation or idle
+  Serial.println( "Stethoscope Stop PLAYING" );                                                                 // Function execution confirmation over USB serial
+  BTooth.write( ACK );                                                                                          // ACKnowledgement sent back through bluetooth serial
   return true;
 }
 
