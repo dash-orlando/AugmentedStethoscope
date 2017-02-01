@@ -59,7 +59,7 @@ void adjustMicLevel()
 void waveAmplitudePeaks( int p )
 {
   //float   vol         = analogRead( 15 ) / 1024.0;
-  float   sensitivity = 0.25; //1.0 - vol;
+  float   sensitivity = 0.75; //1.0 - vol;
 
   if ( msecs > 40 )
   {
