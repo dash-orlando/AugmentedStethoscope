@@ -278,7 +278,9 @@ boolean stopPlaying()
   Serial.println( "stopPlaying" );
   if ( recordState == PLAYING ) playRaw1.stop();
   recordState = STANDBY;
-  mode = 4;                                                                                                     // Change operation mode to normal operation or idle
+  mode = 4;                                                                                                   // Change operation mode to normal operation or idle
+  Serial.println( "Stethoscope Stop PLAYING" );                                                               // Function execution confirmation over USB serial
+  BTooth.write( ACK );                                                                                        // ACKnowledgement sent back through bluetooth serial
   return true;
 }
 
@@ -302,12 +304,12 @@ boolean startBlending( String fileName )
     playRaw1.play( filePly );
     recordState = PLAYING;
     mode = 5;                                                                                                   // Change operation mode to continue blending audio
-    Serial.println( "Stethoscope Began PLAYING" );                                                              // Function execution confirmation over USB serial
+    Serial.println( "Stethoscope Began BLENDING" );                                                              // Function execution confirmation over USB serial
     BTooth.write( ACK );                                                                                        // ACKnowledgement sent back through bluetooth serial
     return true;
   }
   else
-    Serial.println( "Stethoscope CANNOT begin PLAYING" );                                                       // Function execution confirmation over USB serial
+    Serial.println( "Stethoscope CANNOT begin BLENDING" );                                                       // Function execution confirmation over USB serial
     BTooth.write( NAK );                                                                                        // Negative AcKnowledgement sent back through bluetooth serial
     return false;
 }
@@ -317,6 +319,7 @@ boolean startBlending( String fileName )
 //
 void continueBlending() 
 {
+  Serial.println( mixerLvL );
   if ( !playRaw1.isPlaying() )
   {
     playRaw1.stop();
@@ -324,9 +327,9 @@ void continueBlending()
   if ( mixerLvL > 0.10 )
   {
     mixerLvL = mixerLvL - 0.05;
-    mixer2.gain( 0, mixerLvL );
-    mixer2.gain( 1, mixerLvL );
-    mixer2.gain( 2, (1 - mixerLvL) );
+    //mixer2.gain( 0, mixerLvL );
+    //mixer2.gain( 1, mixerLvL );
+    //mixer2.gain( 2, (1 - mixerLvL) );
     Serial.println(mixerLvL);
   }
 }
