@@ -168,6 +168,7 @@ boolean startRecording()
     recordState = RECORDING;
     mode        = 1;                                                                                            // Change value of operation mode for continous recording
     timeStamp   = 0;
+    sf1.StartSend( STRING, 1000 );                                                                              // Begin transmitting heartrate data as a String
     Serial.println( "Stethoscope Began RECORDING" );                                                            // Function execution confirmation over USB serial
     BTooth.write( ACK );                                                                                        // ACKnowledgement sent back through bluetooth serial
     return true;
@@ -197,6 +198,9 @@ void continueRecording()
     {
       lineOut = String( heartRate, DEC ) + "," + String( timeStamp, DEC ) + "\r\n";
       hRate.print( lineOut );
+      txFr = sf1.Get();                                                                                         // get values from existing TX data frame
+      txFr.DataString = String( heartRate );                                                                    // update data-string value with heartrate
+      sf1.Set( txFr );                                                                                          // set TX data frame with new heartate value
     }
   }
 } // End of continueRecording()
@@ -222,6 +226,7 @@ boolean stopRecording()
   }
   recordState = STANDBY;
   mode        = 4;                                                                                              // Change operation mode to normal operation or idle
+  sf1.StopSend( STRING );                                                                                     // Terminate transmitting heartrate data as a String
   return true;
 }
 
