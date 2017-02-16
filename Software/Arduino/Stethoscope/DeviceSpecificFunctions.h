@@ -59,7 +59,7 @@ void adjustMicLevel()
 void waveAmplitudePeaks( int p )
 {
   //float   vol         = analogRead( 15 ) / 1024.0;
-  float   sensitivity = 0.75; //1.0 - vol;
+  float   sensitivity = 0.85; //1.0 - vol;
 
   if ( msecs > 40 )
   {
@@ -340,6 +340,7 @@ boolean stopBlending()
 {
   Serial.println( "stopBlending" );
   if ( recordState == PLAYING ) playRaw1.stop();
+  mixerLvL = 1;
   recordState = STANDBY;
   mode = 4;                                                                                                     // Change operation mode to normal operation or idle
   Serial.println( "Stethoscope Stop PLAYING" );                                                                 // Function execution confirmation over USB serial

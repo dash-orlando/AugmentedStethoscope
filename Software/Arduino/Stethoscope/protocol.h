@@ -37,6 +37,11 @@ byte STE[] = {0x53,0x54,0x45};                    // Stethoscope
 #define         ESHMURMUR       	0x1E          // Playback of Early Systolic Heart Murmur                  					[resp: ACK | NAK]
 #define         STARTBLEND        0x1F          // Start Blending
 #define         STOPBLEND         0x20          // Stop Blending
+#define         BESHMUR           0x21
+#define         BEDHMUR           0x22
+#define         BPEJECT           0x23
+#define         BSPLITP           0x24
+#define         BASYSL            0x25
 
 
 

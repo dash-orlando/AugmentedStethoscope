@@ -124,15 +124,23 @@ void parseBtByte( String fn )
         // ESHMURMUR : Playback of Early Systolic Heart Murmur
         earlyHMPlayback();
       break;
-      case STARTBLEND :
+      case BEDHMUR :
         // STARTBLEND : Start Blending of Early Systolic Heart Murmur
-        startBlending(ses.filePly1);
+        startBlending(ses.filePly3);
       break;
       case STOPBLEND :
         // STOPBLEND : Stop Blending of Early Systolic Heart Murmur
         stopBlending();
       break;
-      
+      case BPEJECT :
+        startBlending(ses.filePly4);
+      break;
+      case BSPLITP :
+        startBlending(ses.filePly5);
+      break;
+      case BASYSL :
+        startBlending(ses.filePly6);
+      break;
       default :
         Serial.print( (char)inByte );
       break;

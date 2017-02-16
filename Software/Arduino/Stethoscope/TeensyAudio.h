@@ -67,7 +67,7 @@ void SetupAudioBoard()
 
   // Enable the audio shield, select input, and enable output
   sgtl5000_1.enable();
-  sgtl5000_1.volume( 0.65 );
+  sgtl5000_1.volume( 0.60 );
   sgtl5000_1.inputSelect( myInput );
   sgtl5000_1.micGain( 35 );
 
