@@ -1,0 +1,23 @@
+*Pick And Place List
+*Company=
+*Author=
+*eMail=
+*
+*Project=STET002
+*Date=10:30:10
+*CreatedBy=Fritzing 0.9.2b.11.19.8d2d5970658f0bed09c661c9ea9a515b5f40f44c
+*
+*
+*Coordinates in mm, always center of component
+*Origin 0/0=Lower left corner of PCB
+*Rotation in degree (0-360, math. pos.)
+*
+*No;Value;Package;X;Y;Rotation;Side;Name
+1;;THT;1.9939;-37.8038;0;Bottom;Bluetooth Antenna
+2;;THT;28.6639;-11.1338;90;Bottom;J4
+3;;THT;28.6639;-26.3738;90;Bottom;Teensy 3.2
+4;;THT;23.5839;-3.51383;90;Bottom;Micro LiPo
+5;;THT;40.0939;-37.4256;90;Bottom;Headphone Audio
+6;;THT;7.0739;-22.5638;180;Bottom;Audio  L G G R
+7;;THT;28.6639;-8.59383;90;Bottom;J3
+8;;THT;28.6639;-23.8338;90;Bottom;Teensy Audio Shield
