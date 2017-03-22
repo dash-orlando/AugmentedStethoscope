@@ -59,7 +59,7 @@ void adjustMicLevel()
 void waveAmplitudePeaks( int p )
 {
   //float   vol         = analogRead( 15 ) / 1024.0;
-  float   sensitivity = 0.6; //1.0 - vol;
+  float   sensitivity = 0.85; //1.0 - vol;
 
   if ( msecs > 40 )
   {
@@ -76,7 +76,7 @@ void waveAmplitudePeaks( int p )
       char  fillChar    = ' ';
 
       for ( count = 0; count < 30 - leftPeak; count++ );
-        //Serial.print( " " );
+        Serial.print( " " );
 
       if ( peakNumber >= sensitivity )
       {
@@ -107,9 +107,9 @@ void waveAmplitudePeaks( int p )
       }
  
       while ( count++ < 30 )
-        //Serial.print( fillChar );
+        Serial.print( fillChar );
 
-      //Serial.print( "||" );
+      Serial.print( "||" );
 
       if ( peakNumber >= sensitivity )
         fillChar = '>';
@@ -117,16 +117,16 @@ void waveAmplitudePeaks( int p )
         fillChar = ' ';
  
       for ( count = 0; count < leftPeak; count++ );
-        //Serial.print( fillChar );
+        Serial.print( fillChar );
 
       while ( count++ < 30 );
-        //Serial.print( " " );
+        Serial.print( " " );
  
-      //if ( beat ) Serial.print( "* " );
-      //Serial.print( "Sens: " );
-      //Serial.print( "0.6" ); //vol );
-      //Serial.print( "\tHR: " );
-      //Serial.println( heartRate );
+      if ( beat ) Serial.print( "* " );
+      Serial.print( "Sens: " );
+      Serial.print( "0.6" ); //vol );
+      Serial.print( "\tHR: " );
+      Serial.println( heartRate );
     }
   }
 } // End of waveAmplitudePeaks()
@@ -168,6 +168,7 @@ boolean startRecording()
     recordState = RECORDING;
     mode        = 1;                                                                                            // Change value of operation mode for continous recording
     timeStamp   = 0;
+    sf1.StartSend( STRING, 1000 );                                                                              // Begin transmitting heartrate data as a String
     Serial.println( "Stethoscope Began RECORDING" );                                                            // Function execution confirmation over USB serial
     BTooth.write( ACK );                                                                                        // ACKnowledgement sent back through bluetooth serial
     return true;
@@ -197,6 +198,9 @@ void continueRecording()
     {
       lineOut = String( heartRate, DEC ) + "," + String( timeStamp, DEC ) + "\r\n";
       hRate.print( lineOut );
+      txFr = sf1.Get();                                                                                         // get values from existing TX data frame
+      txFr.DataString = String( heartRate );                                                                    // update data-string value with heartrate
+      sf1.Set( txFr );                                                                                          // set TX data frame with new heartate value
     }
   }
 } // End of continueRecording()
@@ -222,6 +226,7 @@ boolean stopRecording()
   }
   recordState = STANDBY;
   mode        = 4;                                                                                              // Change operation mode to normal operation or idle
+  sf1.StopSend( STRING );                                                                                     // Terminate transmitting heartrate data as a String
   return true;
 }
 
@@ -273,10 +278,75 @@ boolean stopPlaying()
   Serial.println( "stopPlaying" );
   if ( recordState == PLAYING ) playRaw1.stop();
   recordState = STANDBY;
-  mode = 4;                                                                                                     // Change operation mode to normal operation or idle
+  mode = 4;                                                                                                   // Change operation mode to normal operation or idle
+  Serial.println( "Stethoscope Stop PLAYING" );                                                               // Function execution confirmation over USB serial
+  BTooth.write( ACK );                                                                                        // ACKnowledgement sent back through bluetooth serial
   return true;
 }
 
+//
+// *** Start Blending
+// Start Blending is a variant of the Start Playing/Playback function.
+// Instead of muting one channel, the function progressively attenuates one channel while strengthening an overlaying signal.
+boolean startBlending( String fileName )
+{
+  Serial.println( "EXECUTING startBlending()" );                                                                // Identification of function executed
+
+  mixer2.gain( 0, 1.0 );                                                                                        // Keep the microphone channel 0 at its normal gain value
+  mixer2.gain( 1, 1.0 );                                                                                        // Keep the microphone channel 1 at its normal gain value
+  mixer2.gain( 2, 0.0 );                                                                                        // Set the gain of the playback audio signal to mute for starter
+
+  char  filePly[fileName.length()+1];                                                                           // Conversion from string to character array
+  fileName.toCharArray( filePly, sizeof( filePly ) );
+  
+  if ( SD.exists( filePly ) )
+  {
+    playRaw1.play( filePly );
+    recordState = PLAYING;
+    mode = 5;                                                                                                   // Change operation mode to continue blending audio
+    Serial.println( "Stethoscope Began BLENDING" );                                                              // Function execution confirmation over USB serial
+    BTooth.write( ACK );                                                                                        // ACKnowledgement sent back through bluetooth serial
+    return true;
+  }
+  else
+    Serial.println( "Stethoscope CANNOT begin BLENDING" );                                                       // Function execution confirmation over USB serial
+    BTooth.write( NAK );                                                                                        // Negative AcKnowledgement sent back through bluetooth serial
+    return false;
+}
+
+//
+// *** Continue Blending
+//
+void continueBlending() 
+{
+  if ( !playRaw1.isPlaying() )
+  {
+    playRaw1.stop();
+  }
+  if ( mixerLvL > 0.10 )
+  {
+    mixerLvL = mixerLvL - 0.000005;
+    mixer2.gain( 0, mixerLvL );
+    mixer2.gain( 1, mixerLvL );
+    mixer2.gain( 2, (1 - mixerLvL) );
+    Serial.println(mixerLvL);
+  }
+}
+
+//
+// *** Stop Blending
+//
+boolean stopBlending()
+{
+  Serial.println( "stopBlending" );
+  if ( recordState == PLAYING ) playRaw1.stop();
+  mixerLvL = 1;
+  recordState = STANDBY;
+  mode = 4;                                                                                                     // Change operation mode to normal operation or idle
+  Serial.println( "Stethoscope Stop PLAYING" );                                                                 // Function execution confirmation over USB serial
+  BTooth.write( ACK );                                                                                          // ACKnowledgement sent back through bluetooth serial
+  return true;
+}
 
 //
 // *** Start Microphone Passthrough Mode

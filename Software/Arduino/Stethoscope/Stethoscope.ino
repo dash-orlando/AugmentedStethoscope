@@ -66,7 +66,8 @@ void loop()
   if ( mode == 1 ) continueRecording();
   if ( mode == 2 ) continuePlaying();
   if ( mode == 3 ) continueTrackingMicStream(); //  <--- refactor name
-  if ( mode == 4 ) continueAudioPassThru();     //  <--- 
+  if ( mode == 4 ) continueAudioPassThru();     //  <---
+  if ( mode == 5 ) continueBlending();
   
   // Clear the input byte variable
   inByte = 0x00;                                // this line of code may be unnecessary

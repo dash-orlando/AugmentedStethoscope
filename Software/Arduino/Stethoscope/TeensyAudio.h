@@ -20,7 +20,8 @@ float                    mixer1ON         = 1.00;
 float                    mixer1OFF        = 0.00;
 float                    mixer2ON         = 1.00;
 float                    mixer2OFF        = 0.00;
-float                    cornerFreq       = 1500.00;                            // Hz
+float                    mixerLvL         = 1.00;
+float                    cornerFreq       = 750.00;                            // Hz
 
 /// Audio Shield Variables
 #include <Audio.h>
@@ -66,7 +67,7 @@ void SetupAudioBoard()
 
   // Enable the audio shield, select input, and enable output
   sgtl5000_1.enable();
-  sgtl5000_1.volume( 0.70 );
+  sgtl5000_1.volume( 0.60 );
   sgtl5000_1.inputSelect( myInput );
   sgtl5000_1.micGain( 35 );
 
