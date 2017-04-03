@@ -8,6 +8,7 @@
  * 09/14/2016
  */
 
+
 #define VERSION  0.05
 
 #include  "TeensyAudio.h"
@@ -18,6 +19,7 @@
 #include  "parseBtByte.h"
 
 byte      inByte = 0x00;
+
 
 void setup()
 {
@@ -53,6 +55,7 @@ void setup()
   }
 } // End of setup()
 
+
 void loop()
 { // when using a microphone, continuously adjust gain
 /*  Instead of the following line of code, Mic Level will be hard-coded in SetupAudioBoard()
@@ -66,8 +69,9 @@ void loop()
   if ( mode == 1 ) continueRecording();
   if ( mode == 2 ) continuePlaying();
   if ( mode == 3 ) continueTrackingMicStream(); //  <--- refactor name
-  if ( mode == 4 ) continueAudioPassThru();     //  <---
+  if ( mode == 4 ) continueAudioPassThrough();
   if ( mode == 5 ) continueBlending();
+  if ( mode == 6 ) continueAugmentingBP();
   
   // Clear the input byte variable
   inByte = 0x00;                                // this line of code may be unnecessary

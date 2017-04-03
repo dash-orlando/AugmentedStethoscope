@@ -9,12 +9,15 @@
  * Fluvio Lobo Fenoglietto
  * 10/27/2016
  */
+
  
-#include "SerialFrame.h"
+#include <SerialFrame.h>
 
 //
 // *** Variables
 //
+
+SerialFrame sf1 = SerialFrame();
 
 Frame txFr = (Frame)
   {
@@ -23,8 +26,6 @@ Frame txFr = (Frame)
     HEARTRATE,
     "0"
   };
-
-SerialFrame sf1 = SerialFrame();
 
 File          frec;
 File          hRate;
@@ -38,11 +39,11 @@ boolean       beat          = false;
 boolean       captured      = false;
 
 int           ndx           = 0;
-static int    heartRate     = 0;
-//const int     myInput       = AUDIO_INPUT_MIC;
+static int    heartRateI    = 0;
 unsigned int  hrSample[3]   = { 0, 0, 0 };
 
 String        lineOut       = "";
+
 
 //
 // *** Adjust Microphone Gain Level
@@ -52,6 +53,7 @@ void adjustMicLevel()
   // TODO: read the peak1 object and adjust sgtl5000_1.micGain()
   // if anyone gets this working, please submit a github pull request :-)
 }
+
 
 //
 // *** Wave Amplitude Peaks
@@ -96,7 +98,7 @@ void waveAmplitudePeaks( int p )
           hrSample[ndx] = elapsed;  // - timestamp;
           if ( ndx == 2 )
           {
-            heartRate = 60000 / ((hrSample[0] + hrSample[1] + hrSample[2]) / 3);
+            heartRateI = 60000 / ((hrSample[0] + hrSample[1] + hrSample[2]) / 3);
             for ( int i = 0; i < 3; i++ ) hrSample[i] = 0;
             ndx = 0;
           }
@@ -126,10 +128,11 @@ void waveAmplitudePeaks( int p )
       Serial.print( "Sens: " );
       Serial.print( "0.6" ); //vol );
       Serial.print( "\tHR: " );
-      Serial.println( heartRate );
+      Serial.println( heartRateI );
     }
   }
 } // End of waveAmplitudePeaks()
+
 
 //
 // *** Start Recording
@@ -138,11 +141,11 @@ boolean startRecording()
 {
   Serial.println( "EXECUTING startRecording()" );                                                               // Identification of function executed
 
-  mixer1.gain( 0, mixer1ON  );                                                                                  // Set gain of mixer1, channel0 to 0
-  mixer1.gain( 1, mixer1ON  );                                                                                  // Set gain of mixer1, channel1 to 1
-  mixer2.gain( 0, mixer2ON  );                                                                                  // Set gain of mixer2, channel0 to 0.5 - Microphone on
-  mixer2.gain( 1, mixer2ON  );                                                                                  // Set gain of mixer2, channel0 to 0.5 - Microphone on
-  mixer2.gain( 2, mixer2OFF );                                                                                  // Set gain of mixer2, channel2 to 0
+  mixer1.gain( 0, mixerInputON  );                                                                              // Set gain of mixer1, channel0 to 0
+  mixer1.gain( 1, mixerInputON  );                                                                              // Set gain of mixer1, channel1 to 1
+  mixer2.gain( 0, mixerInputON  );                                                                              // Set gain of mixer2, channel0 to 0.5 - Microphone on
+  mixer2.gain( 1, mixerInputON  );                                                                              // Set gain of mixer2, channel0 to 0.5 - Microphone on
+  mixer2.gain( 2, mixerInputOFF );                                                                              // Set gain of mixer2, channel2 to 0
   
   char  fileRec[ses.fileRec.length()+1];                                                                        // Conversion from string to character array
   ses.fileRec.toCharArray( fileRec, sizeof( fileRec ) );
@@ -179,6 +182,7 @@ boolean startRecording()
     return false;
 }
 
+
 //
 // *** Continue Recording
 //
@@ -196,14 +200,15 @@ void continueRecording()
     waveAmplitudePeaks( 1 );                                                                                       // write HR and time to file at each heart beat
     if ( beat )
     {
-      lineOut = String( heartRate, DEC ) + "," + String( timeStamp, DEC ) + "\r\n";
+      lineOut = String( heartRateI, DEC ) + "," + String( timeStamp, DEC ) + "\r\n";
       hRate.print( lineOut );
       txFr = sf1.Get();                                                                                         // get values from existing TX data frame
-      txFr.DataString = String( heartRate );                                                                    // update data-string value with heartrate
+      txFr.DataString = String( heartRateI );                                                                    // update data-string value with heartrate
       sf1.Set( txFr );                                                                                          // set TX data frame with new heartate value
     }
   }
 } // End of continueRecording()
+
 
 //
 // *** Stop Recording
@@ -230,6 +235,7 @@ boolean stopRecording()
   return true;
 }
 
+
 //
 // *** Start Playing
 //
@@ -237,9 +243,9 @@ boolean startPlaying( String fileName )
 {
   Serial.println( "EXECUTING startPlaying()" );                                                                 // Identification of function executed
 
-  mixer2.gain( 0, 0.0 );                                                                                        // Set the microphone channel 0 to mute (gain value = 0)
-  mixer2.gain( 1, 0.0 );                                                                                        // Set the microphone channel 1 to mute (gain value = 0)
-  mixer2.gain( 2, 1.0 );                                                                                        // Set the gain of the playback audio signal
+  mixer2.gain( 0, mixerInputOFF );                                                                              // Set the microphone channel 0 to mute (gain value = 0)
+  mixer2.gain( 1, mixerInputOFF );                                                                              // Set the microphone channel 1 to mute (gain value = 0)
+  mixer2.gain( 2, mixerInputON  );                                                                              // Set the gain of the playback audio signal
 
   char  filePly[fileName.length()+1];                                                                           // Conversion from string to character array
   fileName.toCharArray( filePly, sizeof( filePly ) );
@@ -259,6 +265,7 @@ boolean startPlaying( String fileName )
     return false;
 }
 
+
 //
 // *** Continue Playing
 //
@@ -269,6 +276,7 @@ void continuePlaying()
     playRaw1.stop();
   }
 }
+
 
 //
 // *** Stop Playing
@@ -284,17 +292,18 @@ boolean stopPlaying()
   return true;
 }
 
+
 //
 // *** Start Blending
-// Start Blending is a variant of the Start Playing/Playback function.
-// Instead of muting one channel, the function progressively attenuates one channel while strengthening an overlaying signal.
+// Start Blending is a variant of the Start Playing/Playback function.  Instead of muting one channel,
+//  the function progressively attenuates one channel while amplifying an overlaying signal.
 boolean startBlending( String fileName )
 {
   Serial.println( "EXECUTING startBlending()" );                                                                // Identification of function executed
 
-  mixer2.gain( 0, 1.0 );                                                                                        // Keep the microphone channel 0 at its normal gain value
-  mixer2.gain( 1, 1.0 );                                                                                        // Keep the microphone channel 1 at its normal gain value
-  mixer2.gain( 2, 0.0 );                                                                                        // Set the gain of the playback audio signal to mute for starter
+  mixer2.gain( 0, mixerInputON  );                                                                              // Keep the microphone channel 0 at its normal gain value
+  mixer2.gain( 1, mixerInputON  );                                                                              // Keep the microphone channel 1 at its normal gain value
+  mixer2.gain( 2, mixerInputOFF );                                                                              // Set the gain of the playback audio signal to mute for starter
 
   char  filePly[fileName.length()+1];                                                                           // Conversion from string to character array
   fileName.toCharArray( filePly, sizeof( filePly ) );
@@ -313,6 +322,7 @@ boolean startBlending( String fileName )
     BTooth.write( NAK );                                                                                        // Negative AcKnowledgement sent back through bluetooth serial
     return false;
 }
+
 
 //
 // *** Continue Blending
@@ -333,6 +343,7 @@ void continueBlending()
   }
 }
 
+
 //
 // *** Stop Blending
 //
@@ -348,23 +359,24 @@ boolean stopBlending()
   return true;
 }
 
+
 //
 // *** Start Microphone Passthrough Mode
 //     This function re-configures the stethoscope to pass audio through the microphone to the speakers
 //
-boolean startAudioPassThru()
+boolean startAudioPassThrough()
 {
-  Serial.println( "EXECUTING startAudioPassThru()" );
+  Serial.println( "EXECUTING startAudioPassThrough()" );
   if ( recordState == RECORDING ) stopRecording();                                                              // Stop recording if recording
   if ( recordState == PLAYING )   stopPlaying();                                                                // Stop playback if playing
 
-  if ( myInput == AUDIO_INPUT_MIC )
+  if ( selectedInput == AUDIO_INPUT_MIC )
   {
-    mixer1.gain( 0, mixer1OFF );                                                                                // Set gain of mixer1, channel0 to 0
-    mixer1.gain( 1, mixer1OFF );                                                                                // Set gain of mixer1, channel1 to 1
-    mixer2.gain( 0, mixer2ON  );                                                                                // Set gain of mixer2, channel0 to 0.5 - Microphone on
-    mixer2.gain( 1, mixer2ON  );                                                                                // Set gain of mixer2, channel0 to 0.5 - Microphone on
-    mixer2.gain( 2, mixer2OFF );                                                                                // Set gain of mixer2, channel2 to 0
+    mixer1.gain( 0, mixerInputOFF );                                                                            // Set gain of mixer1, channel0 to 0
+    mixer1.gain( 1, mixerInputOFF );                                                                            // Set gain of mixer1, channel1 to 1
+    mixer2.gain( 0, mixerInputON  );                                                                            // Set gain of mixer2, channel0 to 0.5 - Microphone on
+    mixer2.gain( 1, mixerInputON  );                                                                            // Set gain of mixer2, channel0 to 0.5 - Microphone on
+    mixer2.gain( 2, mixerInputOFF );                                                                            // Set gain of mixer2, channel2 to 0
     recordState = PASSTHRU;
     mode = 4;                                                                                                   // Change operation mode to continue audio passthrough
     Serial.println( "Stethoscope switched Audio Passthrough mode." );                                           // Function execution confirmation over USB serial
@@ -377,21 +389,23 @@ boolean startAudioPassThru()
     BTooth.write( NAK );                                                                                        // Negative AcKnowledgement sent back through bluetooth serial
     return false;
   }
-} // End of startAudioPassThru()
+} // End of startAudioPassThrough()
+
 
 //
 // *** Continue Microphone Passthrough Mode
 //
-boolean continueAudioPassThru()
+boolean continueAudioPassThrough()
 {
-  mixer1.gain( 0, mixer1OFF );                                                                                  // Set gain of mixer1, channel0 to 0
-  mixer1.gain( 1, mixer1OFF );                                                                                  // Set gain of mixer1, channel1 to 1
-  mixer2.gain( 0, mixer2ON  );                                                                                  // Set gain of mixer2, channel0 to 0.5 - Microphone on
-  mixer2.gain( 1, mixer2ON  );                                                                                  // Set gain of mixer2, channel0 to 0.5 - Microphone on
-  mixer2.gain( 2, mixer2OFF );                                                                                  // Set gain of mixer2, channel2 to 0
+  mixer1.gain( 0, mixerInputOFF );                                                                              // Set gain of mixer1, channel0 to 0
+  mixer1.gain( 1, mixerInputOFF );                                                                              // Set gain of mixer1, channel1 to 1
+  mixer2.gain( 0, mixerInputON  );                                                                              // Set gain of mixer2, channel0 to 0.5 - Microphone on
+  mixer2.gain( 1, mixerInputON  );                                                                              // Set gain of mixer2, channel0 to 0.5 - Microphone on
+  mixer2.gain( 2, mixerInputOFF );                                                                              // Set gain of mixer2, channel2 to 0
   recordState = PASSTHRU;
   return true;
-} // End of continueAudioPassThru()
+} // End of continueAudioPassThrough()
+
 
 //
 // *** Start Detecting Heartbeat Peaks from Microphone Audio.
@@ -404,13 +418,13 @@ boolean startTrackingMicStream()
   Serial.println( "EXECUTING startTrackingMicStream()" );
   if ( recordState == RECORDING ) stopRecording();                                                              // Stop recording if recording
   if ( recordState == PLAYING ) stopPlaying();                                                                  // Stop playback if playing
-  if ( myInput == AUDIO_INPUT_MIC )
+  if ( selectedInput == AUDIO_INPUT_MIC )
   {
-    mixer1.gain( 0, mixer1OFF );                                                                                // Set gain of mixer1, channel0 to 0
-    mixer1.gain( 1, mixer1OFF );                                                                                // Set gain of mixer1, channel1 to 1
-    mixer2.gain( 0, mixer2ON  );                                                                                // Set gain of mixer2, channel0 to 0.5 - Microphone on
-    mixer2.gain( 1, mixer2ON  );                                                                                // Set gain of mixer2, channel0 to 0.5 - Microphone on
-    mixer2.gain( 2, mixer2OFF );                                                                                // Set gain of mixer2, channel2 to 0
+    mixer1.gain( 0, mixerInputOFF );                                                                            // Set gain of mixer1, channel0 to 0
+    mixer1.gain( 1, mixerInputOFF );                                                                            // Set gain of mixer1, channel1 to 1
+    mixer2.gain( 0, mixerInputON  );                                                                            // Set gain of mixer2, channel0 to 0.5 - Microphone on
+    mixer2.gain( 1, mixerInputON  );                                                                            // Set gain of mixer2, channel0 to 0.5 - Microphone on
+    mixer2.gain( 2, mixerInputOFF );                                                                            // Set gain of mixer2, channel2 to 0
     queue2.begin();
     recordState = DETECTING;
     mode = 3;                                                                                                   // Change operation mode to continue streaming audio
@@ -427,6 +441,7 @@ boolean startTrackingMicStream()
   }
 } // End of startTrackingMicStream()
 
+
 //
 // *** Continue Tracking Microphone Stream
 //     This is the companion function to trackingMicStream()
@@ -438,11 +453,12 @@ boolean continueTrackingMicStream()
     if ( beat )
     {
       txFr = sf1.Get();                                                                                         // get values from existing TX data frame
-      txFr.DataString = String( heartRate );                                                                    // update data-string value with heartrate
+      txFr.DataString = String( heartRateI );                                                                    // update data-string value with heartrate
       sf1.Set( txFr );                                                                                          // set TX data frame with new heartate value
     }
   return true;
 } // End of continueTrackingMicStream()
+
 
 
 //

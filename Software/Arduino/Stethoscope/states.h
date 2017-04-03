@@ -9,18 +9,20 @@
  *	10/18/2016
  *
  */
+
  
  // States
  
  enum State
 {
-  CONNECTED, DISCONNECTED, RECORDING, PLAYING, PASSTHRU, DETECTING, STANDBY, READY, NOTREADY
+  CONNECTED, DISCONNECTED, RECORDING, PLAYING, PASSTHRU, DETECTING, AUGMENT, STANDBY, READY, NOTREADY
 };
 
-State     connectState  = DISCONNECTED;
-State     recordState   = STANDBY;
-State     passthruState = PASSTHRU;
-State     HBDetectState = STANDBY;
+State     connectState    = DISCONNECTED;
+State     recordState     = STANDBY;
+State     passthruState   = PASSTHRU;
+State     HBDetectState   = STANDBY;
+State     BPAugmentState  = STANDBY;
 State     readyState;
 
 String stateToText( int state )             // for Serial monitor diagnostics
@@ -46,6 +48,9 @@ String stateToText( int state )             // for Serial monitor diagnostics
     case DETECTING :
       value = "DETECTING";
       break;
+    case AUGMENT :
+      value = "AUGMENT";
+      break;
     case STANDBY :
       value = "STANDBY";
       break;
@@ -69,7 +74,10 @@ String stateToText( int state )             // for Serial monitor diagnostics
  *					= 0		Idle
  *					= 1		Continue Recording
  *					= 2		Continue Playing
- *
+ *          = 3   Continue Tracking Mic Stream
+ *          = 4   Continue Audio Pass-through
+ *          = 5   Continue Blending
+ *          = 6   Continue BP Augmentation
  *
  */
 

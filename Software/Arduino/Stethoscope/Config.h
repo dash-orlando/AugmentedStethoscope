@@ -1,5 +1,6 @@
 // Contents of the Config.h file:
 
+
 struct Session
 {
     String    sessionID;
@@ -11,6 +12,7 @@ struct Session
     String    filePly5;
     String    filePly6;
     String    fileDat;
+    int       heartRate;
 };
 
 Session  ses;
