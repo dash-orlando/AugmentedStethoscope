@@ -18,7 +18,8 @@
 /// Variable Definitions
 const int                 selectedInput   = AUDIO_INPUT_MIC;
 int                       microphoneGain  =  36;
-float                     sampleGain      =   0.5;
+float                     micInputLvL     =   0.50;
+float                     sampleInputLvL  =   0.50;
 float                     speakerVolume   =   0.60;                             // 2-speaker: 0.50; 1-speaker: 0.60
 float                     mixerInputON    =   1.00;
 float                     mixerInputOFF   =   0.00;

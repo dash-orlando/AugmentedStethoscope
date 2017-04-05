@@ -37,36 +37,48 @@
  //
  // *** Augment BP Reading
  //
-void startAugmentingBP()
+boolean startAugmentingBP()
 {
   switch ( ses.heartRate )
   {
     case normalSinus :
       SetRate( ses.heartRate );
       BeginHB();
-      BPAugmentState  = AUGMENT;
+      BPAugmentState  = AUGMENTING;
       recordState     = STANDBY;
       mode            = 6;
+      Serial.println( "Augmentation for BP reading STARTED." );
+      BTooth.write( ACK );
+      return true;
     break;
     case bradycardia :
       SetRate( ses.heartRate );
       BeginHB();
-      BPAugmentState  = AUGMENT;
+      BPAugmentState  = AUGMENTING;
       recordState     = STANDBY;
       mode            = 6;
+      Serial.println( "Augmentation for BP reading STARTED." );
+      BTooth.write( ACK );
+      return true;
     break;
     case tachycardia :
       SetRate( ses.heartRate );
       BeginHB();
-      BPAugmentState  = AUGMENT;
+      BPAugmentState  = AUGMENTING;
       recordState     = STANDBY;
       mode            = 6;
+      Serial.println( "Augmentation for BP reading STARTED." );
+      BTooth.write( ACK );
+      return true;
     break;
     default :
-    BPAugmentState    = STANDBY;
-    recordState       = PASSTHRU;
+      BPAugmentState    = STANDBY;
+      recordState       = PASSTHRU;
       mode            = 4;
-      Serial.print( ses.heartRate );
+      Serial.println( ses.heartRate );
+      Serial.println( "BP Augmentation called with invalid parameter." );
+      BTooth.write( NAK );
+      return false;
     break;
   }
 }
@@ -74,12 +86,15 @@ void startAugmentingBP()
  //
  // *** Augment BP Reading
  //
-void stopAugmentingBP()
+boolean stopAugmentingBP()
 {
   EndHB();
   BPAugmentState  = STANDBY;
   recordState     = PASSTHRU;
   mode            = 4;
+  Serial.println( "Augmentation for BP reading STOPPED." );
+  BTooth.write( ACK );
+  return true;
 }
 
 

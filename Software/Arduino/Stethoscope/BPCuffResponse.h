@@ -28,8 +28,8 @@ void PlayHB()
 void BeginHB()
 {
   mixer3.gain( 0, mixerInputOFF  );                                            // Normal stethoscope mic input (off)
-  mixer3.gain( 1, microphoneGain );                                            // Highpass mic input  (on)
-  mixer3.gain( 2, sampleGain     );                                            // HB-sample playback  (on)
+  mixer3.gain( 1, micInputLvL    );                                            // Highpass mic input  (on)
+  mixer3.gain( 2, sampleInputLvL );                                            // HB-sample playback  (on)
 
   MsTimer2::set( hrInterval, PlayHB );
   MsTimer2::start();
