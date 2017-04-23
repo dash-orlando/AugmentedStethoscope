@@ -203,7 +203,7 @@ void continueRecording()
       lineOut = String( heartRateI, DEC ) + "," + String( timeStamp, DEC ) + "\r\n";
       hRate.print( lineOut );
       txFr = sf1.Get();                                                                                         // get values from existing TX data frame
-      txFr.DataString = String( heartRateI );                                                                    // update data-string value with heartrate
+      txFr.DataString = String( heartRateI );                                                                   // update data-string value with heartrate
       sf1.Set( txFr );                                                                                          // set TX data frame with new heartate value
     }
   }
@@ -215,10 +215,20 @@ void continueRecording()
 //
 boolean stopRecording()
 {
-  Serial.println( "stopRecording" );
+  Serial.println( "EXECUTING stopRecording" );
+
+  mixer1.gain( 0, mixerInputOFF  );                                                                             // Set gain of mixer1, channel0 to 0
+  mixer1.gain( 1, mixerInputOFF  );                                                                             // Set gain of mixer1, channel1 to 1
+  mixer2.gain( 0, mixerInputON  );                                                                              // Set gain of mixer2, channel0 to 0.5 - Microphone on
+  mixer2.gain( 1, mixerInputON  );                                                                              // Set gain of mixer2, channel0 to 0.5 - Microphone on
+  mixer2.gain( 2, mixerInputOFF );                                                                              // Set gain of mixer2, channel2 to 0
+  
   queue1.end();
   if ( recordState == RECORDING )
-  {
+  { 
+    sf1.StopSend( STRING );                                                                                     // Terminate transmitting heartrate data as a String
+    Serial.println( "Stethoscope Will STOP RECORDING" );                                                            // Function execution confirmation over USB serial
+    BTooth.write( ACK );
     while ( queue1.available() > 0 )
     {
       frec.write( (byte*)queue1.readBuffer(), 256 );
@@ -226,13 +236,14 @@ boolean stopRecording()
     }
     frec.close();
     hRate.close();
-    Serial.println( "Stethoscope Will STOP RECORDING" );                                                            // Function execution confirmation over USB serial
-    BTooth.write( ACK );
+    recordState = STANDBY;
+    mode        = 4;                                                                                              // Change operation mode to normal operation or idle
+    return true;
   }
-  recordState = STANDBY;
-  mode        = 4;                                                                                              // Change operation mode to normal operation or idle
-  sf1.StopSend( STRING );                                                                                     // Terminate transmitting heartrate data as a String
-  return true;
+  else
+    Serial.println( "Stethoscope CANNOT STOP RECORDING" );                                                       // Function execution confirmation over USB serial
+    BTooth.write( NAK );                                                                                        // Negative AcKnowledgement sent back through bluetooth serial
+    return false;
 }
 
 
