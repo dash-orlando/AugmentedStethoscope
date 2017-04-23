@@ -163,7 +163,11 @@ void parseBtByte( String fn )
       case STOPBPALL :
         // STOPBPALL : Stop Augmenting BP Heart Sounds (return to passthrough)
         stopAugmentingBP();
-      break;     
+      break;
+      case BRECORD   :
+        // BRECORD   : Start Augmented On-Board Recording
+        startBlending( ses.fileRec );
+      break;   
       
       default :
         Serial.print( (char)inByte );

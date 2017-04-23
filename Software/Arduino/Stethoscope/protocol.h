@@ -47,6 +47,7 @@ byte STE[] = {0x53,0x54,0x45};                    // Stethoscope
 #define         STARTBPBRADY      0x27          // Start BP Cuff augmentation -- Bradycardia
 #define         STARTBPTACHY      0x28          // Start BP Cuff augmentation -- Tachycardia
 #define         STOPBPALL         0x29          // Stop BP Cuff augmentation
+#define         BRECORD           0x30          // Blend Recording
 
 
 
