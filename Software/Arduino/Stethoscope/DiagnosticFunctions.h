@@ -11,9 +11,9 @@
  //
  // *** Device Identification
  //
- void deviceID(byte deviceHexCode[])
+ void deviceID( byte deviceHexCode[] )
  {
-   int Nchars = sizeof(deviceHexCode);
+   int Nchars = sizeof( deviceHexCode) ;
    for ( int i = 0; i < Nchars; i ++ )
    {
     Serial.print( "sending: [" );

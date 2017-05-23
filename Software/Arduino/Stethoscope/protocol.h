@@ -8,6 +8,7 @@
  * 01/31/2017
  */
 
+
 /// Device Identification Variables
 byte STE[] = {0x53,0x54,0x45};                    // Stethoscope
 
@@ -42,6 +43,11 @@ byte STE[] = {0x53,0x54,0x45};                    // Stethoscope
 #define         BPEJECT           0x23
 #define         BSPLITP           0x24
 #define         BASYSL            0x25
+#define         STARTBPNORM       0x26          // Start BP Cuff augmentation -- Normal heartrate
+#define         STARTBPBRADY      0x27          // Start BP Cuff augmentation -- Bradycardia
+#define         STARTBPTACHY      0x28          // Start BP Cuff augmentation -- Tachycardia
+#define         STOPBPALL         0x29          // Stop BP Cuff augmentation
+#define         BRECORD           0x30          // Blend Recording
 
 
 

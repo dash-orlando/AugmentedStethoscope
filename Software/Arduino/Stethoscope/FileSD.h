@@ -8,6 +8,7 @@
  * 09/27/2016
  */
 
+
 // Variables
 Sd2Card   card;
 SdVolume  volume;
@@ -74,6 +75,7 @@ boolean sdCardCheck()
   return true;
 }
 
+
 void printDirectory( File dir, int numTabs )
 {
   int filesize = 0;
@@ -131,6 +133,7 @@ int       listPtr       =  0;
 int       endPtr        =  0;
 String    fileEntry[arrayElements];
 
+
 void loadDirectory( File dir )
 {
   while ( true )
@@ -183,6 +186,7 @@ void loadDirectory( File dir )
 //  }
   fileCount = 0;
 }
+
 
 void sendFileSerial( File  file )
 {

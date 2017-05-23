@@ -8,6 +8,7 @@
  * 01/31/2017
  */
 
+
 //
 // *** Imports and Includes
 //
@@ -23,6 +24,7 @@
 //     Serial monitors may be enabled for diagnostics
 //
 
+
 void displayByte( byte byteValue )
 {
   Serial.print( "received: [" );
@@ -36,6 +38,7 @@ void displayByte( byte byteValue )
 // *** parseBtByte
 //     This function parses incoming bytes (or byte sequences) and calls/executes functions associated with such bytes
 //
+
 
 void parseBtByte( String fn )
 {
@@ -106,7 +109,7 @@ void parseBtByte( String fn )
   	  break;
   	  case STARTPASSTHRU :
   	    // STARTPASSTHRU : Start Audio Passthrough from Mic
-  	    startAudioPassThru();
+  	    startAudioPassThrough();
   	  break;
   	  case STARTTRACKING :
   	    // STARTTRACKING : Start Tracking Microphone Stream for Peaks
@@ -126,27 +129,55 @@ void parseBtByte( String fn )
       break;
       case BEDHMUR :
         // STARTBLEND : Start Blending of Early Systolic Heart Murmur
-        startBlending(ses.filePly3);
+        startBlending( ses.filePly3 );
       break;
       case STOPBLEND :
         // STOPBLEND : Stop Blending of Early Systolic Heart Murmur
         stopBlending();
       break;
       case BPEJECT :
-        startBlending(ses.filePly4);
+        startBlending( ses.filePly4 );
       break;
       case BSPLITP :
-        startBlending(ses.filePly5);
+        startBlending( ses.filePly5 );
       break;
       case BASYSL :
-        startBlending(ses.filePly6);
+        startBlending( ses.filePly6 );
       break;
+ 
+      case STARTBPNORM :
+        // STARTBPNORM : Start Augmenting BP Heart Sounds (normal rate)
+        ses.heartRate = normalSinus;
+        startAugmentingBP();
+      break;     
+      case STARTBPBRADY :
+        // STARTBPBRADY : Start Augmenting BP Heart Sounds (slow rate)
+        ses.heartRate = bradycardia;
+        startAugmentingBP();
+      break;     
+      case STARTBPTACHY :
+        // STARTBPTACHY : Start Augmenting BP Heart Sounds (rapid rate)
+        ses.heartRate = tachycardia;
+        startAugmentingBP();
+      break;     
+      case STOPBPALL :
+        // STOPBPALL : Stop Augmenting BP Heart Sounds (return to passthrough)
+        stopAugmentingBP();
+      break;
+      case BRECORD   :
+        // BRECORD   : Start Augmented On-Board Recording
+        startBlending( ses.fileRec );
+      break;   
+      
       default :
         Serial.print( (char)inByte );
       break;
     }
-    Serial.print( "(post) readyState: ");    Serial.println( stateToText( readyState   ) );
-    Serial.print( "(post) connectState: ");  Serial.println( stateToText( connectState ) );
-    Serial.print( "(post) recordState: ");   Serial.println( stateToText( recordState  ) );
+    Serial.print( "(post) readyState   :  " ); Serial.println( stateToText( readyState     ) );
+    Serial.print( "(post) connectState :  " ); Serial.println( stateToText( connectState   ) );
+    Serial.print( "(post) recordState  :  " ); Serial.println( stateToText( recordState    ) );
+    Serial.print( "(post) passthruState:  " ); Serial.println( stateToText( passthruState  ) );
+    Serial.print( "(post) HBDetectState:  " ); Serial.println( stateToText( HBDetectState  ) );
+    Serial.print( "(post) BPAugmentState: " ); Serial.println( stateToText( BPAugmentState ) );
     delay( 10 );
 }
