@@ -13,8 +13,7 @@
  //
  void deviceID( byte deviceHexCode[] )
  {
-   int Nchars = sizeof( deviceHexCode) ;
-   for ( int i = 0; i < Nchars; i ++ )
+   for ( int i = 0; deviceHexCode[i] != 0x00; i ++ )
    {
     Serial.print( "sending: [" );
     Serial.print( (char)deviceHexCode[i] );

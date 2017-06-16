@@ -21,7 +21,7 @@ void SetRate( int hr )
 
 void PlayHB()
 {
-  playMem1.play( KorotkoffSound );
+  playMem_heartSoundSamp.play( KorotkoffSound );
 }
 
 

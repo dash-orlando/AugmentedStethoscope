@@ -31,16 +31,25 @@ File          frec;
 File          hRate;
 
 elapsedMillis msecs;
-elapsedMillis triggered;
+elapsedMillis triggerTime;
 elapsedMillis elapsed;
 elapsedMillis timeStamp;
-
-boolean       beat          = false;
-boolean       captured      = false;
+elapsedMillis restTime;
 
 int           ndx           = 0;
 static int    heartRateI    = 0;
 unsigned int  hrSample[3]   = { 0, 0, 0 };
+unsigned int  intervalRate  = 0;
+unsigned int  minS1S2       = 120;    // must be greater-than 100ms
+unsigned int  maxS1S2       = 350;    // must be less-than 400ms
+unsigned int  maxHBInterval = 5000;   //ms
+
+float         sigThreshold  = 0.35;
+
+bool          beatHeard     = false;
+bool          atRest        = true;
+bool          transition    = atRest;
+bool          soundTwo      = false;
 
 String        lineOut       = "";
 
@@ -50,7 +59,7 @@ String        lineOut       = "";
 //
 void adjustMicLevel()
 {
-  // TODO: read the peak1 object and adjust sgtl5000_1.micGain()
+  // TODO: read the peak_QrsMeter1 object and adjust sgtl5000_1.micGain()
   // if anyone gets this working, please submit a github pull request :-)
 }
 
@@ -58,79 +67,160 @@ void adjustMicLevel()
 //
 // *** Wave Amplitude Peaks
 //
-void waveAmplitudePeaks( int p )
+bool waveAmplitudePeaks()
 {
-  //float   vol         = analogRead( 15 ) / 1024.0;
-  float   sensitivity = 0.85; //1.0 - vol;
-
-  if ( msecs > 40 )
+  if ( msecs > 40 )                                     // sample at 25MHz
   {
-    if ( peak2.available() )
+     msecs = 0;
+    if ( peak_QrsMeter.available() )
     {
-      msecs             = 0;
       float peakNumber  = 0.0;
 
-      if ( p == 1 ) peakNumber = peak1.read();
-      else if ( p == 2 ) peakNumber = peak2.read();
+      peakNumber = peak_QrsMeter.read();
+
+      int   directionT  = 0;
 
       int   leftPeak    = peakNumber  * 30.0;
       int   count;
-      char  fillChar    = ' ';
+      char  fillCharL   = ' ';
+      char  fillCharR   = ' ';
 
-      for ( count = 0; count < 30 - leftPeak; count++ );
-        Serial.print( " " );
+      Serial.print( "Threshold: " );
+      Serial.print( peakNumber );
+      Serial.print( "/" );
+      Serial.print( sigThreshold );
+      Serial.print( " Peak: " );
+      Serial.print( leftPeak );
+      Serial.print( '\t' );
 
-      if ( peakNumber >= sensitivity )
+      for ( int i = 0; i < 30 - leftPeak; i++ )
       {
-        fillChar  = '<';
-        triggered = 0;
-        beat      = false;
-        captured  = false;
+         if ( i == (30 - (sigThreshold * 30)) )
+          Serial.print( "." );
+        else
+          Serial.print( " " );
       }
-      else
+
+      if ( peakNumber >= sigThreshold )                 // Sound is heard.
       {
-        fillChar = ' ';
-        if ( ( triggered > 250 ) && ( !captured ) )    // this interval needs to be a calculated value....
+        fillCharL = '<';
+        fillCharR = '>';
+        if ( atRest )                                   // If heart is at rest, then a sound is heard...
+          transition  = true;                           // ....there is a 'transition',
+        else                                            // otherwise...
+          transition  = false;                          // ....there is no transition
+        atRest        = false;                          // ....but with either event, the heart is NOT at rest.
+      }
+      else                                              // No sound heard (or, below threshold)
+      {
+        fillCharL = ' ';
+        fillCharR = ' ';
+        if ( !atRest )                                  // If heart was NOT at rest, then NO sound is heard...
+          transition  = true;                           // ....there is a 'transition',
+        else                                            // otherwise...
+          transition  = false;                          // ....there is no transition
+        atRest        = true;                           // ....but with either event, the heart is presently at rest.
+      }
+
+
+      if ( transition && !atRest && !soundTwo )         // transitioning into (potential) 1st heart sound
+      {
+        intervalRate  = triggerTime;
+        triggerTime   = 0;
+      }
+
+      else if ( !transition && !atRest && !soundTwo )   // within (potential) 1st heart sound *(may be unnecessary)*
+      {
+      }
+
+      else if ( transition && atRest && !soundTwo )     // transitioning out of (potential) 1st heart sound
+      {
+        soundTwo      = true;
+        restTime      = 0;
+      }
+
+      else if ( transition && !atRest && soundTwo )     // transitioning into (potential) 2nd heart sound
+      {
+        if ( ( triggerTime >= minS1S2 )                 // qualifies as 2nd heart sound if S1S2 interval falls...
+          && ( triggerTime <= maxS1S2 ) )               // ....within the defined range
         {
-          beat      = true;
-          captured  = true;
-          triggered = 0;
-          hrSample[ndx] = elapsed;  // - timestamp;
-          if ( ndx == 2 )
-          {
-            heartRateI = 60000 / ((hrSample[0] + hrSample[1] + hrSample[2]) / 3);
-            for ( int i = 0; i < 3; i++ ) hrSample[i] = 0;
-            ndx = 0;
-          }
-          else ndx++;
-          elapsed   = 0;
+          beatHeard     = true;
         }
-        else beat   = false;
       }
- 
-      while ( count++ < 30 )
-        Serial.print( fillChar );
 
-      Serial.print( "||" );
+      else if ( !transition && !atRest && soundTwo )    // within (potential) 1st heart sound *(may be unnecessary)*
+      {
+        beatHeard     = false;
+      }
 
-      if ( peakNumber >= sensitivity )
-        fillChar = '>';
+      else if ( transition && atRest && soundTwo )      // transitioning out of (potential) 2nd heart sound
+      {
+        soundTwo      = false;
+        beatHeard     = false;
+        intervalRate  = 0;
+      }
+
+      else if ( !transition && atRest && restTime > maxS1S2 )
+      {
+        soundTwo = false;
+      }
+      
       else
-        fillChar = ' ';
- 
-      for ( count = 0; count < leftPeak; count++ );
-        Serial.print( fillChar );
+        beatHeard     = false;
 
-      while ( count++ < 30 );
-        Serial.print( " " );
- 
-      if ( beat ) Serial.print( "* " );
-      Serial.print( "Sens: " );
-      Serial.print( "0.6" ); //vol );
-      Serial.print( "\tHR: " );
-      Serial.println( heartRateI );
+
+      if ( beatHeard )                                  // This section calculates a running average...
+      {                                                 // heart rate from three successive samples
+        hrSample[ndx] = elapsed;  // - timestamp;
+        if ( ndx == 2 )
+        {
+          heartRateI = 60000 / ((hrSample[0] + hrSample[1] + hrSample[2]) / 3);
+          for ( int i = 0; i < 3; i++ ) hrSample[i] = 0;
+          ndx = 0;
+        }
+        else ndx++;
+        elapsed = 0;
+      }
+//      else if ( elapsed > maxHBInterval )               // If no heartbeat is detected within this...
+//        heartRateI = 0;                                 // ....interval, heart rate is set to zero.
+
+      for ( int i = 0; i < leftPeak; i++ )
+        Serial.print( fillCharL );
+
+      if ( beatHeard )
+        Serial.print( "|*|" );
+      else if ( transition )
+        Serial.print( "|.|" );
+      else if ( atRest )
+        Serial.print( "| |" );
+      else
+        Serial.print( "|-|" );
+
+      for ( count = 0; count < leftPeak; count++ )
+        Serial.print( fillCharR );
+
+      while ( count++ < 30 )
+      {
+         if ( count == sigThreshold * 30 )
+          Serial.print( "." );
+        else
+          Serial.print( " " );
+      }
+
+      if ( transition )
+      {
+        Serial.print( "\ttime: " );
+        Serial.print( triggerTime );
+      }
+      if ( beatHeard )
+      {
+        Serial.print( "\tHR: " );
+        Serial.print( heartRateI );
+      }
+      Serial.println();
     }
   }
+  return beatHeard;
 } // End of waveAmplitudePeaks()
 
 
@@ -141,8 +231,6 @@ boolean startRecording()
 {
   Serial.println( "EXECUTING startRecording()" );                                                               // Identification of function executed
 
-  mixer1.gain( 0, mixerInputON  );                                                                              // Set gain of mixer1, channel0 to 0
-  mixer1.gain( 1, mixerInputON  );                                                                              // Set gain of mixer1, channel1 to 1
   mixer2.gain( 0, mixerInputON  );                                                                              // Set gain of mixer2, channel0 to 0.5 - Microphone on
   mixer2.gain( 1, mixerInputON  );                                                                              // Set gain of mixer2, channel0 to 0.5 - Microphone on
   mixer2.gain( 2, mixerInputOFF );                                                                              // Set gain of mixer2, channel2 to 0
@@ -153,31 +241,33 @@ boolean startRecording()
   char  fileDat[ses.fileDat.length()+1];                                                                        // Conversion from string to character array
   ses.fileDat.toCharArray( fileDat, sizeof( fileDat ) );
   
-  if ( SD.exists( fileRec ) )                                                                                   // Check for existence of RECORD.RAW
+  if ( SD.exists( fileRec ) ) SD.remove( fileRec );                                                             // Check for existence of RECORD.RAW
+  if ( SD.exists( fileDat ) ) SD.remove( fileDat );                                                             // Check for existence of HRATE.DAT
+
+  if (  SD.open( fileRec, FILE_WRITE ) &&                                                                       // Create and open RECORD.RAW file
+        SD.open( fileDat, FILE_WRITE ) )                                                                        // Create and open HRATE.DAT file
   {
-    SD.remove( fileRec );                                                                                       // If found, delete RECORD.RAW
-  }
-  if ( SD.exists( fileDat ) )                                                                                   // Check for existence of HRATE.DAT
-  {
-    SD.remove( fileDat );                                                                                       // If found, delete HRATE.DAT
-  }
-  frec  = SD.open( fileRec, FILE_WRITE );                                                                       // Create and open RECORD.RAW file
-  Serial.println( frec );
-  hRate = SD.open( fileDat,  FILE_WRITE );                                                                      // Create and open HRATE.DAT file
-  Serial.println( hRate );
-  if ( frec )
-  {
-    queue1.begin();
+
+    Serial.print( "\nMinimum S1-S2 interval:\t\t" );      Serial.print( minS1S2 );        Serial.print( "ms" );
+    Serial.print( "\nMaximum S1-S2 interval:\t\t" );      Serial.print( maxS1S2 );        Serial.print( "ms" );
+    Serial.print( "\nNo-heartrate detect interval:\t" );  Serial.print( maxHBInterval );  Serial.print( "ms" );
+    Serial.print( "\nHearsound detection threshold:\t" ); Serial.println( sigThreshold );
+
+float         sigThreshold  = 0.35;
+        
+    queue_recMic.begin();
     recordState = RECORDING;
     mode        = 1;                                                                                            // Change value of operation mode for continous recording
     timeStamp   = 0;
     sf1.StartSend( STRING, 1000 );                                                                              // Begin transmitting heartrate data as a String
-    Serial.println( "Stethoscope Began RECORDING" );                                                            // Function execution confirmation over USB serial
+    Serial.println( "Stethoscope began RECORDING" );                                                            // Function execution confirmation over USB serial
+    Serial.println( "sending: ACK..." );
     BTooth.write( ACK );                                                                                        // ACKnowledgement sent back through bluetooth serial
     return true;
   }
   else
-    Serial.println( "Stethoscope CANNOT Begin RECORDING" );                                                     // Function execution failed, notification over USB serial
+    Serial.println( "Stethoscope CANNOT begin RECORDING" );                                                     // Function execution failed, notification over USB serial
+    Serial.println( "sending: NAK..." );
     BTooth.write( NAK );                                                                                        // Negative AcKnowledgement sent back through bluetooth serial
     return false;
 }
@@ -188,24 +278,24 @@ boolean startRecording()
 //
 void continueRecording()
 {
-  if ( queue1.available() >= 2 )
+  if ( queue_recMic.available() >= 2 )
   {
     byte buffer[512];                                                                                           // Fetch 2 blocks from the audio library and copy into a 512 byte buffer.
                                                                                                                 // The Arduino SD library is most efficient when full 512 byte sector size writes are used.
-    memcpy( buffer, queue1.readBuffer(), 256 );
-    queue1.freeBuffer();
-    memcpy( buffer + 256, queue1.readBuffer(), 256 );
-    queue1.freeBuffer();                                                                                        // write all 512 bytes to the SD card
-    frec.write( buffer, 512 );
-    waveAmplitudePeaks( 1 );                                                                                       // write HR and time to file at each heart beat
-    if ( beat )
-    {
-      lineOut = String( heartRateI, DEC ) + "," + String( timeStamp, DEC ) + "\r\n";
-      hRate.print( lineOut );
-      txFr = sf1.Get();                                                                                         // get values from existing TX data frame
-      txFr.DataString = String( heartRateI );                                                                   // update data-string value with heartrate
-      sf1.Set( txFr );                                                                                          // set TX data frame with new heartate value
-    }
+//    memcpy( buffer, queue_recMic.readBuffer(), 256 );
+//    queue_recMic.freeBuffer();
+//    memcpy( buffer + 256, queue_recMic.readBuffer(), 256 );
+//    queue_recMic.freeBuffer();                                                                                  // write all 512 bytes to the SD card
+//    frec.write( buffer, 512 );
+    bool beatCaptured = waveAmplitudePeaks();                                                                   // write HR and time to file at each heart beat
+//    if ( beatCaptured )
+//    {
+//      lineOut = String( heartRateI, DEC ) + "," + String( timeStamp, DEC ) + "\r\n";
+//      hRate.print( lineOut );
+//      txFr = sf1.Get();                                                                                         // get values from existing TX data frame
+//      txFr.DataString = String( heartRateI );                                                                   // update data-string value with heartrate
+//      sf1.Set( txFr );                                                                                          // set TX data frame with new heartate value
+//    }
   }
 } // End of continueRecording()
 
@@ -217,31 +307,31 @@ boolean stopRecording()
 {
   Serial.println( "EXECUTING stopRecording" );
 
-  mixer1.gain( 0, mixerInputOFF  );                                                                             // Set gain of mixer1, channel0 to 0
-  mixer1.gain( 1, mixerInputOFF  );                                                                             // Set gain of mixer1, channel1 to 1
   mixer2.gain( 0, mixerInputON  );                                                                              // Set gain of mixer2, channel0 to 0.5 - Microphone on
   mixer2.gain( 1, mixerInputON  );                                                                              // Set gain of mixer2, channel0 to 0.5 - Microphone on
   mixer2.gain( 2, mixerInputOFF );                                                                              // Set gain of mixer2, channel2 to 0
   
-  queue1.end();
+  queue_recMic.end();
   if ( recordState == RECORDING )
   { 
     sf1.StopSend( STRING );                                                                                     // Terminate transmitting heartrate data as a String
-    Serial.println( "Stethoscope Will STOP RECORDING" );                                                            // Function execution confirmation over USB serial
+    Serial.println( "Stethoscope will STOP RECORDING" );                                                        // Function execution confirmation over USB serial
+    Serial.println( "sending: ACK..." );
     BTooth.write( ACK );
-    while ( queue1.available() > 0 )
+    while ( queue_recMic.available() > 0 )
     {
-      frec.write( (byte*)queue1.readBuffer(), 256 );
-      queue1.freeBuffer();
+      frec.write( (byte*)queue_recMic.readBuffer(), 256 );
+      queue_recMic.freeBuffer();
     }
     frec.close();
     hRate.close();
     recordState = STANDBY;
-    mode        = 4;                                                                                              // Change operation mode to normal operation or idle
+    mode        = 4;                                                                                            // Change operation mode to normal operation or idle
     return true;
   }
   else
-    Serial.println( "Stethoscope CANNOT STOP RECORDING" );                                                       // Function execution confirmation over USB serial
+    Serial.println( "Stethoscope CANNOT STOP RECORDING" );                                                      // Function execution confirmation over USB serial
+    Serial.println( "sending: NAK..." );
     BTooth.write( NAK );                                                                                        // Negative AcKnowledgement sent back through bluetooth serial
     return false;
 }
@@ -263,15 +353,17 @@ boolean startPlaying( String fileName )
   
   if ( SD.exists( filePly ) )
   {
-    playRaw1.play( filePly );
+    playRaw_sdHeartSound.play( filePly );
     recordState = PLAYING;
     mode = 2;                                                                                                   // Change operation mode to continue playing audio
-    Serial.println( "Stethoscope Began PLAYING" );                                                              // Function execution confirmation over USB serial
+    Serial.println( "Stethoscope began PLAYING" );                                                              // Function execution confirmation over USB serial
+    Serial.println( "sending: ACK..." );
     BTooth.write( ACK );                                                                                        // ACKnowledgement sent back through bluetooth serial
     return true;
   }
   else
     Serial.println( "Stethoscope CANNOT begin PLAYING" );                                                       // Function execution confirmation over USB serial
+    Serial.println( "sending: NAK..." );
     BTooth.write( NAK );                                                                                        // Negative AcKnowledgement sent back through bluetooth serial
     return false;
 }
@@ -282,9 +374,9 @@ boolean startPlaying( String fileName )
 //
 void continuePlaying() 
 {
-  if ( !playRaw1.isPlaying() )
+  if ( !playRaw_sdHeartSound.isPlaying() )
   {
-    playRaw1.stop();
+    playRaw_sdHeartSound.stop();
   }
 }
 
@@ -295,10 +387,11 @@ void continuePlaying()
 boolean stopPlaying()
 {
   Serial.println( "stopPlaying" );
-  if ( recordState == PLAYING ) playRaw1.stop();
+  if ( recordState == PLAYING ) playRaw_sdHeartSound.stop();
   recordState = STANDBY;
   mode = 4;                                                                                                   // Change operation mode to normal operation or idle
-  Serial.println( "Stethoscope Stop PLAYING" );                                                               // Function execution confirmation over USB serial
+  Serial.println( "Stethoscope stopping PLAY" );                                                              // Function execution confirmation over USB serial
+  Serial.println( "sending: ACK..." );
   BTooth.write( ACK );                                                                                        // ACKnowledgement sent back through bluetooth serial
   return true;
 }
@@ -321,15 +414,15 @@ boolean startBlending( String fileName )
   
   if ( SD.exists( filePly ) )
   {
-    playRaw1.play( filePly );
+    playRaw_sdHeartSound.play( filePly );
     recordState = PLAYING;
     mode = 5;                                                                                                   // Change operation mode to continue blending audio
-    Serial.println( "Stethoscope Began BLENDING" );                                                              // Function execution confirmation over USB serial
+    Serial.println( "Stethoscope began BLENDING" );                                                             // Function execution confirmation over USB serial
     BTooth.write( ACK );                                                                                        // ACKnowledgement sent back through bluetooth serial
     return true;
   }
   else
-    Serial.println( "Stethoscope CANNOT begin BLENDING" );                                                       // Function execution confirmation over USB serial
+    Serial.println( "Stethoscope CANNOT begin BLENDING" );                                                      // Function execution confirmation over USB serial
     BTooth.write( NAK );                                                                                        // Negative AcKnowledgement sent back through bluetooth serial
     return false;
 }
@@ -340,9 +433,9 @@ boolean startBlending( String fileName )
 //
 void continueBlending() 
 {
-  if ( !playRaw1.isPlaying() )
+  if ( !playRaw_sdHeartSound.isPlaying() )
   {
-    playRaw1.stop();
+    playRaw_sdHeartSound.stop();
   }
   if ( mixerLvL > 0.10 )
   {
@@ -350,7 +443,7 @@ void continueBlending()
     mixer2.gain( 0, mixerLvL );
     mixer2.gain( 1, mixerLvL );
     mixer2.gain( 2, (1 - mixerLvL) );
-    Serial.println(mixerLvL);
+    Serial.println( mixerLvL );
   }
 }
 
@@ -361,11 +454,12 @@ void continueBlending()
 boolean stopBlending()
 {
   Serial.println( "stopBlending" );
-  if ( recordState == PLAYING ) playRaw1.stop();
-  mixerLvL = 1;
+  if ( recordState == PLAYING ) playRaw_sdHeartSound.stop();
+  mixerLvL    = 1;
   recordState = STANDBY;
-  mode = 4;                                                                                                     // Change operation mode to normal operation or idle
-  Serial.println( "Stethoscope Stop PLAYING" );                                                                 // Function execution confirmation over USB serial
+  mode        = 4;                                                                                                     // Change operation mode to normal operation or idle
+  Serial.println( "Stethoscope stopped BLENDING" );                                                             // Function execution confirmation over USB serial
+  Serial.println( "sending: ACK..." );
   BTooth.write( ACK );                                                                                          // ACKnowledgement sent back through bluetooth serial
   return true;
 }
@@ -383,20 +477,20 @@ boolean startAudioPassThrough()
 
   if ( selectedInput == AUDIO_INPUT_MIC )
   {
-    mixer1.gain( 0, mixerInputOFF );                                                                            // Set gain of mixer1, channel0 to 0
-    mixer1.gain( 1, mixerInputOFF );                                                                            // Set gain of mixer1, channel1 to 1
     mixer2.gain( 0, mixerInputON  );                                                                            // Set gain of mixer2, channel0 to 0.5 - Microphone on
     mixer2.gain( 1, mixerInputON  );                                                                            // Set gain of mixer2, channel0 to 0.5 - Microphone on
     mixer2.gain( 2, mixerInputOFF );                                                                            // Set gain of mixer2, channel2 to 0
     recordState = PASSTHRU;
     mode = 4;                                                                                                   // Change operation mode to continue audio passthrough
-    Serial.println( "Stethoscope switched Audio Passthrough mode." );                                           // Function execution confirmation over USB serial
+    Serial.println( "Stethoscope switched AUDIO PASSTHROUGH mode." );                                           // Function execution confirmation over USB serial
+    Serial.println( "sending: ACK..." );
     BTooth.write( ACK );                                                                                        // ACKnowledgement sent back through bluetooth serial
     return true;
   }
   else
   {
-    Serial.println( "Stethoscope CANNOT switch to Audio Passthrough mode." );                                   // Function execution confirmation over USB serial
+    Serial.println( "Stethoscope CANNOT switch to AUDIO PASSTHROUGH mode." );                                   // Function execution confirmation over USB serial
+    Serial.println( "sending: NAK..." );
     BTooth.write( NAK );                                                                                        // Negative AcKnowledgement sent back through bluetooth serial
     return false;
   }
@@ -408,8 +502,6 @@ boolean startAudioPassThrough()
 //
 boolean continueAudioPassThrough()
 {
-  mixer1.gain( 0, mixerInputOFF );                                                                              // Set gain of mixer1, channel0 to 0
-  mixer1.gain( 1, mixerInputOFF );                                                                              // Set gain of mixer1, channel1 to 1
   mixer2.gain( 0, mixerInputON  );                                                                              // Set gain of mixer2, channel0 to 0.5 - Microphone on
   mixer2.gain( 1, mixerInputON  );                                                                              // Set gain of mixer2, channel0 to 0.5 - Microphone on
   mixer2.gain( 2, mixerInputOFF );                                                                              // Set gain of mixer2, channel2 to 0
@@ -431,22 +523,22 @@ boolean startTrackingMicStream()
   if ( recordState == PLAYING ) stopPlaying();                                                                  // Stop playback if playing
   if ( selectedInput == AUDIO_INPUT_MIC )
   {
-    mixer1.gain( 0, mixerInputOFF );                                                                            // Set gain of mixer1, channel0 to 0
-    mixer1.gain( 1, mixerInputOFF );                                                                            // Set gain of mixer1, channel1 to 1
     mixer2.gain( 0, mixerInputON  );                                                                            // Set gain of mixer2, channel0 to 0.5 - Microphone on
     mixer2.gain( 1, mixerInputON  );                                                                            // Set gain of mixer2, channel0 to 0.5 - Microphone on
     mixer2.gain( 2, mixerInputOFF );                                                                            // Set gain of mixer2, channel2 to 0
-    queue2.begin();
+    queue_recMic.begin();
     recordState = DETECTING;
     mode = 3;                                                                                                   // Change operation mode to continue streaming audio
     sf1.StartSend( STRING, 1000 );                                                                              // Begin transmitting heartrate data as a String
     Serial.println( "Stethoscope STARTed DETECTING heartbeat from MIC audio." );                                // Function execution confirmation over USB serial
+    Serial.println( "sending: ACK..." );
     BTooth.write( ACK );                                                                                        // ACKnowledgement sent back through bluetooth serial
     return true;
   }
   else
   {
     Serial.println( "Stethoscope CANNOT START DETECTING heartbeat from MIC audio." );                           // Function execution confirmation over USB serial
+    Serial.println( "sending: NAK..." );
     BTooth.write( NAK );                                                                                        // Negative AcKnowledgement sent back through bluetooth serial
     return false;
   }
@@ -460,11 +552,11 @@ boolean startTrackingMicStream()
 //
 boolean continueTrackingMicStream()
 {
-    waveAmplitudePeaks( 2 );                                                                                    // write HR and time to file at each heart beat
-    if ( beat )
+    bool beatCaptured = waveAmplitudePeaks();                                                                   // write HR and time to file at each heart beat
+    if ( beatCaptured )
     {
       txFr = sf1.Get();                                                                                         // get values from existing TX data frame
-      txFr.DataString = String( heartRateI );                                                                    // update data-string value with heartrate
+      txFr.DataString = String( heartRateI );                                                                   // update data-string value with heartrate
       sf1.Set( txFr );                                                                                          // set TX data frame with new heartate value
     }
   return true;
@@ -473,7 +565,7 @@ boolean continueTrackingMicStream()
 
 
 //
-// *** Stop Detecting Heartbeat Peaks from Microphone Audio.
+// *** Stop Tracking Microphone Stream
 //     This function terminates startTrackingMicStream().
 //
 boolean stopTrackingMicStream()
@@ -485,12 +577,14 @@ boolean stopTrackingMicStream()
     mode = 4;                                                                                                   // Change operation mode to continue streaming audio
     sf1.StopSend( STRING );                                                                                     // Terminate transmitting heartrate data as a String
     Serial.println( "Stethoscope will STOP DETECTING heartbeat from MIC audio." );                              // Function execution confirmation over USB serial
+    Serial.println( "sending: ACK..." );
     BTooth.write( ACK );                                                                                        // ACKnowledgement sent back through bluetooth serial
     return true;
   }
   else
   {
     Serial.println( "Stethoscope CANNOT STOP DETECTING heartbeat from MIC audio." );                            // Function execution confirmation over USB serial
+    Serial.println( "sending: NAK..." );
     BTooth.write( NAK );                                                                                        // Negative AcKnowledgement sent back through bluetooth serial
     return false;
   }

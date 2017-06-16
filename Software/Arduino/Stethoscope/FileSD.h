@@ -30,7 +30,7 @@ boolean sdCardCheck()
   //Serial1.println( "SD Card Test" );
 
  // First, detect the card
-  status = card.init(10); // Audio shield has SD card SD on pin 10
+  status = card.init( SPI_FULL_SPEED, 10 ); // Audio shield has SD card SD on pin 10
   if ( status )
   {
     Serial.println( "SD card is connected" );
@@ -239,7 +239,7 @@ void sendFileSerial( File  file )
     }
     else reading = false;
   }
-  while( reading );
+  while( reading ) ;
 
   file.close();
  }

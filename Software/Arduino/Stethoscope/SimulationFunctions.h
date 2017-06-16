@@ -72,8 +72,8 @@ boolean startAugmentingBP()
       return true;
     break;
     default :
-      BPAugmentState    = STANDBY;
-      recordState       = PASSTHRU;
+      BPAugmentState  = STANDBY;
+      recordState     = PASSTHRU;
       mode            = 4;
       Serial.println( ses.heartRate );
       Serial.println( "BP Augmentation called with invalid parameter." );
