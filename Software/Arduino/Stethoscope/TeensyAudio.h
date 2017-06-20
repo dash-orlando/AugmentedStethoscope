@@ -8,7 +8,6 @@
  */
 
 
-/// Import or Include Libraries
 #include <Audio.h>
 #include <Wire.h>
 #include <SPI.h>
@@ -16,48 +15,63 @@
 #include <SerialFlash.h>
 
 // GUItool: begin automatically generated code
-AudioInputI2S            i2s_mic;           //xy=80.99998474121094,127
-AudioPlaySdRaw           playRaw_sdHeartSound;       //xy=86.99998474121094,185.99998474121094
-AudioPlayMemory          playMem_heartSoundSamp;       //xy=87.99998474121094,245.99998474121094
-AudioFilterStateVariable filter3;        //xy=302,126.99998474121094
-AudioMixer4              mixer2;         //xy=302,201.99998474121094
-AudioFilterStateVariable filter4;        //xy=302,278
-AudioFilterStateVariable filter1;        //xy=456,141.99998474121094
-AudioMixer4              mixer3;         //xy=533,259
-AudioRecordQueue         queue_recMic;         //xy=688,130
-AudioAnalyzePeak         peak_QrsMeter;          //xy=688,177.99998474121094
-AudioOutputI2S           i2s_speaker;           //xy=688,228.99998474121094
-AudioConnection          patchCord2(i2s_mic, 0, mixer2, 0);
-AudioConnection          patchCord3(i2s_mic, 0, filter3, 0);
-AudioConnection          patchCord5(i2s_mic, 1, mixer2, 1);
-AudioConnection          patchCord6(i2s_mic, 1, filter3, 1);
-AudioConnection          patchCord7(playRaw_sdHeartSound, 0, mixer2, 2);
-AudioConnection          patchCord8(playMem_heartSoundSamp, 0, filter4, 0);
-AudioConnection          patchCord10(filter3, 2, mixer3, 1);
-AudioConnection          patchCord11(mixer2, 0, filter1, 0);
-AudioConnection          patchCord12(filter4, 0, mixer3, 2);
-AudioConnection          patchCord15(filter1, 0, queue_recMic, 0);
-AudioConnection          patchCord16(filter1, 0, peak_QrsMeter, 0);
-AudioConnection          patchCord17(filter1, 0, mixer3, 0);
-AudioConnection          patchCord18(mixer3, 0, i2s_speaker, 0);
-AudioConnection          patchCord19(mixer3, 0, i2s_speaker, 1);
-AudioControlSGTL5000     sgtl5000_1;     //xy=88.99998474121094,69
+AudioInputI2S            i2s_mic;                             //xy=92,188
+AudioPlaySdRaw           playRaw_sdHeartSound;                //xy=142.5,301.99998474121094
+AudioPlayMemory          playMem_heartSoundSamp;              //xy=154,398
+AudioMixer4              mixer_mic_Sd;                        //xy=421,200.99998474121094
+AudioFilterStateVariable filter_LowPass_Rec;                  //xy=440,404
+AudioFilterStateVariable filter_HighPass_Amb;                 //xy=444,305.99998474121094
+AudioFilterBiquad        biquad_micSpk_EQ;                    //xy=670,201
+AudioMixer4              mixer_allToSpk;                      //xy=700,325
+AudioOutputI2S           i2s_speaker;                         //xy=934,350
+AudioRecordQueue         queue_recMic;                        //xy=936,187
+AudioAnalyzePeak         peak_QrsMeter;                       //xy=941,268
+
+AudioConnection          patchCord1(  i2s_mic, 0, mixer_mic_Sd,        0 );
+AudioConnection          patchCord3(  i2s_mic, 1, mixer_mic_Sd,        1 );
+AudioConnection          patchCord2(  i2s_mic, 0, filter_HighPass_Amb, 0 );
+AudioConnection          patchCord4(  i2s_mic, 1, filter_HighPass_Amb, 1 );
+
+AudioConnection          patchCord5(  playRaw_sdHeartSound,   0, mixer_mic_Sd,       2 );
+AudioConnection          patchCord6(  playMem_heartSoundSamp, 0, filter_LowPass_Rec, 0 );
+
+AudioConnection          patchCord7(  mixer_mic_Sd, biquad_micSpk_EQ );
+
+AudioConnection          patchCord8(  biquad_micSpk_EQ, queue_recMic         );
+AudioConnection          patchCord9(  biquad_micSpk_EQ, peak_QrsMeter        );
+AudioConnection          patchCord10( biquad_micSpk_EQ, 0, mixer_allToSpk, 0 );
+
+AudioConnection          patchCord11( filter_LowPass_Rec,  0, mixer_allToSpk, 2 );
+AudioConnection          patchCord12( filter_HighPass_Amb, 2, mixer_allToSpk, 1 );
+
+AudioConnection          patchCord13( mixer_allToSpk, 0, i2s_speaker, 0 );
+AudioConnection          patchCord14( mixer_allToSpk, 0, i2s_speaker, 1 );
+
+AudioControlSGTL5000     sgtl5000_1;     //xy=101,86
 // GUItool: end automatically generated code
 
 
 /// Variable Definitions
 const int                 selectedInput   = AUDIO_INPUT_MIC;
-int                       microphoneGain  =  36;
-float                     micInputLvL     =   0.50;
-float                     sampleInputLvL  =   0.50;
-float                     speakerVolume   =   0.80;                             // 2-speaker: 0.50; 1-speaker: 0.60
-float                     mixerInputON    =   1.00;
-float                     mixerInputOFF   =   0.00;
-float                     mixerLvL        =   1.00;
-float                     cornerFreq      = 750.00;                             // Hz
+int                       microphoneGain  =    35;
+float                     micInputLvL     =     0.50;
+float                     sampleInputLvL  =     0.50;
+float                     speakerVolume   =     0.80;                           // 2-speaker: 0.50; 1-speaker: 0.60
 
-float                     bpLowPassFreq   = 250.0;                              // Low pass from HB sample
-float                     bpHighPassFreq  = 500.0;                              // High pass from mic
+float                     mixerInputON    =     1.00;
+float                     mixerInputOFF   =     0.00;
+float                     mixerLvL        =     1.00;
+
+float                     bpLowPassFreq   =   250.0;                            // Low pass from HB sample
+float                     bpHighPassFreq  =   500.0;                            // High pass from mic
+
+float                     freqHighShelf   =  2000.0f;
+float                     tGain1          =   -20.0f;                           // ...may need to fiddle with this one
+float                     slope1          =    1.0f;
+
+float                     freqLowPass     = 2000.0f;                            // prjc example uses 800.0
+float                     Q2              =    0.707f;                          // 0.707 = Butterworth Filter value;  min: 0.1;
+
 
 
 /// Functions
@@ -77,18 +91,30 @@ void SetupAudioBoard()
   SPI.setMOSI( 7 );                                                             // Audio shield has MOSI on pin 7
   SPI.setSCK( 14 );                                                             // Audio shield has SCK on pin 14
 
-  mixer2.gain( 0, mixerInputON  );                                              // Set gain of mixer2, channel0 to 0.25 - Microphone on
-  mixer2.gain( 1, mixerInputON  );                                              // Set gain of mixer2, channel1 to 0.25 - Microphone on
-  mixer2.gain( 2, mixerInputOFF );                                              // Set gain of mixer2, channel2 to 0
-  mixer3.gain( 0, mixerInputON  );                                              // Normal stethoscope mic input (on)
-  mixer3.gain( 1, mixerInputOFF );                                              // Highpass mic input (off)
-  mixer3.gain( 2, mixerInputOFF );                                              // HB-sample playback (off)
+  mixer_mic_Sd.gain(    0, mixerInputON  );                                     // Set gain of mixer_mic_Sd, channel0 to 0.25 - Microphone on
+  mixer_mic_Sd.gain(    1, mixerInputON  );                                     // Set gain of mixer_mic_Sd, channel1 to 0.25 - Microphone on
+  mixer_mic_Sd.gain(    2, mixerInputOFF );                                     // Set gain of mixer_mic_Sd, channel2 to 0
 
-  // Configure filters for heartsound listening
-  filter1.frequency( cornerFreq );                                              // Set Corner Frequency to the default value of 1500.00 Hz or 1.5 kHz
+  mixer_allToSpk.gain(  0, mixerInputON  );                                     // Normal stethoscope mic input (on)
+  mixer_allToSpk.gain(  1, mixerInputOFF );                                     // Highpass mic input (off)
+  mixer_allToSpk.gain(  2, mixerInputOFF );                                     // HB-sample playback (off)
 
   // Configure filters for BP Augmentation
-  filter3.frequency( bpHighPassFreq );
-  filter4.frequency( bpLowPassFreq  );
+  filter_HighPass_Amb.frequency( bpHighPassFreq );
+  filter_LowPass_Rec.frequency(  bpLowPassFreq  );
+
+
+  // Configure Biquad filter to EQ between mic and speaker
+  biquad_micSpk_EQ.setLowpass(   0, freqLowPass, Q2             );              //stage, freq, Q; Butterworth filter, 12 db/octave
+  biquad_micSpk_EQ.setHighShelf( 1, freqHighShelf, tGain1, slope1 );            //stage, freq, gain, slope
+
+  // Butterworth filter, 12 db/octave
+  biquad_micSpk_EQ.setLowpass( 0, freqLowPass, 0.707) ;
+
+  // Linkwitz-Riley filter, 48 dB/octave
+  //biquad_micSpk_EQ.setLowpass( 0, freqLowPass, 0.54 );
+  //biquad_micSpk_EQ.setLowpass( 1, freqLowPass, 1.3  );
+  //biquad_micSpk_EQ.setLowpass( 2, freqLowPass, 0.54 );
+  //biquad_micSpk_EQ.setLowpass( 3, freqLowPass, 1.3  );
   
 } // End of SetupAudioBoard()
