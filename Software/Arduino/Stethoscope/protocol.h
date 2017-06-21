@@ -10,7 +10,7 @@
 
 
 /// Device Identification Variables
-byte STE[] = {0x53,0x54,0x45};                    // Stethoscope
+byte STE[] = { 0x53, 0x54, 0x45, 0x00 };        // Stethoscope Device IDs
 
 /// BT Configuration
 #define         SPEED       115200
@@ -18,9 +18,9 @@ byte STE[] = {0x53,0x54,0x45};                    // Stethoscope
 
 /// ASCII Byte Codes -- used for communication protocol
 // General Commands
-#define         ENQ                 0x05          // Enquiry: "Are you ready for commands?";                                    [resp: ACK | NAK]
-#define         ACK                 0x06          // Positive Acknowledgement: "Command/Action successful."
-#define         NAK                 0x15          // Negative Acknowledgement: "Command/Action UNsuccessful."
+#define         ENQ               0x05          // Enquiry: "Are you ready for commands?"                             [resp: ACK | NAK]
+#define         ACK               0x06          // Positive Acknowledgement: "Command/Action successful."
+#define         NAK               0x15          // Negative Acknowledgement: "Command/Action UNsuccessful."
 
 // Device Control Commands
 #define         DEVICEID        	0x11          // Device Identification                                    					[resp: Device Code]

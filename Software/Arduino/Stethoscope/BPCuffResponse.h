@@ -21,15 +21,15 @@ void SetRate( int hr )
 
 void PlayHB()
 {
-  playMem1.play( KorotkoffSound );
+  playMem_heartSoundSamp.play( KorotkoffSound );
 }
 
 
 void BeginHB()
 {
-  mixer3.gain( 0, mixerInputOFF  );                                            // Normal stethoscope mic input (off)
-  mixer3.gain( 1, micInputLvL    );                                            // Highpass mic input  (on)
-  mixer3.gain( 2, sampleInputLvL );                                            // HB-sample playback  (on)
+  mixer_allToSpk.gain( 0, mixerInputOFF  );                                            // Normal stethoscope mic input (off)
+  mixer_allToSpk.gain( 1, micInputLvL    );                                            // Highpass mic input  (on)
+  mixer_allToSpk.gain( 2, sampleInputLvL );                                            // HB-sample playback  (on)
 
   MsTimer2::set( hrInterval, PlayHB );
   MsTimer2::start();
@@ -39,8 +39,8 @@ void BeginHB()
 void EndHB()
 {
   MsTimer2::stop();
-  mixer3.gain( 0, mixerInputON  );                                              // Normal stethoscope mic input (on)
-  mixer3.gain( 1, mixerInputOFF );                                              // Highpass mic input (off)
-  mixer3.gain( 2, mixerInputOFF );                                              // HB-sample playback (off)
+  mixer_allToSpk.gain( 0, mixerInputON  );                                              // Normal stethoscope mic input (on)
+  mixer_allToSpk.gain( 1, mixerInputOFF );                                              // Highpass mic input (off)
+  mixer_allToSpk.gain( 2, mixerInputOFF );                                              // HB-sample playback (off)
 }
 

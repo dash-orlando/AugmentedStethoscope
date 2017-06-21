@@ -46,7 +46,7 @@ boolean startAugmentingBP()
       BeginHB();
       BPAugmentState  = AUGMENTING;
       recordState     = STANDBY;
-      mode            = 6;
+      switchMode( 6 );
       Serial.println( "Augmentation for BP reading STARTED." );
       BTooth.write( ACK );
       return true;
@@ -56,7 +56,7 @@ boolean startAugmentingBP()
       BeginHB();
       BPAugmentState  = AUGMENTING;
       recordState     = STANDBY;
-      mode            = 6;
+      switchMode( 6 );
       Serial.println( "Augmentation for BP reading STARTED." );
       BTooth.write( ACK );
       return true;
@@ -66,15 +66,15 @@ boolean startAugmentingBP()
       BeginHB();
       BPAugmentState  = AUGMENTING;
       recordState     = STANDBY;
-      mode            = 6;
+      switchMode( 6 );
       Serial.println( "Augmentation for BP reading STARTED." );
       BTooth.write( ACK );
       return true;
     break;
     default :
-      BPAugmentState    = STANDBY;
-      recordState       = PASSTHRU;
-      mode            = 4;
+      BPAugmentState  = STANDBY;
+      recordState     = PASSTHRU;
+      switchMode( 4 );
       Serial.println( ses.heartRate );
       Serial.println( "BP Augmentation called with invalid parameter." );
       BTooth.write( NAK );
@@ -91,7 +91,7 @@ boolean stopAugmentingBP()
   EndHB();
   BPAugmentState  = STANDBY;
   recordState     = PASSTHRU;
-  mode            = 4;
+  switchMode( 4 );
   Serial.println( "Augmentation for BP reading STOPPED." );
   BTooth.write( ACK );
   return true;

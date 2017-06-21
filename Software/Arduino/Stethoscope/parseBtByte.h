@@ -52,13 +52,17 @@ void parseBtByte( String fn )
 
     inByte = BTooth.read();                     // get incoming byte
     displayByte( inByte );
-    Serial.print( "(pre) readyState: ");    Serial.println( stateToText( readyState   ) );
-    Serial.print( "(pre) connectState: ");  Serial.println( stateToText( connectState ) );
-    Serial.print( "(pre) recordState: ");   Serial.println( stateToText( recordState  ) );
+    Serial.print( "(pre) readyState    : ");   Serial.println( stateToText( readyState     ) );
+    Serial.print( "(pre) connectState  : ");   Serial.println( stateToText( connectState   ) );
+    Serial.print( "(pre) recordState   : ");   Serial.println( stateToText( recordState    ) );
+    Serial.print( "(pre) passthruState : " );  Serial.println( stateToText( passthruState  ) );
+    Serial.print( "(pre) HBDetectState : " );  Serial.println( stateToText( HBDetectState  ) );
+    Serial.print( "(pre) BPAugmentState: " );  Serial.println( stateToText( BPAugmentState ) );
     switch ( inByte )
     {
       case ENQ :
         Serial.println( "received: ENQ..." );
+        Serial.print( "readyState is " ); Serial.println( stateToText( readyState ) );
         if ( readyState == READY )
         {
           connectState  = CONNECTED;                                                                  // The ENQ command has to always be sent first
@@ -78,7 +82,7 @@ void parseBtByte( String fn )
 	  // Diagnostic Functions
       case DEVICEID :
         // DC1_DEVICEID : Device Identification
-		    deviceID(STE);
+		    deviceID( STE );
       break;
       case SDCHECK :
         // DC1_SDCHECK
@@ -86,22 +90,26 @@ void parseBtByte( String fn )
 	    break;
       case SENDWAV :
         // SENDWAV : Send .WAV File
-        sendWav(fn);
+        sendWav( fn );
       break;
       case DELVOLATILE :
         //  DELVOLATILE : Delete Volatile Directory
       break;
 	    case STARTREC :
         // STARTREC : Start Recording
+        Serial.println( "received: STARTREC..." );
+        Serial.print( "readyState is " ); Serial.println( stateToText( readyState ) );
         startRecording();
       break;
 	    case STOPREC :
   	    // STOPREC : Stop Recording
+        Serial.println( "received: STOPREC..." );
+        Serial.print( "readyState is " ); Serial.println( stateToText( readyState ) );
   	    stopRecording();
   	  break;
   	  case STARTPLAY :
   	    // STARTPLAY : Start Playing
-  	    startPlaying(ses.filePly1);
+  	    startPlaying( ses.filePly1 );
   	  break;
   	  case STOPPLAY :
   	    // STOPPLAY : Stop Playing
@@ -173,11 +181,11 @@ void parseBtByte( String fn )
         Serial.print( (char)inByte );
       break;
     }
-    Serial.print( "(post) readyState   :  " ); Serial.println( stateToText( readyState     ) );
-    Serial.print( "(post) connectState :  " ); Serial.println( stateToText( connectState   ) );
-    Serial.print( "(post) recordState  :  " ); Serial.println( stateToText( recordState    ) );
-    Serial.print( "(post) passthruState:  " ); Serial.println( stateToText( passthruState  ) );
-    Serial.print( "(post) HBDetectState:  " ); Serial.println( stateToText( HBDetectState  ) );
-    Serial.print( "(post) BPAugmentState: " ); Serial.println( stateToText( BPAugmentState ) );
+    Serial.print( "(post) readyState    :  " ); Serial.println( stateToText( readyState     ) );
+    Serial.print( "(post) connectState  :  " ); Serial.println( stateToText( connectState   ) );
+    Serial.print( "(post) recordState   :  " ); Serial.println( stateToText( recordState    ) );
+    Serial.print( "(post) passthruState :  " ); Serial.println( stateToText( passthruState  ) );
+    Serial.print( "(post) HBDetectState :  " ); Serial.println( stateToText( HBDetectState  ) );
+    Serial.print( "(post) BPAugmentState:  " ); Serial.println( stateToText( BPAugmentState ) );
     delay( 10 );
 }
