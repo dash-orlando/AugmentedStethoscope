@@ -27,25 +27,25 @@ AudioOutputI2S           i2s_speaker;                         //xy=934,350
 AudioRecordQueue         queue_recMic;                        //xy=936,187
 AudioAnalyzePeak         peak_QrsMeter;                       //xy=941,268
 
-AudioConnection          patchCord1(  i2s_mic, 0, mixer_mic_Sd,        0 );
-AudioConnection          patchCord3(  i2s_mic, 1, mixer_mic_Sd,        1 );
-AudioConnection          patchCord2(  i2s_mic, 0, filter_HighPass_Amb, 0 );
-AudioConnection          patchCord4(  i2s_mic, 1, filter_HighPass_Amb, 1 );
+AudioConnection          patchCord1(i2s_mic, 0, mixer_mic_Sd, 0);
+AudioConnection          patchCord2(i2s_mic, 0, filter_HighPass_Amb, 0);
+AudioConnection          patchCord3(i2s_mic, 1, mixer_mic_Sd, 1);
+AudioConnection          patchCord4(i2s_mic, 1, filter_HighPass_Amb, 1);
 
-AudioConnection          patchCord5(  playRaw_sdHeartSound,   0, mixer_mic_Sd,       2 );
-AudioConnection          patchCord6(  playMem_heartSoundSamp, 0, filter_LowPass_Rec, 0 );
+AudioConnection          patchCord5(playRaw_sdHeartSound, 0, mixer_mic_Sd, 2);
+AudioConnection          patchCord6(playMem_heartSoundSamp, 0, filter_LowPass_Rec, 0);
 
-AudioConnection          patchCord7(  mixer_mic_Sd, biquad_micSpk_EQ );
+AudioConnection          patchCord7(mixer_mic_Sd, biquad_micSpk_EQ);
 
-AudioConnection          patchCord8(  biquad_micSpk_EQ, queue_recMic         );
-AudioConnection          patchCord9(  biquad_micSpk_EQ, peak_QrsMeter        );
-AudioConnection          patchCord10( biquad_micSpk_EQ, 0, mixer_allToSpk, 0 );
+AudioConnection          patchCord8(filter_LowPass_Rec, 0, mixer_allToSpk, 2);
+AudioConnection          patchCord9(filter_HighPass_Amb, 0, mixer_allToSpk, 1);
+AudioConnection          patchCord10(biquad_micSpk_EQ, queue_recMic);
 
-AudioConnection          patchCord11( filter_LowPass_Rec,  0, mixer_allToSpk, 2 );
-AudioConnection          patchCord12( filter_HighPass_Amb, 2, mixer_allToSpk, 1 );
+AudioConnection          patchCord11(biquad_micSpk_EQ, 0, mixer_allToSpk, 0);
+AudioConnection          patchCord12(mixer_allToSpk, peak_QrsMeter);
 
-AudioConnection          patchCord13( mixer_allToSpk, 0, i2s_speaker, 0 );
-AudioConnection          patchCord14( mixer_allToSpk, 0, i2s_speaker, 1 );
+AudioConnection          patchCord13(mixer_allToSpk, 0, i2s_speaker, 0);
+AudioConnection          patchCord14(mixer_allToSpk, 0, i2s_speaker, 1);
 
 AudioControlSGTL5000     sgtl5000_1;     //xy=101,86
 // GUItool: end automatically generated code
