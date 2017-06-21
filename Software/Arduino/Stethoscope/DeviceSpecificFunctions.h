@@ -252,6 +252,11 @@ boolean startRecording()
   if ( SD.exists( fileRec ) ) SD.remove( fileRec );                                                             // Check for existence of RECORD.RAW
   if ( SD.exists( fileDat ) ) SD.remove( fileDat );                                                             // Check for existence of HRATE.DAT
 
+  frec  = SD.open( fileRec, FILE_WRITE );                                                                       // Create and open RECORD.RAW file
+  Serial.println( frec );
+  hRate = SD.open( fileDat,  FILE_WRITE );                                                                      // Create and open HRATE.DAT file
+  Serial.println( hRate );
+
   if (  SD.open( fileRec, FILE_WRITE ) &&                                                                       // Create and open RECORD.RAW file
         SD.open( fileDat, FILE_WRITE ) )                                                                        // Create and open HRATE.DAT file
   {
