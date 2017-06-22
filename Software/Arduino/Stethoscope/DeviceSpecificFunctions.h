@@ -302,7 +302,7 @@ void continueRecording()
     queue_recMic.freeBuffer();
     memcpy( buffer + 256, queue_recMic.readBuffer(), 256 );
     queue_recMic.freeBuffer();                                                                                  // write all 512 bytes to the SD card
-    elapsedMicros usec = 0;
+    //elapsedMicros usec = 0;
     frec.write( buffer, 512 );
     // Uncomment these lines to see how long SD writes
     // are taking.  A pair of audio blocks arrives every
@@ -314,8 +314,8 @@ void continueRecording()
     // approximately 301700 us of audio, to allow time
     // for occasional high SD card latency, as long as
     // the average write time is under 5802 us.
-    Serial.print( "SD write, us = " );
-    Serial.println( usec );
+    //Serial.print( "SD write, us = " );
+    //Serial.println( usec );
     bool beatCaptured = waveAmplitudePeaks();                                                                   // write HR and time to file at each heart beat
     if ( beatCaptured )
     {
