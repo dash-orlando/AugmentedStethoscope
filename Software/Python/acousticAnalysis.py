@@ -34,6 +34,7 @@ def read_WAV(wav_file):
     wav_struct['fs'] = raw_data[0]                                                          # sampling rate (Hz)
     wav_struct['amp'] = raw_data[1]                                                         # amplitude (signal) 
     wav_struct['n_samples'] = len(raw_data[1])                                              # number of samples in signal
+    wav_struct['samples'] = np.linspace(1,len(raw_data[1]),len(raw_data[1]))
     wav_struct['tf'] = len(raw_data[1])/float(raw_data[0])                                  # time length of recording
     wav_struct['dt'] = 1./raw_data[0]                                                       # time interval
     wav_struct['t'] = np.linspace(0,len(raw_data[1])/float(raw_data[0]),len(raw_data[1]))   # approximation of time array (using linespace)
@@ -44,7 +45,7 @@ def read_WAV(wav_file):
 def plot_WAV(wav_struct):                                   
 
     plt.subplot(211)                                                                        # widescreen, top plot
-    plt.plot(wav_struct['amp'],color='b',linewidth=0.25)                                    # plot in sample domain
+    plt.plot(wav_struct['samples'],wav_struct['amp'],color='b',linewidth=0.25)                                    # plot in sample domain
     plt.xlabel('Samples')                                                                   # x-label
     plt.ylabel('Amplitude')                                                                 # y-label
     plt.subplot(212)                                                                        # widescreen, bottom plot
@@ -52,6 +53,31 @@ def plot_WAV(wav_struct):
     plt.xlabel('Time [sec.]')
     plt.ylabel('Amplitude')
     plt.show()                                                                              # show plot
+
+# Signal Gain Mod.
+#   - Modify the signal amplitude using a gain
+def mod_WAV_gain(wav_struct,gain):
+
+    wav_amp = wav_struct['amp']
+    mod_amp = np.multiply(wav_amp,float(gain))
+    samples = wav_struct['samples']
+    time = wav_struct['t']
+
+    plt.subplot(211)                                                                        # widescreen, top plot
+    plt.plot(samples,wav_amp,linestyle='-',color='b',linewidth=0.50)
+    plt.plot(samples,mod_amp,linestyle='-',color='r',linewidth=0.25)
+    plt.xlabel('Samples')                                                                   # x-label
+    plt.ylabel('Amplitude')                                                                 # y-label
+    plt.subplot(212)                                                                        # widescreen, bottom plot
+    plt.plot(time,wav_amp,linestyle='-',color='b',linewidth=0.50)
+    plt.plot(time,mod_amp,linestyle='-',color='r',linewidth=0.25)
+    plt.xlabel('Time [sec.]')
+    plt.ylabel('Amplitude')
+
+    plt.show()
+    
+    return wav_amp, mod_amp
+    
 
 """
 References

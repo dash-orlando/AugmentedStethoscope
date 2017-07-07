@@ -1,8 +1,6 @@
 
 
-from acousticAnalysis   import browse_WAV
-from acousticAnalysis   import read_WAV
-from acousticAnalysis   import plot_WAV
+from acousticAnalysis   import *
 
 #wav_file = browse_WAV()
 
@@ -10,3 +8,6 @@ filename = "C:\Users\WOLF512\Documents\Gits\PD3D\AugmentedStethoscope\Software\S
 wav_struct = read_WAV(filename)
 
 plot_WAV(wav_struct)
+
+
+mod_amp = mod_WAV_gain(wav_struct,2.0)
