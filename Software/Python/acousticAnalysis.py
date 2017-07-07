@@ -32,7 +32,7 @@ def read_WAV(wav_file):
     raw_data = read(wav_file)                                                               # reading the wav file
     wav_struct['raw'] = raw_data                                                            # store raw output from the read() function
     wav_struct['fs'] = raw_data[0]                                                          # sampling rate (Hz)
-    wav_struct['amp'] = raw_data[1]                                                         # amplitude (signal) 
+    wav_struct['amp'] = np.array(raw_data[1],dtype=float)                                   # amplitude (signal) 
     wav_struct['n_samples'] = len(raw_data[1])                                              # number of samples in signal
     wav_struct['samples'] = np.linspace(1,len(raw_data[1]),len(raw_data[1]))
     wav_struct['tf'] = len(raw_data[1])/float(raw_data[0])                                  # time length of recording
@@ -78,6 +78,17 @@ def mod_WAV_gain(wav_struct,gain):
     
     return wav_amp, mod_amp
     
+
+# Signal RMS
+#   - Calculates the RMS of the input signal
+def WAV_RMS(wav_struct):
+
+    wav_amp = wav_struct['amp']
+
+    wav_struct['RMS'] = np.sqrt(np.mean(wav_amp**2))
+
+    return wav_struct
+        
 
 """
 References

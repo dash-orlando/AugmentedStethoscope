@@ -11,3 +11,5 @@ plot_WAV(wav_struct)
 
 
 mod_amp = mod_WAV_gain(wav_struct,2.0)
+
+wav_struct = WAV_RMS(wav_struct)
