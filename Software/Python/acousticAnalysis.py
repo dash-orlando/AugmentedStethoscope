@@ -43,10 +43,16 @@ def read_WAV(wav_file):
 # Plot WAV file
 def plot_WAV(wav_struct):
 
+    # Plot in sample domain
+    plt.plot(wav_struct['amp'])
+    plt.show()
+
+    # Plot in time domain
     plt.plot(wav_struct['amp'])
     plt.show()
 
 """
 References
-1- https://docs.python.org/2/library/wave.html
+1 - WAV file import and read - https://docs.scipy.org/doc/scipy-0.19.0/reference/generated/scipy.io.wavfile.read.html
+2 - Data plotting - https://matplotlib.org/users/pyplot_tutorial.html
 """
