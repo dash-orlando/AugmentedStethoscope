@@ -48,6 +48,8 @@ byte STE[] = { 0x53, 0x54, 0x45, 0x00 };        // Stethoscope Device IDs
 #define         STARTBPTACHY      0x28          // Start BP Cuff augmentation -- Tachycardia
 #define         STOPBPALL         0x29          // Stop BP Cuff augmentation
 #define         BRECORD           0x30          // Blend Recording
+#define         PLYNHBEATREC      0x31          // Blend Normal Heart Beat Recorded
+#define         PLYEHBEATREC      0x32          // Blend Exercised Heart Beat Recorded
 
 
 

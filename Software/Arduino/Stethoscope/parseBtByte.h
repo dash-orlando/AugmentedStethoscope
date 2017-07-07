@@ -137,7 +137,7 @@ void parseBtByte( String fn )
       break;
       case BEDHMUR :
         // STARTBLEND : Start Blending of Early Systolic Heart Murmur
-        startBlending( ses.filePly3 );
+        startBlending( ses.filePly5 );
       break;
       case STOPBLEND :
         // STOPBLEND : Stop Blending of Early Systolic Heart Murmur
@@ -175,6 +175,14 @@ void parseBtByte( String fn )
       case BRECORD   :
         // BRECORD   : Start Augmented On-Board Recording
         startBlending( ses.fileRec );
+      break;
+      case PLYNHBEATREC   :
+        // BRECORD   : Start Augmented On-Board Recording
+        startBlending( ses.filePly5 );
+      break;
+      case PLYEHBEATREC   :
+        // BRECORD   : Start Augmented On-Board Recording
+        startBlending( ses.filePly6 );
       break;   
       
       default :

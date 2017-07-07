@@ -31,11 +31,11 @@ void SessionInit( String SID )
                       SID,
                       "RECORD.RAW",              // 
                       "NORMAL.RAW",              // Normal Heart Beat
-                      "ESMUR.RAW",               // Early Systolic Heart Murmur
-                      "EDMUR.RAW",               // Early Diastolic Heart Murmur
+                      "ESMURE.RAW",               // Early Systolic Heart Murmur
+                      "EDMURE.RAW",               // Early Diastolic Heart Murmur
                       "PEJECT.RAW",
-                      "PSPLITP.RAW",
-                      "ASYSL.RAW",
+                      "EDMUR.RAW",
+                      "ESMUR.RAW",
                       "HRATE.DAT"                // 
                   };
 }
