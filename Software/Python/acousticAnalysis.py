@@ -41,14 +41,12 @@ def read_WAV(wav_file):
     return wav_struct
 
 # Plot WAV file
-def plot_WAV(wav_struct):
+def plot_WAV(wav_struct):                                   
 
-    # Plot in sample domain
-    plt.plot(wav_struct['amp'])
-    plt.show()
-
-    # Plot in time domain
-    plt.plot(wav_struct['amp'])
+    plt.subplot(211)                                                                        # widescreen, top plot
+    plt.plot(wav_struct['amp'],color='b',linewidth=0.25)                                                             # plot in sample domain
+    plt.subplot(212)                                                                        # widescreen, bottom plot
+    plt.plot(wav_struct['t'],wav_struct['amp'],color='r',linewidth=0.25)                                             # plot in time domain
     plt.show()
 
 """
