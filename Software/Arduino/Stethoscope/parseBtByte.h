@@ -119,13 +119,13 @@ void parseBtByte( String fn )
   	    // STARTPASSTHRU : Start Audio Passthrough from Mic
   	    startAudioPassThrough();
   	  break;
-  	  case STARTTRACKING :
+  	  case STARTHBMONITOR :
   	    // STARTTRACKING : Start Tracking Microphone Stream for Peaks
-  	    startTrackingMicStream();
+  	    startHeartBeatMonitoring();
   	  break;
-  	  case STOPTRACKING :
+  	  case STOPHBMONITOR :
   	    // STOPTRACKING : Stop Tracking Microphone Stream for Peaks
-  	    stopTrackingMicStream();
+  	    stopHeartBeatMonitoring();
   	  break;
       case NORMALHB :
         // ?NORMALHB : Playback of Normal Heart Beat

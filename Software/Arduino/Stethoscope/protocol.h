@@ -32,8 +32,8 @@ byte STE[] = { 0x53, 0x54, 0x45, 0x00 };        // Stethoscope Device IDs
 #define         STARTPLAY       	0x18          // *Start Playback                                           					[resp: ACK | NAK]
 #define         STOPPLAY        	0x19          // *Stop Playback                                            					[resp: ACK | NAK]
 #define         STARTPASSTHRU   	0x1A          // *Start Audio passthrough from mic to ear monitors         					[resp: ACK | NAK]
-#define         STARTTRACKING   	0x1B          // ?Start Tracking Microphone Stream for Peaks               					[resp: ACK | NAK]
-#define         STOPTRACKING    	0x1C          // ?Stop Tracking Microphone Stream for Peaks                					[resp: ACK | NAK]
+#define         STARTHBMONITOR    0x1B          // Start Monitoring Heart Beat                              					[resp: ACK | NAK]
+#define         STOPHBMONITOR     0x1C          // Stop Monitoring Heart Beat                               					[resp: ACK | NAK]
 
 #define         NORMALHB        	0x1D          // Playback of Normal Heart Beat                            					[resp: ACK | NAK]
 #define         ESHMURMUR       	0x1E          // Playback of Early Systolic Heart Murmur                  					[resp: ACK | NAK]

@@ -547,7 +547,7 @@ boolean continueAudioPassThrough()
 //     The function does not record data to a file, rather is needed to send information for remote display via serial port communication.
 //     Note that the function acts as an alternative to startMicStream().
 //
-boolean startTrackingMicStream()
+boolean startHeartBeatMonitoring()
 {
   Serial.println( "EXECUTING startTrackingMicStream()" );
   if ( recordState == RECORDING ) stopRecording();                                                              // Stop recording if recording
@@ -573,7 +573,7 @@ boolean startTrackingMicStream()
     BTooth.write( NAK );                                                                                        // Negative AcKnowledgement sent back through bluetooth serial
     return false;
   }
-} // End of startTrackingMicStream()
+} // End of startMonitoring()
 
 
 //
@@ -581,7 +581,7 @@ boolean startTrackingMicStream()
 //     This is the companion function to trackingMicStream()
 //     The function continues the tracking of audio peaks
 //
-boolean continueTrackingMicStream()
+boolean continueHeartBeatMonitoring()
 {
     bool beatCaptured = waveAmplitudePeaks();                                                                   // write HR and time to file at each heart beat
     if ( beatCaptured )
@@ -591,7 +591,7 @@ boolean continueTrackingMicStream()
       sf1.Set( txFr );                                                                                          // set TX data frame with new heartate value
     }
   return true;
-} // End of continueTrackingMicStream()
+} // End of continueMonitoring()
 
 
 
@@ -599,7 +599,7 @@ boolean continueTrackingMicStream()
 // *** Stop Tracking Microphone Stream
 //     This function terminates startTrackingMicStream().
 //
-boolean stopTrackingMicStream()
+boolean stopHeartBeatMonitoring()
 {
   Serial.println( "EXECUTING stopTrackingMicStream()" );
   if ( recordState == DETECTING )
@@ -619,4 +619,4 @@ boolean stopTrackingMicStream()
     BTooth.write( NAK );                                                                                        // Negative AcKnowledgement sent back through bluetooth serial
     return false;
   }
-} // End of stopTrackingMicStream()
+} // End of stopHeartBeatMonitoring()
