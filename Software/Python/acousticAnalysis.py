@@ -44,10 +44,14 @@ def read_WAV(wav_file):
 def plot_WAV(wav_struct):                                   
 
     plt.subplot(211)                                                                        # widescreen, top plot
-    plt.plot(wav_struct['amp'],color='b',linewidth=0.25)                                                             # plot in sample domain
+    plt.plot(wav_struct['amp'],color='b',linewidth=0.25)                                    # plot in sample domain
+    plt.xlabel('Samples')                                                                   # x-label
+    plt.ylabel('Amplitude')                                                                 # y-label
     plt.subplot(212)                                                                        # widescreen, bottom plot
-    plt.plot(wav_struct['t'],wav_struct['amp'],color='r',linewidth=0.25)                                             # plot in time domain
-    plt.show()
+    plt.plot(wav_struct['t'],wav_struct['amp'],color='r',linewidth=0.25)                    # plot in time domain
+    plt.xlabel('Time [sec.]')
+    plt.ylabel('Amplitude')
+    plt.show()                                                                              # show plot
 
 """
 References
