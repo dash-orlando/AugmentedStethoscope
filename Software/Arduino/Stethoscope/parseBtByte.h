@@ -150,7 +150,7 @@ void parseBtByte( String fn )
         NHBRBlend();
       break;
       case EHBREC   :
-        // BRECORD   : Blending of Recorded, Exercised Heart Beat
+        // EHBREC   : Blending of Recorded, Exercised Heart Beat
         EHBRBlend();
       break;  
       case STARTBPNORM :
