@@ -122,41 +122,37 @@ void parseBtByte( String fn )
   	    startAudioPassThrough();
   	  break;
   	  case STARTHBMONITOR :
-  	    // STARTTRACKING : Start Tracking Microphone Stream for Peaks
+  	    // STARTTRACKING : Start Heart Rate monitoring
   	    startHeartBeatMonitoring();
   	  break;
   	  case STOPHBMONITOR :
-  	    // STOPTRACKING : Stop Tracking Microphone Stream for Peaks
+  	    // STOPTRACKING : Stop Heart Rate monitoring
   	    stopHeartBeatMonitoring();
   	  break;
-
-      // Simulation Functions =======================================================================  //
-      case NORMALHB :
-        // ?NORMALHB : Playback of Normal Heart Beat
-        normalHBPlayback();
-      break;
-      case ESHMURMUR :
-        // ?ESHMURMUR : Playback of Early Systolic Heart Murmur
-        earlyHMPlayback();
-      break;
-      case BEDHMUR :
-        // STARTBLEND : Start Blending of Early Systolic Heart Murmur
-        startBlending( ses.filePly5 );
-      break;
+      case STARTBLEND :
+        // STARTBLEND : Start Blending default audio file
       case STOPBLEND :
-        // STOPBLEND : Stop Blending of Early Systolic Heart Murmur
+        // STOPBLEND : Stop Blending default audio file
         stopBlending();
       break;
-      case BPEJECT :
-        startBlending( ses.filePly4 );
+
+      // Simulation Functions =======================================================================  //
+      case NHBSYN :
+        // NHBSYN : Blending of Synthetic, Normal Heart Beat
+        NHBSBlend();
       break;
-      case BSPLITP :
-        startBlending( ses.filePly5 );
+      case ESMSYN :
+        // ESMSYN : Blending of Synthetic, Early Systolic Heart Murmur
+        ESMSBlend();
       break;
-      case BASYSL :
-        startBlending( ses.filePly6 );
+      case NHBREC   :
+        // NHBREC   : Blending of Recorded, Normal Heart Beat
+        NHBRBlend();
       break;
- 
+      case EHBREC   :
+        // BRECORD   : Blending of Recorded, Exercised Heart Beat
+        EHBRBlend();
+      break;  
       case STARTBPNORM :
         // STARTBPNORM : Start Augmenting BP Heart Sounds (normal rate)
         ses.heartRate = normalSinus;
@@ -176,19 +172,7 @@ void parseBtByte( String fn )
         // STOPBPALL : Stop Augmenting BP Heart Sounds (return to passthrough)
         stopAugmentingBP();
       break;
-      case BRECORD   :
-        // BRECORD   : Start Augmented On-Board Recording
-        startBlending( ses.fileRec );
-      break;
-      case PLYNHBEATREC   :
-        // BRECORD   : Start Augmented On-Board Recording
-        startBlending( ses.filePly5 );
-      break;
-      case PLYEHBEATREC   :
-        // BRECORD   : Start Augmented On-Board Recording
-        startBlending( ses.filePly6 );
-      break;   
-      
+
       default :
         Serial.print( (char)inByte );
       break;
