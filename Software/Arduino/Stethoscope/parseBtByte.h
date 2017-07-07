@@ -79,7 +79,7 @@ void parseBtByte( String fn )
       case NAK :
       break;
       
-	  // Diagnostic Functions
+	    // Diagnostic Functions =======================================================================  //
       case DEVICEID :
         // DC1_DEVICEID : Device Identification
 		    deviceID( STE );
@@ -95,6 +95,8 @@ void parseBtByte( String fn )
       case DELVOLATILE :
         //  DELVOLATILE : Delete Volatile Directory
       break;
+
+      // Device-Specific Functions ==================================================================  //
 	    case STARTREC :
         // STARTREC : Start Recording
         Serial.println( "received: STARTREC..." );
@@ -127,6 +129,8 @@ void parseBtByte( String fn )
   	    // STOPTRACKING : Stop Tracking Microphone Stream for Peaks
   	    stopHeartBeatMonitoring();
   	  break;
+
+      // Simulation Functions =======================================================================  //
       case NORMALHB :
         // ?NORMALHB : Playback of Normal Heart Beat
         normalHBPlayback();
