@@ -440,6 +440,8 @@ boolean startBlending( String fileName )
 
   char  filePly[fileName.length()+1];                                                                           // Conversion from string to character array
   fileName.toCharArray( filePly, sizeof( filePly ) );
+  Serial.println(filePly);
+  Serial.println(SD.exists(filePly));
   
   if ( SD.exists( filePly ) )
   {

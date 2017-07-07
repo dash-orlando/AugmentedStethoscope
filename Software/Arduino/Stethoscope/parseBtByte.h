@@ -128,11 +128,11 @@ void parseBtByte( String fn )
   	    stopTrackingMicStream();
   	  break;
       case NORMALHB :
-        // NORMALHB : Playback of Normal Heart Beat
+        // ?NORMALHB : Playback of Normal Heart Beat
         normalHBPlayback();
       break;
       case ESHMURMUR :
-        // ESHMURMUR : Playback of Early Systolic Heart Murmur
+        // ?ESHMURMUR : Playback of Early Systolic Heart Murmur
         earlyHMPlayback();
       break;
       case BEDHMUR :
