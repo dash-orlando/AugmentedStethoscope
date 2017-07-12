@@ -81,13 +81,11 @@ def mod_WAV_gain(wav_struct,gain):
 
 # Signal RMS
 #   - Calculates the RMS of the input signal
-def WAV_RMS(wav_struct):
+def WAV_RMS(wav_amp):
 
-    wav_amp = wav_struct['amp']
+    wav_RMS = np.sqrt(np.mean(wav_amp**2))
 
-    wav_struct['RMS'] = np.sqrt(np.mean(wav_amp**2))
-
-    return wav_struct
+    return wav_RMS
         
 
 """
