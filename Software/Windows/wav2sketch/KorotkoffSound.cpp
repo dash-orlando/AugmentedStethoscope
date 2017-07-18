@@ -1,9 +1,9 @@
 // Audio data converted from WAV file by wav2sketch
 
-#include "KorotkoffSound.h"
+#include "AudioSampleKorotkoffsound.h"
 
 // Converted from KorotkoffSound.wav, using 44100 Hz, u-law encoding
-const unsigned int KorotkoffSound[6593] = {
+const unsigned int AudioSampleKorotkoffsound[6593] = {
 0x010066B9,0x43434343,0x42434343,0x42424242,0x42424242,0x42424242,0x41414242,0x41414141,
 0x41414141,0x40404041,0x40404040,0x40404040,0x40404040,0x3F3F3F3F,0x3F3F3F3F,0x3E3E3E3F,
 0x3E3E3E3E,0x3E3E3E3E,0x3D3D3D3D,0x3D3D3D3D,0x3D3D3D3D,0x3C3D3D3D,0x3C3C3C3C,0x3C3C3C3C,

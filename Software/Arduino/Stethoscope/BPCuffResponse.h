@@ -3,7 +3,7 @@
 
 
 float clipLength    =    0.2;
-float heartRateF    =   80.0;             // Range: 7-300 bpm; default is 80
+float heartRateF    =   25.0;             // Range: 7-300 bpm; default is 80
 
 int         hrInterval    =  (60.0 / heartRateF) * 1000.0;
 const int   bradycardia   =   60;
@@ -15,6 +15,7 @@ void SetRate( int hr )
 {
   heartRateF  = (float)hr;
   hrInterval  = (60.0 / heartRateF) * 1000.0;
+  Serial.println(hrInterval);
 //  Serial.print( "Heartrate set to " ); Serial.println( heartRateF );
 }
 
