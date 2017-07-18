@@ -53,10 +53,10 @@ AudioControlSGTL5000     sgtl5000_1;     //xy=101,86
 
 /// Variable Definitions
 const int                 selectedInput   = AUDIO_INPUT_MIC;
-int                       microphoneGain  =     34;
+int                       microphoneGain  =     28;
 float                     micInputLvL     =     0.50;
 float                     sampleInputLvL  =     0.50;
-float                     speakerVolume   =     0.80;                           // 2-speaker: 0.50; 1-speaker: 0.60
+float                     speakerVolume   =     0.65;                           // 2-speaker: 0.50; 1-speaker: 0.60
 
 float                     mixerInputON    =     1.00;
 float                     mixerInputOFF   =     0.00;
