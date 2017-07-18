@@ -3,12 +3,12 @@
 
 
 float clipLength    =    0.2;
-float heartRateF    =   25.0;             // Range: 7-300 bpm; default is 80
+float heartRateF    =   80.0;             // Range: 7-300 bpm; default is 80
 
 int         hrInterval    =  (60.0 / heartRateF) * 1000.0;
-const int   bradycardia   =   60;
-const int   tachycardia   =  120;
-const int   normalSinus   =   80;
+const int   bradycardia   =   55;
+const int   tachycardia   =   60;
+const int   normalSinus   =   70;
 
 
 void SetRate( int hr )
@@ -28,9 +28,9 @@ void PlayHB()
 
 void BeginHB()
 {
-  mixer_allToSpk.gain( 0, mixerInputOFF  );                                            // Normal stethoscope mic input (off)
+  mixer_allToSpk.gain( 0, 0.10  );                                            // Normal stethoscope mic input (off)
   mixer_allToSpk.gain( 1, micInputLvL    );                                            // Highpass mic input  (on)
-  mixer_allToSpk.gain( 2, sampleInputLvL );                                            // HB-sample playback  (on)
+  mixer_allToSpk.gain( 2, 0.35 );                                                       // HB-sample playback  (on)
 
   MsTimer2::set( hrInterval, PlayHB );
   MsTimer2::start();

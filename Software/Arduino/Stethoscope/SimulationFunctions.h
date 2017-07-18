@@ -119,5 +119,13 @@ boolean stopAugmentingBP()
 
 void continueAugmentingBP()
 {
+  if ( mixerLvL > 0.10 )
+  {
+    mixerLvL = mixerLvL - 0.00005;
+    mixer_mic_Sd.gain( 0, mixerLvL );
+    mixer_mic_Sd.gain( 1, mixerLvL );
+    mixer_mic_Sd.gain( 2, (0.5 - mixerLvL) );
+    Serial.println( mixerLvL );
+  }
 }
 
