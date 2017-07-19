@@ -225,7 +225,7 @@ bool waveAmplitudePeaks()
 } // End of waveAmplitudePeaks()
 
 
-void rmsAmplitudePeaks()
+void rmsAmplitudePeaksSingle()
 {
   if(fps > 24)
   {
@@ -246,17 +246,11 @@ void rmsAmplitudePeaks()
         Serial.print("=");
       }
       
-      Serial.print("||");
-      
-      //for(cnt=0; cnt < rightRMS; cnt++) {
-      //  Serial.print("=");
-      //}
-      //for(; cnt < rightPeak; cnt++) {
-      //  Serial.print(">");
-      //}
-      //while(cnt++ < 30) {
-      //  Serial.print(" ");
-      //}
+      Serial.print("||     ");
+      Serial.print(micPeak);
+      Serial.print("/");
+      Serial.print(micRMS);
+      Serial.print("||     ");
       Serial.print(AudioProcessorUsage());
       Serial.print("/");
       Serial.print(AudioProcessorUsageMax());
@@ -577,7 +571,7 @@ boolean continueAudioPassThrough()
   mixer_mic_Sd.gain( 0, mixerInputON  );                                                                        // Set gain of mixer_mic_Sd, channel0 to 0.5 - Microphone on
   mixer_mic_Sd.gain( 1, mixerInputOFF  );                                                                        // Set gain of mixer_mic_Sd, channel0 to 0.5 - Microphone on
   //mixer_mic_Sd.gain( 2, mixerInputOFF );                                                                        // Set gain of mixer_mic_Sd, channel2 to 0
-  rmsAmplitudePeaks();
+  rmsAmplitudePeaksSingle();
   recordState = PASSTHRU;
   return true;
 } // End of continueAudioPassThrough()
