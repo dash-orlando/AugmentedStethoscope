@@ -225,6 +225,47 @@ bool waveAmplitudePeaks()
 } // End of waveAmplitudePeaks()
 
 
+void rmsAmplitudePeaks()
+{
+  if(fps > 24)
+  {
+    // only the microphone
+    if ( mic_peaks.available() && mic_rms.available() )
+    {
+      fps=0;
+      uint8_t micPeak = mic_peaks.read() * 30.0;
+      uint8_t micRMS = mic_rms.read() * 30.0;
+
+      for (cnt=0; cnt < 30-micPeak; cnt++) {
+        Serial.print(" ");
+      }
+      while (cnt++ < 29 && cnt < 30-micRMS) {
+        Serial.print("<");
+      }
+      while (cnt++ < 30) {
+        Serial.print("=");
+      }
+      
+      Serial.print("||");
+      
+      //for(cnt=0; cnt < rightRMS; cnt++) {
+      //  Serial.print("=");
+      //}
+      //for(; cnt < rightPeak; cnt++) {
+      //  Serial.print(">");
+      //}
+      //while(cnt++ < 30) {
+      //  Serial.print(" ");
+      //}
+      Serial.print(AudioProcessorUsage());
+      Serial.print("/");
+      Serial.print(AudioProcessorUsageMax());
+      Serial.println();
+    }
+  }
+} // End of rmsAmplitudePeaks()
+
+
 void switchMode( int m )
 {
     Serial.print( "\nMode = "  );  Serial.print( mode );
@@ -534,8 +575,9 @@ boolean startAudioPassThrough()
 boolean continueAudioPassThrough()
 {
   mixer_mic_Sd.gain( 0, mixerInputON  );                                                                        // Set gain of mixer_mic_Sd, channel0 to 0.5 - Microphone on
-  mixer_mic_Sd.gain( 1, mixerInputON  );                                                                        // Set gain of mixer_mic_Sd, channel0 to 0.5 - Microphone on
-  mixer_mic_Sd.gain( 2, mixerInputOFF );                                                                        // Set gain of mixer_mic_Sd, channel2 to 0
+  mixer_mic_Sd.gain( 1, mixerInputOFF  );                                                                        // Set gain of mixer_mic_Sd, channel0 to 0.5 - Microphone on
+  //mixer_mic_Sd.gain( 2, mixerInputOFF );                                                                        // Set gain of mixer_mic_Sd, channel2 to 0
+  rmsAmplitudePeaks();
   recordState = PASSTHRU;
   return true;
 } // End of continueAudioPassThrough()

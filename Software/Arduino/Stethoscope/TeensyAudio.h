@@ -70,6 +70,8 @@ AudioControlSGTL5000     sgtl5000_1;     //xy=174,188
 
 
 /// Variable Definitions
+elapsedMillis             fps;
+uint8_t                   cnt             =     0;
 const int                 selectedInput   = AUDIO_INPUT_MIC;
 int                       microphoneGain  =     28;
 float                     micInputLvL     =     0.50;
