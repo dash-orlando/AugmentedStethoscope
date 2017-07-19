@@ -562,7 +562,7 @@ void continueBlending()
     mixer_mic_Sd.gain( 0, mixerLvL );
     mixer_mic_Sd.gain( 1, mixerLvL );
     mixer_mic_Sd.gain( 2, (0.5 - mixerLvL) );
-    Serial.println( mixerLvL );
+    //Serial.println( mixerLvL );
   }
   rmsAmplitudePeaksDuo();
 } // End of continueBlending();
