@@ -249,11 +249,12 @@ void rmsAmplitudePeaksSingle()
   }
 } // End of rmsAmplitudePeaksSingle()
 
-
+uint32_t count;
 uint8_t rmsAmplitudePeaksDuo()
 {
+  
   uint8_t returnValue = 0;
-  uint8_t threshRMS   = 8;
+  uint8_t threshRMS   = 0;
 
   if( fps > 24 )
   {
@@ -290,10 +291,11 @@ uint8_t rmsAmplitudePeaksDuo()
       if ( micRMS > threshRMS )
       {
         returnValue = 1;
+        count = 0;
       }
       else if ( micRMS <= threshRMS )
       {
-        returnValue = 2;
+        if ( ++count == 12 ) returnValue = 2;
       } // End of RMS muting
     }
   }
