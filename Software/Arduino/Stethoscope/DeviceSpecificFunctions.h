@@ -250,9 +250,10 @@ void rmsAmplitudePeaksSingle()
 } // End of rmsAmplitudePeaksSingle()
 
 
-boolean rmsAmplitudePeaksDuo()
+uint8_t rmsAmplitudePeaksDuo()
 {
-  uint8_t threshRMS = 0;
+  uint8_t returnValue = 0;
+  uint8_t threshRMS   = 8;
 
   if( fps > 24 )
   {
@@ -272,9 +273,10 @@ boolean rmsAmplitudePeaksDuo()
       for ( cnt = 0; cnt < 30 - micPeak; cnt++ ) Serial.print( " "  );
       while ( cnt++ < 29 && cnt < 30 - micRMS )  Serial.print( "<"  );
       while ( cnt++ < 30 )                       Serial.print( "="  );
+      if ( micPeak == 1 )                        Serial.print( " "  );
                                                  Serial.print( "||" );
       for( cnt = 0; cnt < playRawRMS; cnt++ )    Serial.print( "="  );
-      for( ; cnt < playRawPeak; cnt++ )          Serial.print( ">"  );
+      while( cnt++ < playRawPeak )               Serial.print( ">"  );
       while( cnt++ < 30 )                        Serial.print( " "  );
       Serial.printf( "       | Mic. Peak = %d | Mic. RMS = %d |"
                           " playRaw Peak = %d | playRaw RMS = %d |\n",
@@ -287,17 +289,15 @@ boolean rmsAmplitudePeaksDuo()
       // forward mixer muting (switching)
       if ( micRMS > threshRMS )
       {
-//        mixer_mic_Sd.gain( 0, 0.10 );
-//        mixer_mic_Sd.gain( 1, 0.5 );
-        return true;
+        returnValue = 1;
       }
       else if ( micRMS <= threshRMS )
       {
-//        mixer_mic_Sd.gain( 1, 0 );
-        return false;
+        returnValue = 2;
       } // End of RMS muting
     }
   }
+  return returnValue;
 } // End of rmsAmplitudePeaksDuo()
 
 
@@ -530,9 +530,11 @@ boolean startBlending( String fileName )
     return true;
   }
   else
+  {
     Serial.println( "Stethoscope CANNOT begin BLENDING" );                                                      // Function execution confirmation over USB serial
     BTooth.write( NAK );                                                                                        // Negative AcKnowledgement sent back through bluetooth serial
     return false;
+  }
 }
 
 
@@ -545,22 +547,13 @@ void continueBlending()
   {
     playRaw_sdHeartSound.stop();
   }
-//  if ( mixerLvL > 0.10 )
-//  {
-//    mixerLvL = mixerLvL - 0.0000005;
-//    mixer_mic_Sd.gain( 0, mixerLvL );
-//    mixer_mic_Sd.gain( 1, (0.5 - mixerLvL) );
-//    //Serial.println( mixerLvL );
-//  }
-
-//  rmsAmplitudePeaksDuo();
-
-  if ( rmsAmplitudePeaksDuo() )
+  uint8_t blendState = rmsAmplitudePeaksDuo();
+  if ( blendState == 1 )
   {
     mixer_mic_Sd.gain( 0, 0.10 );
     mixer_mic_Sd.gain( 1, 0.5  );
   }
-  else
+  else if ( blendState == 2 )
   {
     mixer_mic_Sd.gain( 1, 0 );
   }
