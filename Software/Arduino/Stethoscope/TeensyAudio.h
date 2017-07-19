@@ -117,7 +117,7 @@ void SetupAudioBoard()
   rms_playRaw_mixer.gain(   0, mixerInputON  );
 
   mixer_mic_Sd.gain(    0, mixerInputON  );                                     // Set gain of mixer_mic_Sd, channel0 to 0.25 - Microphone on
-  mixer_mic_Sd.gain(    1, mixerInputON  );                                     // Set gain of mixer_mic_Sd, channel1 to 0.25 - Microphone on
+  mixer_mic_Sd.gain(    1, mixerInputOFF  );                                     // Set gain of mixer_mic_Sd, channel1 to 0.25 - Microphone on
   //mixer_mic_Sd.gain(    2, mixerInputOFF );                                     // Set gain of mixer_mic_Sd, channel2 to 0
 
   mixer_allToSpk.gain(  0, mixerInputON  );                                     // Normal stethoscope mic input (on)
