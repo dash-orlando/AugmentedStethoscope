@@ -251,9 +251,9 @@ void rmsAmplitudePeaksSingle()
       Serial.print("/");
       Serial.print(micRMS);
       Serial.print("||     ");
-      Serial.print(AudioProcessorUsage());
-      Serial.print("/");
-      Serial.print(AudioProcessorUsageMax());
+      //Serial.print(AudioProcessorUsage());
+      //Serial.print("/");
+      //Serial.print(AudioProcessorUsageMax());
       Serial.println();
 
     }
@@ -261,8 +261,9 @@ void rmsAmplitudePeaksSingle()
 } // End of rmsAmplitudePeaksSingle()
 
 
-void rmsAmplitudePeaksDuo()
+boolean rmsAmplitudePeaksDuo()
 {
+  boolean flag;
   if(fps > 24)
   {
     // both microphone and the play_raw module
@@ -274,6 +275,7 @@ void rmsAmplitudePeaksDuo()
       uint8_t playRawPeak = playRaw_peaks.read() * 30.0;
       uint8_t playRawRMS = playRaw_rms.read() * 30.0;
 
+      /*
       for (cnt=0; cnt < 30-micPeak; cnt++) {
         Serial.print(" ");
       }
@@ -306,31 +308,37 @@ void rmsAmplitudePeaksDuo()
       Serial.print(" | playRaw RMS = ");
       Serial.print(playRawRMS);
       Serial.print(" |     ");
-      Serial.print(AudioProcessorUsage());
-      Serial.print("/");
-      Serial.print(AudioProcessorUsageMax());
+      //Serial.print(AudioProcessorUsage());
+      //Serial.print("/");
+      //Serial.print(AudioProcessorUsageMax());
       Serial.println();
-
+       */
+       
       // forward mixer muting (switching)
-      uint8_t threshRMS = 10;
+      uint8_t threshRMS = 1;
       if ( micRMS > threshRMS )
       {
-        if ( mixerLvL > 0.10 )
-        {
-          mixerLvL = mixerLvL - 0.0000005;
-          mixer_mic_Sd.gain( 0, mixerLvL );
-          mixer_mic_Sd.gain( 1, (0.5 - mixerLvL) );
+        //if ( mixerLvL > 0.10 )
+        //{
+          //mixerLvL = mixerLvL - 0.0000005;
+          //mixer_mic_Sd.gain( 0, mixerLvL );
+          //mixer_mic_Sd.gain( 1, (0.5 - mixerLvL) );
+          Serial.println(" Above Threshold ");
+          flag = true;
           //Serial.println( mixerLvL );
-        }
+        //}
       }
       else if ( micRMS < threshRMS )
       {
-        mixerLvL = 1;
-        mixer_mic_Sd.gain( 0, mixerLvL);
-        mixer_mic_Sd.gain( 1, 0 ); //mute channel
+        //mixerLvL = 1; //start today be commenting this line
+        //mixer_mic_Sd.gain( 0, mixerLvL);
+        //mixer_mic_Sd.gain( 1, 0 ); //mute channel
+        Serial.println(" Below Threshold ");
+        flag = false;
       }// End of RMS muting
     }
   }
+  return flag;
 } // End of rmsAmplitudePeaksDuo()
 
 void switchMode( int m )
@@ -583,7 +591,15 @@ void continueBlending()
 //    mixer_mic_Sd.gain( 1, (0.5 - mixerLvL) );
 //    //Serial.println( mixerLvL );
 //  }
-  rmsAmplitudePeaksDuo();
+  boolean flag = rmsAmplitudePeaksDuo();
+  if (flag == true)
+  {
+    Serial.println("puppies");
+  }
+  else if (flag == false)
+  {
+    Serial.println("no puppies");
+  }
 } // End of continueBlending();
 
 
