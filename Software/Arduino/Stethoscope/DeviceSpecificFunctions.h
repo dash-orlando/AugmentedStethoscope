@@ -257,8 +257,61 @@ void rmsAmplitudePeaksSingle()
       Serial.println();
     }
   }
-} // End of rmsAmplitudePeaks()
+} // End of rmsAmplitudePeaksSingle()
 
+
+void rmsAmplitudePeaksDuo()
+{
+  if(fps > 24)
+  {
+    // both microphone and the play_raw module
+    if ( mic_peaks.available() && mic_rms.available() && playRaw_peaks.available() && playRaw_rms.available())
+    {
+      fps=0;
+      uint8_t micPeak = mic_peaks.read() * 30.0;
+      uint8_t micRMS = mic_rms.read() * 30.0;
+      uint8_t playRawPeak = playRaw_peaks.read() * 30.0;
+      uint8_t playRawRMS = playRaw_rms.read() * 30.0;
+
+      for (cnt=0; cnt < 30-micPeak; cnt++) {
+        Serial.print(" ");
+      }
+      while (cnt++ < 29 && cnt < 30-micRMS) {
+        Serial.print("<");
+      }
+      while (cnt++ < 30) {
+        Serial.print("=");
+      }
+      
+      Serial.print("||");
+
+      for(cnt=0; cnt < playRawRMS; cnt++) {
+        Serial.print("=");
+      }
+      for(; cnt < playRawPeak; cnt++) {
+        Serial.print(">");
+      }
+      while(cnt++ < 30) {
+        Serial.print(" ");
+      }
+
+      Serial.print("       ");
+      Serial.print("| Mic. Peak = ");
+      Serial.print(micPeak);
+      Serial.print(" | Mic. RMS = ");
+      Serial.print(micRMS);
+      Serial.print(" | playRaw Peak = ");
+      Serial.print(playRawPeak);
+      Serial.print(" | playRaw RMS = ");
+      Serial.print(playRawRMS);
+      Serial.print(" |     ");
+      Serial.print(AudioProcessorUsage());
+      Serial.print("/");
+      Serial.print(AudioProcessorUsageMax());
+      Serial.println();
+    }
+  }
+} // End of rmsAmplitudePeaksDuo()
 
 void switchMode( int m )
 {
@@ -511,7 +564,8 @@ void continueBlending()
     mixer_mic_Sd.gain( 2, (0.5 - mixerLvL) );
     Serial.println( mixerLvL );
   }
-}
+  rmsAmplitudePeaksDuo();
+} // End of continueBlending();
 
 
 //
