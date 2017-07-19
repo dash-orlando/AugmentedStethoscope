@@ -28,9 +28,9 @@ void PlayHB()
 
 void BeginHB()
 {
-  mixer_allToSpk.gain( 0, 0.10  );                                            // Normal stethoscope mic input (off)
-  mixer_allToSpk.gain( 1, micInputLvL    );                                            // Highpass mic input  (on)
-  mixer_allToSpk.gain( 2, 0.35 );                                                       // HB-sample playback  (on)
+  //mixer_allToSpk.gain( 0, 0.10  );                                            // Normal stethoscope mic input (off)
+  //mixer_allToSpk.gain( 1, micInputLvL    );                                            // Highpass mic input  (on)
+  //mixer_allToSpk.gain( 2, 0.35 );                                                       // HB-sample playback  (on)
 
   MsTimer2::set( hrInterval, PlayHB );
   MsTimer2::start();
@@ -40,8 +40,8 @@ void BeginHB()
 void EndHB()
 {
   MsTimer2::stop();
-  mixer_allToSpk.gain( 0, mixerInputON  );                                              // Normal stethoscope mic input (on)
-  mixer_allToSpk.gain( 1, mixerInputOFF );                                              // Highpass mic input (off)
-  mixer_allToSpk.gain( 2, mixerInputOFF );                                              // HB-sample playback (off)
+  //mixer_allToSpk.gain( 0, mixerInputON  );                                              // Normal stethoscope mic input (on)
+  //mixer_allToSpk.gain( 1, mixerInputOFF );                                              // Highpass mic input (off)
+  //mixer_allToSpk.gain( 2, mixerInputOFF );                                              // HB-sample playback (off)
 }
 
