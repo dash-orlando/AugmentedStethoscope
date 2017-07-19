@@ -24,14 +24,14 @@ void SessionInit( String SID )
     /* ...load the data into the configuration */
     /*    object:                              */
     
-    ses = (Session)                             // Note that the string must be 6 characters long
-                  {
-                      SID,
-                      "RECORD.RAW",             // Recording 
-                      "NHBSYN.RAW",             // Normal Heart Beat            - Synthetic
-                      "ESMSYN.RAW",             // Early Systolic Heart Murmur  - Synthetic
-                      "NHBREC.RAW",             // Normal Heart Beat            - Recorded
-                      "EHBREC.RAW",             // Exercised Heart Beat         - Recorded
-                      "HRATE.DAT"               // Heart Rate data file 
-                  };
+    ses = (Session)                     // Note that the string must be 6 characters long
+          {
+              SID,
+              "RECORD.RAW",             // Recording 
+              "NHBSYN.RAW",             // Normal Heart Beat            - Synthetic
+              "ESMSYN.RAW",             // Early Systolic Heart Murmur  - Synthetic
+              "NHBREC.RAW",             // Normal Heart Beat            - Recorded
+              "EHBREC.RAW",             // Exercised Heart Beat         - Recorded
+              "HRATE.DAT"               // Heart Rate data file 
+          };
 }

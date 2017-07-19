@@ -52,9 +52,9 @@ void parseBtByte( String fn )
 
     inByte = BTooth.read();                     // get incoming byte
     displayByte( inByte );
-    Serial.print( "(pre) readyState    : ");   Serial.println( stateToText( readyState     ) );
-    Serial.print( "(pre) connectState  : ");   Serial.println( stateToText( connectState   ) );
-    Serial.print( "(pre) recordState   : ");   Serial.println( stateToText( recordState    ) );
+    Serial.print( "(pre) readyState    : " );  Serial.println( stateToText( readyState     ) );
+    Serial.print( "(pre) connectState  : " );  Serial.println( stateToText( connectState   ) );
+    Serial.print( "(pre) recordState   : " );  Serial.println( stateToText( recordState    ) );
     Serial.print( "(pre) passthruState : " );  Serial.println( stateToText( passthruState  ) );
     Serial.print( "(pre) HBDetectState : " );  Serial.println( stateToText( HBDetectState  ) );
     Serial.print( "(pre) BPAugmentState: " );  Serial.println( stateToText( BPAugmentState ) );
@@ -62,7 +62,7 @@ void parseBtByte( String fn )
     {
       case ENQ :
         Serial.println( "received: ENQ..." );
-        Serial.print( "readyState is " ); Serial.println( stateToText( readyState ) );
+        Serial.print( "readyState is " );      Serial.println( stateToText( readyState     ) );
         if ( readyState == READY )
         {
           connectState  = CONNECTED;                                                                  // The ENQ command has to always be sent first

@@ -227,35 +227,24 @@ bool waveAmplitudePeaks()
 
 void rmsAmplitudePeaksSingle()
 {
-  if(fps > 24)
+  if( fps > 24 )
   {
     // only the microphone
-    if ( mic_peaks.available() && mic_rms.available() )
+    if (   mic_peaks.available()
+        && mic_rms.available() )
     {
-      fps=0;
-      uint8_t micPeak = mic_peaks.read() * 30.0;
-      uint8_t micRMS = mic_rms.read() * 30.0;
+      fps = 0;
+      uint8_t micPeak = mic_peaks.read()  * 30.0;
+      uint8_t micRMS  = mic_rms.read()    * 30.0;
 
-      for (cnt=0; cnt < 30-micPeak; cnt++) {
-        Serial.print(" ");
-      }
-      while (cnt++ < 29 && cnt < 30-micRMS) {
-        Serial.print("<");
-      }
-      while (cnt++ < 30) {
-        Serial.print("=");
-      }
-      
-      Serial.print("||     ");
-      Serial.print(micPeak);
-      Serial.print("/");
-      Serial.print(micRMS);
-      Serial.print("||     ");
-      //Serial.print(AudioProcessorUsage());
-      //Serial.print("/");
-      //Serial.print(AudioProcessorUsageMax());
-      Serial.println();
-
+      for ( cnt = 0; cnt < 30 - micPeak; cnt++ ) Serial.print( " "  );
+      while ( cnt++ < 29 && cnt < 30-micRMS )    Serial.print( "<"  );
+      while ( cnt++ < 30 )                       Serial.print( "="  );
+                                                 Serial.print( "||" );
+      Serial.printf( "       | Mic. Peak = %d | Mic. RMS = %d |\n",
+                      micPeak,
+                      micRMS
+                   );  //*/
     }
   }
 } // End of rmsAmplitudePeaksSingle()
@@ -263,80 +252,62 @@ void rmsAmplitudePeaksSingle()
 
 boolean rmsAmplitudePeaksDuo()
 {
-  boolean flag;
-  if(fps > 24)
+  uint8_t threshRMS = 0;
+
+  if( fps > 24 )
   {
     // both microphone and the play_raw module
-    if ( mic_peaks.available() && mic_rms.available() && playRaw_peaks.available() && playRaw_rms.available())
+    if (   mic_peaks.available() 
+        && mic_rms.available() 
+        && playRaw_peaks.available() 
+        && playRaw_rms.available() )
     {
-      fps=0;
-      uint8_t micPeak = mic_peaks.read() * 30.0;
-      uint8_t micRMS = mic_rms.read() * 30.0;
-      uint8_t playRawPeak = playRaw_peaks.read() * 30.0;
-      uint8_t playRawRMS = playRaw_rms.read() * 30.0;
+      fps = 0;
+      uint8_t micPeak     = mic_peaks.read()    * 30.0;
+      uint8_t micRMS      = mic_rms.read()      * 30.0;
+      uint8_t playRawPeak = playRaw_peaks.read()* 30.0;
+      uint8_t playRawRMS  = playRaw_rms.read()  * 30.0;
 
-      
-      for (cnt=0; cnt < 30-micPeak; cnt++) {
-        Serial.print(" ");
-      }
-      while (cnt++ < 29 && cnt < 30-micRMS) {
-        Serial.print("<");
-      }
-      while (cnt++ < 30) {
-        Serial.print("=");
-      }
-      
-      Serial.print("||");
+    // Print the moving waveform Serial display
+      for ( cnt = 0; cnt < 30 - micPeak; cnt++ ) Serial.print( " "  );
+      while ( cnt++ < 29 && cnt < 30 - micRMS )  Serial.print( "<"  );
+      while ( cnt++ < 30 )                       Serial.print( "="  );
+                                                 Serial.print( "||" );
+      for( cnt = 0; cnt < playRawRMS; cnt++ )    Serial.print( "="  );
+      for( ; cnt < playRawPeak; cnt++ )          Serial.print( ">"  );
+      while( cnt++ < 30 )                        Serial.print( " "  );
+      Serial.printf( "       | Mic. Peak = %d | Mic. RMS = %d |"
+                          " playRaw Peak = %d | playRaw RMS = %d |\n",
+                      micPeak,
+                      micRMS,
+                      playRawPeak,
+                      playRawRMS
+                   );  //*/
 
-      for(cnt=0; cnt < playRawRMS; cnt++) {
-        Serial.print("=");
-      }
-      for(; cnt < playRawPeak; cnt++) {
-        Serial.print(">");
-      }
-      while(cnt++ < 30) {
-        Serial.print(" ");
-      }
-
-      Serial.print("       ");
-      Serial.print("| Mic. Peak = ");
-      Serial.print(micPeak);
-      Serial.print(" | Mic. RMS = ");
-      Serial.print(micRMS);
-      Serial.print(" | playRaw Peak = ");
-      Serial.print(playRawPeak);
-      Serial.print(" | playRaw RMS = ");
-      Serial.print(playRawRMS);
-      Serial.print(" |     ");
-      //Serial.print(AudioProcessorUsage());
-      //Serial.print("/");
-      //Serial.print(AudioProcessorUsageMax());
-      Serial.println();
-      
-       
       // forward mixer muting (switching)
-      uint8_t threshRMS = 0;
       if ( micRMS > threshRMS )
       {
-        mixer_mic_Sd.gain( 0, 0.10 );
-        mixer_mic_Sd.gain( 1, 0.5 );
+//        mixer_mic_Sd.gain( 0, 0.10 );
+//        mixer_mic_Sd.gain( 1, 0.5 );
         return true;
       }
-      else if ( micRMS == threshRMS )
+      else if ( micRMS <= threshRMS )
       {
-        mixer_mic_Sd.gain( 1, 0 );
+//        mixer_mic_Sd.gain( 1, 0 );
         return false;
-      }// End of RMS muting
+      } // End of RMS muting
     }
   }
 } // End of rmsAmplitudePeaksDuo()
 
+
 void switchMode( int m )
 {
     Serial.print( "\nMode = "  );  Serial.print( mode );
-    mode        = m;                                                                                            // Change value of operation mode for continous recording
+    mode = m;                                                                                            // Change value of operation mode for continous recording
     Serial.print( " -> "  );  Serial.println( mode );
 }
+
 
 //
 // *** Start Recording
@@ -480,8 +451,8 @@ boolean startPlaying( String fileName )
   Serial.println( "EXECUTING startPlaying()" );                                                                 // Identification of function executed
 
   mixer_mic_Sd.gain( 0, mixerInputOFF );                                                                        // Set the microphone channel 0 to mute (gain value = 0)
-  mixer_mic_Sd.gain( 1, mixerInputON );                                                                        // Set the microphone channel 1 to mute (gain value = 0)
-  //mixer_mic_Sd.gain( 2, mixerInputON  );                                                                        // Set the gain of the playback audio signal
+  mixer_mic_Sd.gain( 1, mixerInputON );                                                                         // Set the microphone channel 1 to mute (gain value = 0)
+  //mixer_mic_Sd.gain( 2, mixerInputON  );                                                                      // Set the gain of the playback audio signal
 
   char  filePly[fileName.length()+1];                                                                           // Conversion from string to character array
   fileName.toCharArray( filePly, sizeof( filePly ) );
@@ -525,9 +496,9 @@ boolean stopPlaying()
   if ( recordState == PLAYING ) playRaw_sdHeartSound.stop();
   recordState = STANDBY;
   switchMode( 4 );
-  Serial.println( "Stethoscope stopping PLAY" );                                                              // Function execution confirmation over USB serial
+  Serial.println( "Stethoscope stopping PLAY" );                                                                // Function execution confirmation over USB serial
   Serial.println( "sending: ACK..." );
-  BTooth.write( ACK );                                                                                        // ACKnowledgement sent back through bluetooth serial
+  BTooth.write( ACK );                                                                                          // ACKnowledgement sent back through bluetooth serial
   return true;
 }
 
@@ -540,18 +511,18 @@ boolean startBlending( String fileName )
 {
   Serial.println( "EXECUTING startBlending()" );                                                                // Identification of function executed
 
-  mixer_mic_Sd.gain( 0, mixerInputON  );                                                                        // Keep the microphone channel 0 at its normal gain value
-  mixer_mic_Sd.gain( 1, mixerInputOFF  );                                                                        // Keep the microphone channel 1 at its normal gain value
-  //mixer_mic_Sd.gain( 2, mixerInputOFF );                                                                        // Set the gain of the playback audio signal to mute for starter
+  mixer_mic_Sd.gain( 0, mixerInputON  );        // Turn mic on                                                  // Keep the microphone channel 0 at its normal gain value
+  mixer_mic_Sd.gain( 1, mixerInputOFF  );       // Turn recorded HB off                                         // Keep the microphone channel 1 at its normal gain value
+  //mixer_mic_Sd.gain( 2, mixerInputOFF );                                                                      // Set the gain of the playback audio signal to mute for starter
 
   char  filePly[fileName.length()+1];                                                                           // Conversion from string to character array
   fileName.toCharArray( filePly, sizeof( filePly ) );
-  Serial.println(filePly);
-  Serial.println(SD.exists(filePly));
+  Serial.println( filePly );
+  Serial.println( SD.exists( filePly ) );
   
   if ( SD.exists( filePly ) )
   {
-    playRaw_sdHeartSound.play( filePly );
+    playRaw_sdHeartSound.play( filePly );       // Start playing recorded HB
     recordState = PLAYING;
     switchMode( 5 );
     Serial.println( "Stethoscope began BLENDING" );                                                             // Function execution confirmation over USB serial
@@ -582,7 +553,17 @@ void continueBlending()
 //    //Serial.println( mixerLvL );
 //  }
 
-  rmsAmplitudePeaksDuo();
+//  rmsAmplitudePeaksDuo();
+
+  if ( rmsAmplitudePeaksDuo() )
+  {
+    mixer_mic_Sd.gain( 0, 0.10 );
+    mixer_mic_Sd.gain( 1, 0.5  );
+  }
+  else
+  {
+    mixer_mic_Sd.gain( 1, 0 );
+  }
   
 } // End of continueBlending();
 
@@ -617,8 +598,8 @@ boolean startAudioPassThrough()
   if ( selectedInput == AUDIO_INPUT_MIC )
   {
     mixer_mic_Sd.gain( 0, mixerInputON  );                                                                      // Set gain of mixer_mic_Sd, channel0 to 0.5 - Microphone on
-    mixer_mic_Sd.gain( 1, mixerInputOFF  );                                                                      // Set gain of mixer_mic_Sd, channel0 to 0.5 - Microphone on
-    //mixer_mic_Sd.gain( 2, mixerInputOFF );                                                                      // Set gain of mixer_mic_Sd, channel2 to 0
+    mixer_mic_Sd.gain( 1, mixerInputOFF  );                                                                     // Set gain of mixer_mic_Sd, channel0 to 0.5 - Microphone on
+    //mixer_mic_Sd.gain( 2, mixerInputOFF );                                                                    // Set gain of mixer_mic_Sd, channel2 to 0
     recordState = PASSTHRU;
     switchMode( 4 );
     Serial.println( "Stethoscope switched AUDIO PASSTHROUGH mode." );                                           // Function execution confirmation over USB serial
@@ -642,8 +623,8 @@ boolean startAudioPassThrough()
 boolean continueAudioPassThrough()
 {
   mixer_mic_Sd.gain( 0, mixerInputON  );                                                                        // Set gain of mixer_mic_Sd, channel0 to 0.5 - Microphone on
-  mixer_mic_Sd.gain( 1, mixerInputOFF  );                                                                        // Set gain of mixer_mic_Sd, channel0 to 0.5 - Microphone on
-  //mixer_mic_Sd.gain( 2, mixerInputOFF );                                                                        // Set gain of mixer_mic_Sd, channel2 to 0
+  mixer_mic_Sd.gain( 1, mixerInputOFF  );                                                                       // Set gain of mixer_mic_Sd, channel0 to 0.5 - Microphone on
+  //mixer_mic_Sd.gain( 2, mixerInputOFF );                                                                      // Set gain of mixer_mic_Sd, channel2 to 0
   rmsAmplitudePeaksSingle();
   recordState = PASSTHRU;
   return true;

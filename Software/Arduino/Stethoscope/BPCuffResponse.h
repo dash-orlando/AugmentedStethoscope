@@ -15,7 +15,7 @@ void SetRate( int hr )
 {
   heartRateF  = (float)hr;
   hrInterval  = (60.0 / heartRateF) * 1000.0;
-  Serial.println(hrInterval);
+  Serial.println( hrInterval );
 //  Serial.print( "Heartrate set to " ); Serial.println( heartRateF );
 }
 
@@ -28,8 +28,8 @@ void PlayHB()
 
 void BeginHB()
 {
-  //mixer_allToSpk.gain( 0, 0.10  );                                            // Normal stethoscope mic input (off)
-  //mixer_allToSpk.gain( 1, micInputLvL    );                                            // Highpass mic input  (on)
+  //mixer_allToSpk.gain( 0, 0.10 );                                                       // Normal stethoscope mic input (off)
+  //mixer_allToSpk.gain( 1, micInputLvL );                                                // Highpass mic input  (on)
   //mixer_allToSpk.gain( 2, 0.35 );                                                       // HB-sample playback  (on)
 
   MsTimer2::set( hrInterval, PlayHB );
