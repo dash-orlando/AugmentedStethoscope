@@ -6,7 +6,8 @@ Plotting magnetometer data
 
 import serial, time
 
-#initialization and open the port
+#Defining the serial port connection.
+
 #possible timeout values:
 #    1. None: wait forever, block call
 #    2. 0: non-blocking mode, return immediately
@@ -24,29 +25,30 @@ ser.rtscts = False                                      #disable hardware (RTS/C
 ser.dsrdtr = False                                      #disable hardware (DSR/DTR) flow control
 ser.writeTimeout = 5                                    #timeout for write
 
+#Imports for doing math quickly
+import numpy as np                                      #Optimized for array math
+import math                                             #Optimized for single values
 
-
-#Live plot on Loop
-
-import numpy as np
-import math
+#Imports for animating the data
 import matplotlib.pyplot as plt
 import matplotlib.animation as animation
+from drawnow import *
 
+#Opening the serial port.
 if ser.is_open == False:
     ser.open()
 
-#for i in range(0, 500):
-
+#Entering the main loop. Reading a line of input data (6 comma separated values) and splitting them into an array.
 while True:
     line = ser.readline()[:-1]
     col = line.split(",")
     
-#Throwing out bad data 
+#Throwing out bad data. Waiting for the sensor to calibrate itself to ambient fields. 
     if len(col) < 6:
         print "Calibrating. Please wait."
     else:
-#Casting individual values as floats
+        
+#Casting the split input values as floats.
         imux0=float(col[0])
         imuy0=float(col[1])
         imuz0=float(col[2])
@@ -61,36 +63,36 @@ while True:
 
 #Calculating distance from IMUx using the value of Bx
 #Empirically derived: distance=15.608*(magnitudeB)^(-0.528) [1] r^2 = .906
-#Empirically derived: distance=19.818*(magnitudeB)^(-0.496) [2] r^2 = .891
-#Empirically derived: distance=95.198*(magnitudeB)^(-0.294) [3] r^2=0.9931 <-(AFTER CALIBRATING FIRST! WOW! :D)
+#Empirically derived: distance=19.818*(magnitudeB)^(-0.516) [2] r^2 = .891
+#Empirically derived: distance=95.198*(magnitudeB)^(-0.294) [3] r^2=0.9931 <-(AFTER CALIBRATING FIRST! WOW!)
 
         factorB0= math.pow(imuB0,0.294)
         factorB1= math.pow(imuB1,0.294)
 
-        d0 = 95.198/factorB0
-        d1 = 95.198/factorB1
-        
+#The radial distance of the magnet from each Sensor, result
+        c = 95.198/factorB0     #Radial distance from first sensor
+        a = 95.198/factorB1     #Radial distance from second sensor
+        #Really accurate! ^_^
+
+#Printing values to stdout to verify that calculations are being done appropriately
+        #print imuB0, imuB1, a, c
+             
 
 #Calculating angle above the x-axis, Theta from known values
-#d is the minimum distance between the center of the two IMU sensors in cm
-        d=225
+#d is the minimum distance between the center of the two IMU sensors in [millimeters], given by design.
+        l=225
         
-        cosnum= (d*d)+(d0*d0)-(d1*d1)
-        cosden= 2*d*d1
+        cosnum= (l*l)+(c*c)-(a*a)
+        cosden= 2*l*c
         thetarad= np.arccos(cosnum/cosden)
         theta=math.degrees(thetarad)
 
         inv=-1
-        x= d0*(math.cos(thetarad))
-        y= d0*(math.sin(thetarad))*(np.sign(imux0))*(inv)
+        x= a*(math.cos(thetarad))
+        y= a*(math.sin(thetarad))*(np.sign(imux0))*(inv)
         
-        print d0, d1, theta
+        print c, a, x, y, theta
 
-        plt.axis([0, 150, 0, 150])
-        plt.ion()
-
-        plt.scatter(x, y)
-        plt.pause(0.25)
         
 ser.close() 
         
