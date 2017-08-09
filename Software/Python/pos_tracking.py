@@ -1,99 +1,196 @@
-"""
+'''
+Position tracking of magnet
 
-Plotting magnetometer data
+Author: Danny, Moe
+Date: Aug. 4th, 2017th year of our Lord
+'''
 
-"""
+# Import Modules
+import  serial, math
+import  numpy           as      np
+import  pyqtgraph       as      pg
+from    pyqtgraph.Qt    import  QtGui, QtCore, USE_PYSIDE, USE_PYQT5
+from    pyqtgraph.ptime import  time
+from    UISetup         import  Ui_Form
+from    threading       import  Thread
+from    Queue           import  Queue
+from    usbProtocol     import  createUSBPort
 
-import serial, time
+######################################################
+#                   FUNCTION DEFINITIONS
+######################################################
 
-#Defining the serial port connection.
+# Define plot updating function, called once as part of Qt application event loop
+def update():
+    global data, curve, p
+    try:
+        p.clear()
+        curve = pg.ScatterPlotItem( x=data[0],
+                                    y=data[1],
+                                    pen='w',
+                                    brush='b',
+                                    size=ui.sizeSpin.value(),
+                                    pxMode=ui.pixelModeCheck.isChecked() )
+        p.addItem(curve)
+        p.repaint()
 
-#possible timeout values:
-#    1. None: wait forever, block call
-#    2. 0: non-blocking mode, return immediately
-#    3. x, x is bigger than 0, float allowed, timeout block call
+    except Exception as e:
+        print( "Caught error in update()"       )
+        print( "Error type %s" %str(type(e))    )
+        print( "Error Arguments " + str(e.args) )
+        ser.close()
+        
+# Define getData (pool data from Arduino), started as a thread; always updating values to queue Q_getData
+def getData( Q_getData ):
 
-ser = serial.Serial()
-ser.port = "COM4"
-ser.baudrate = 115200
-ser.bytesize = serial.EIGHTBITS                         #number of bits per bytes
-ser.parity = serial.PARITY_NONE                         #set parity check: no parity
-ser.stopbits = serial.STOPBITS_ONE                      #number of stop bits
-ser.timeout = None                                  
-ser.xonxoff = False                                     #disable software flow control
-ser.rtscts = False                                      #disable hardware (RTS/CTS) flow control
-ser.dsrdtr = False                                      #disable hardware (DSR/DTR) flow control
-ser.writeTimeout = 5                                    #timeout for write
+    #Sample size of Arduino data per refresh.
+    n = 25
+    
+    #Declaring arrays to store calculated values. 
+    valu0=[]
+    valu1=[]
 
-#Imports for doing math quickly
-import numpy as np                                      #Optimized for array math
-import math                                             #Optimized for single values
+    #Entering the calculation loop. Reading a line of input data (6 comma separated values) and splitting them into an array.
+    while True:
 
-#Imports for animating the data
-import matplotlib.pyplot as plt
-import matplotlib.animation as animation
-from drawnow import *
+        try: 
+            line = ser.readline()[:-1]
+            col = line.split(",")
 
-#Opening the serial port.
+            #Throwing out bad data. Waiting for the sensor to calibrate itself to ambient fields. 
+            if len(col) < 6:
+                print "Waiting."
+
+            else:
+                #Casting the split input values as floats.
+                imux0=float(col[0])
+                imuy0=float(col[1])
+                imuz0=float(col[2])
+                imux1=float(col[3])
+                imuy1=float(col[4])
+                imuz1=float(col[5])
+
+                #Doing math to find the magnitude of the magnetic field, B, from the POV of each IMU
+                imuB0 = math.sqrt( math.pow(imux0,2) + math.pow(imuy0,2) + math.pow(imuz0,2) )
+                imuB1 = math.sqrt( math.pow(imux1,2) + math.pow(imuy1,2) + math.pow(imuz1,2) )
+
+                #Each sensor has its own calibration empirically derived calibration curve:
+                #Sensor0: [AbsoluteDistance_to_Sensor0] = 95.01*[Magnitude_B0]^(-0.308)
+                #Sensor1: [AbsoluteDistance_to_Sensor0] = 105.41*[Magnitude_B1]^(-0.325)
+                
+                #Calculating distance from IMUx using the value of Bx
+                factorB0 = math.pow(imuB0,0.308)
+                factorB1 = math.pow(imuB1,0.325)
+
+                #The radial distance of the magnet from each Sensor, result
+                d0 = 95.01/factorB0      #Radial distance from first sensor
+                d1 = 105.41/factorB1     #Radial distance from second sensor
+                #Really accurate! ^_^
+
+                #Calculating angle above the x-axis, Theta from known values
+                #length_apart is the minimum distance between the center of the two IMU sensors in [millimeters], given by design.
+
+                length_apart    =   225
+                cosnum          =   math.pow(length_apart, 2) + math.pow(d0, 2) - math.pow(d1, 2)
+                cosden          =   2*d1*length_apart
+                thetarad        =   np.arccos(cosnum/cosden)
+                theta           =   math.degrees(thetarad)
+
+                x = float( d0 * ( math.cos(thetarad) ) )
+                y = float( d0 * ( math.sin(thetarad) ) )
+                
+                valu0.append(x)
+                valu1.append(y)
+                
+                if ( len(valu0) and len(valu1) ) == n:
+                    # Place data in queue for retrieval
+                    print( "Placed items in Q_getData" )
+                    Q_getData.put( [valu0, valu1] )
+                    # Reset arrays
+                    del valu0[:]
+                    del valu1[:]
+
+        except Exception as e:
+            print( "Caught error in getData()"      )
+            print( "Error type %s" %str(type(e))    )
+            print( "Error Arguments " + str(e.args) )
+            ser.close()
+
+# Define function to update from pooled data
+def queueBuffers( Q_getData, Q_stuff ):
+    try:
+        while True:
+            #print ("Waiting for values")
+            # Fetch data from stack
+            if Q_getData.qsize() > 0:
+                print ("Got values")
+                data = Q_getData.get()
+                Q_stuff.put( data )
+
+    except Exception as e:
+        print( "Caught error in queueBuffers()" )
+        print( "Error type %s" %str(type(e)) )
+        print( " Error Arguments " + str(e.args) )
+        ser.close()
+
+
+######################################################
+#                   SETUP PROGRAM
+######################################################
+# Setup UI
+app = QtGui.QApplication([])
+win = QtGui.QWidget()
+win.setWindowTitle( 'ScatterPlot' )
+ui = Ui_Form()
+ui.setupUi(win)
+win.show()
+
+# Setup Plot
+p = ui.plot
+p.setRange(xRange=[0, 150], yRange=[0,150])
+
+# Establish connection with Arduino
+ser = createUSBPort( "Arduino", 6, 115200 )
 if ser.is_open == False:
     ser.open()
 
-#Entering the main loop. Reading a line of input data (6 comma separated values) and splitting them into an array.
-while True:
-    line = ser.readline()[:-1]
-    col = line.split(",")
+# Setup queues for data communication
+Q_getData   = Queue( maxsize=0 )    #Pooled data from arduino
+Q_stuff     = Queue( maxsize=0 )    #
+
+# Retrieve data
+t_getData = Thread( target=getData, args=( Q_getData, ) )
+t_getData.start()
+
+# Update plot
+t_queueBuffers = Thread( target=queueBuffers, args=( Q_getData, Q_stuff,) )
+t_queueBuffers.start()
+
+# Plot data
+while Q_stuff.qsize() == 0:
+    print( "Waiting" )
+
+# Fetch data from stack
+if Q_stuff.qsize() > 0:
+    print ("Got stuff")
+    data = Q_stuff.get()
     
-#Throwing out bad data. Waiting for the sensor to calibrate itself to ambient fields. 
-    if len(col) < 6:
-        print "Calibrating. Please wait."
-    else:
-        
-#Casting the split input values as floats.
-        imux0=float(col[0])
-        imuy0=float(col[1])
-        imuz0=float(col[2])
-        
-        imux1=float(col[3])
-        imuy1=float(col[4])
-        imuz1=float(col[5])
+# Call for update
+timer = QtCore.QTimer()
+timer.timeout.connect( update )
+timer.start(0)
 
-#Doing math to find the magnitude of the magnetic field, B, from the POV of each IMU
-        imuB0 = math.sqrt((imux0*imux0 + imuy0*imuy0 + imuz0*imuz0))
-        imuB1 = math.sqrt((imux1*imux1 + imuy1*imuy1 + imuz1*imuz1))
+######################################################
+#                   START PROGRAM
+######################################################
 
-#Calculating distance from IMUx using the value of Bx
-#Empirically derived: distance=15.608*(magnitudeB)^(-0.528) [1] r^2 = .906
-#Empirically derived: distance=19.818*(magnitudeB)^(-0.516) [2] r^2 = .891
-#Empirically derived: distance=95.198*(magnitudeB)^(-0.294) [3] r^2=0.9931 <-(AFTER CALIBRATING FIRST! WOW!)
+## Start Qt event loop.
+if __name__ == '__main__':
+    import sys
+    if (sys.flags.interactive != 1) or not hasattr(QtCore, 'PYQT_VERSION'):
+        QtGui.QApplication.instance().exec_()
 
-        factorB0= math.pow(imuB0,0.294)
-        factorB1= math.pow(imuB1,0.294)
 
-#The radial distance of the magnet from each Sensor, result
-        c = 95.198/factorB0     #Radial distance from first sensor
-        a = 95.198/factorB1     #Radial distance from second sensor
-        #Really accurate! ^_^
 
-#Printing values to stdout to verify that calculations are being done appropriately
-        #print imuB0, imuB1, a, c
-             
-
-#Calculating angle above the x-axis, Theta from known values
-#d is the minimum distance between the center of the two IMU sensors in [millimeters], given by design.
-        l=225
-        
-        cosnum= (l*l)+(c*c)-(a*a)
-        cosden= 2*l*c
-        thetarad= np.arccos(cosnum/cosden)
-        theta=math.degrees(thetarad)
-
-        inv=-1
-        x= a*(math.cos(thetarad))
-        y= a*(math.sin(thetarad))*(np.sign(imux0))*(inv)
-        
-        print c, a, x, y, theta
 
         
-ser.close() 
-        
-      

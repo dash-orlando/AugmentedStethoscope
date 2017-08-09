@@ -3,11 +3,12 @@
 #include <SparkFunLSM9DS1.h>
 
 LSM9DS1 imu;
-#define LSM9DS1_M           0x1E    // Would be 0x1C if SDO_M is LOW
-#define LSM9DS1_AG          0x6B    // Would be 0x6A if SDO_AG is LOW
-#define PRINT_SPEED          40
-#define CALIBRATION_INDEX    50    // Accounting for ambient magnetic fields
-#define DECLINATION         6.55    // Accounting for the Earth's magnetic field
+#define LSM9DS1_M            0x1E   // Would be 0x1C if SDO_M is LOW
+#define LSM9DS1_AG           0x6B   // Would be 0x6A if SDO_AG is LOW
+#define PRINT_DELAY          20     // Milliseconds
+#define CALIBRATION_INDEX    50     // Accounting for ambient magnetic fields
+#define DECLINATION          6.55   // Accounting for the Earth's magnetic field
+#define NPASS                10     // Single reading sample size
 
 static byte setSensor = 0;
 static unsigned long lastPrint = 0;
@@ -33,8 +34,8 @@ void setup() {
     Serial.println("Failed to communicate with LSM9DS1 0.");
     while (1);
   } else {
-    
-    //Serial.println("Calibrating. Please Wait.");
+
+    Serial.println("Calibrating. Please Wait.");
     double imux_hold = 0, imuy_hold = 0, imuz_hold = 0;
 
     for (int i = 0; i < CALIBRATION_INDEX ; i++)
@@ -81,75 +82,92 @@ void setup() {
     };
   };
 
-  //Serial.println("Success.");
-  //  Serial.println("Calibration: ");
-  //  Serial.println(cal_imu0_x, 5);
-  //  Serial.println(cal_imu0_y, 5);
-  //  Serial.println(cal_imu0_z, 5);
-  //  Serial.println(cal_imu1_x, 5);
-  //  Serial.println(cal_imu1_y, 5);
-  //  Serial.println(cal_imu1_z, 5);
+  Serial.println("Success.");
 }
 
 void loop() {
-double imux0, imuy0, imuz0, imuB0, factor0, imux1, imuy1, imuz1, imuB1, factor1;
-  
+  double imux0 = 0, imuy0 = 0, imuz0 = 0, imuB0, imux1 = 0, imuy1 = 0, imuz1 = 0, imuB1;
+
   //Sensor Selector Loop
   if (setSensor == 0) {
-    
+
     digitalWrite(13, LOW);
-    delay(PRINT_SPEED / 2);
+    delay(PRINT_DELAY / 2);
 
     while ( !imu.magAvailable() );
     imu.readMag();
 
-    imux0=double(imu.calcMag(imu.mx));
-    imuy0=double(imu.calcMag(imu.my));
-    imuz0=double(imu.calcMag(imu.mz));
-//    imuB0=sqrt(pow(imux0,2) + pow(imuy0,2) + pow(imuz0,2));
-//    factor0=pow(imuB0,0.294);
-//    d0=95.198/factor0;
+    imux0 = double(imu.calcMag(imu.mx)) - cal_imu0_x;
+    imuy0 = double(imu.calcMag(imu.my)) - cal_imu0_y;
+    imuz0 = double(imu.calcMag(imu.mz)) - cal_imu0_z;
 
-//    Serial.print(imuB0, 5);
-//    Serial.print(", ");
-//    Serial.print(d0, 4);
-//    Serial.print(", ");
-    
-    delay(PRINT_SPEED / 2);
-    Serial.print((imu.calcMag(imu.mx) - cal_imu0_x), 5);
+    //    for (int i = 0; i < NPASS ; i++) {
+    //
+    //      while ( !imu.magAvailable() );
+    //      imu.readMag();
+    //
+    //      imux0 += double(imu.calcMag(imu.mx));
+    //      imuy0 += double(imu.calcMag(imu.my));
+    //      imuz0 += double(imu.calcMag(imu.mz));
+    //
+    //      if (i == NPASS - 1) {
+    //        imux0 = (imux0 / NPASS) - cal_imu0_x;
+    //        imuy0 = (imuy0 / NPASS) - cal_imu0_y;
+    //        imuz0 = (imuz0 / NPASS) - cal_imu0_z;
+    //      }
+    //    }
+
+    //      imuB0 = sqrt(pow(imux0, 2) + pow(imuy0, 2) + pow(imuz0, 2));
+    //      Serial.print(imuB0, 5);
+    //      Serial.print(", ");
+
+    Serial.print(imux0, 5);
     Serial.print(", ");
-    Serial.print((imu.calcMag(imu.my) - cal_imu0_y), 5);
+    Serial.print(imuy0, 5);
     Serial.print(", ");
-    Serial.print((imu.calcMag(imu.mz) - cal_imu0_z), 5);
+    Serial.print(imuz0, 5);
     Serial.print(", ");
+
   }
   else if (setSensor == 1) {
     digitalWrite(13, HIGH);
-    delay(PRINT_SPEED / 2);
-    
+    delay(PRINT_DELAY / 2);
+
     while ( !imu.magAvailable() );
     imu.readMag();
 
-    imux1=double(imu.calcMag(imu.mx));
-    imuy1=double(imu.calcMag(imu.my));
-    imuz1=double(imu.calcMag(imu.mz));
-//    imuB1=sqrt(pow(imux1,2) + pow(imuy1,2) + pow(imuz1,2));
-//    factor1=pow(imuB1,0.294);
-//    d1=95.198/factor1;
-//    
-//    Serial.print(imuB1, 5);
-//    Serial.print(", ");
-//    Serial.print(d1, 4);
-//    Serial.print(", ");
-//    Serial.println();
-//    
-    delay(PRINT_SPEED / 2);
-    Serial.print((imu.calcMag(imu.mx) - cal_imu1_x), 5);
+    imux1 = double(imu.calcMag(imu.mx)) - cal_imu1_x;
+    imuy1 = double(imu.calcMag(imu.my)) - cal_imu1_y;
+    imuz1 = double(imu.calcMag(imu.mz)) - cal_imu1_z;
+
+//    for (int i = 0; i < NPASS ; i++) {
+//
+//      while ( !imu.magAvailable() );
+//      imu.readMag();
+//
+//      imux1 += double(imu.calcMag(imu.mx));
+//      imuy1 += double(imu.calcMag(imu.my));
+//      imuz1 += double(imu.calcMag(imu.mz));
+//      if (i == NPASS - 1) {
+//        imux1 = (imux1 / NPASS) - cal_imu1_x;
+//        imuy1 = (imuy1 / NPASS) - cal_imu1_y;
+//        imuz1 = (imuz1 / NPASS) - cal_imu1_z;
+//      }
+//    }
+
+    //    imuB1 = sqrt(pow(imux1, 2) + pow(imuy1, 2) + pow(imuz1, 2));
+    //    Serial.print(imuB1, 5);
+    //    Serial.print(", ");
+
+    Serial.print(imux1, 5);
     Serial.print(", ");
-    Serial.print((imu.calcMag(imu.my) - cal_imu1_y), 5);
+    Serial.print(imuy1, 5);
     Serial.print(", ");
-    Serial.print((imu.calcMag(imu.mz) - cal_imu1_z), 5);
+    Serial.print(imuz1, 5);
+    //    Serial.print(", ");
   }
+
+
   if (setSensor == 0) {
     setSensor++;
   }
