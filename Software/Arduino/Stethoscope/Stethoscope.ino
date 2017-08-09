@@ -68,7 +68,7 @@ void loop()
   // If playing or recording, carry on...
   if ( mode == 1 ) continueRecording();
   if ( mode == 2 ) continuePlaying();
-  if ( mode == 3 ) continueTrackingMicStream(); //  <--- refactor name
+  if ( mode == 3 ) continueHeartBeatMonitoring();
   if ( mode == 4 ) continueAudioPassThrough();
   if ( mode == 5 ) continueBlending();
   if ( mode == 6 ) continueAugmentingBP();
@@ -76,4 +76,5 @@ void loop()
   // Clear the input byte variable
   inByte = 0x00;                                // this line of code may be unnecessary
 }
+
 

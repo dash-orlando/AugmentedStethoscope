@@ -52,9 +52,9 @@ void parseBtByte( String fn )
 
     inByte = BTooth.read();                     // get incoming byte
     displayByte( inByte );
-    Serial.print( "(pre) readyState    : ");   Serial.println( stateToText( readyState     ) );
-    Serial.print( "(pre) connectState  : ");   Serial.println( stateToText( connectState   ) );
-    Serial.print( "(pre) recordState   : ");   Serial.println( stateToText( recordState    ) );
+    Serial.print( "(pre) readyState    : " );  Serial.println( stateToText( readyState     ) );
+    Serial.print( "(pre) connectState  : " );  Serial.println( stateToText( connectState   ) );
+    Serial.print( "(pre) recordState   : " );  Serial.println( stateToText( recordState    ) );
     Serial.print( "(pre) passthruState : " );  Serial.println( stateToText( passthruState  ) );
     Serial.print( "(pre) HBDetectState : " );  Serial.println( stateToText( HBDetectState  ) );
     Serial.print( "(pre) BPAugmentState: " );  Serial.println( stateToText( BPAugmentState ) );
@@ -62,7 +62,7 @@ void parseBtByte( String fn )
     {
       case ENQ :
         Serial.println( "received: ENQ..." );
-        Serial.print( "readyState is " ); Serial.println( stateToText( readyState ) );
+        Serial.print( "readyState is " );      Serial.println( stateToText( readyState     ) );
         if ( readyState == READY )
         {
           connectState  = CONNECTED;                                                                  // The ENQ command has to always be sent first
@@ -79,7 +79,7 @@ void parseBtByte( String fn )
       case NAK :
       break;
       
-	  // Diagnostic Functions
+	    // Diagnostic Functions =======================================================================  //
       case DEVICEID :
         // DC1_DEVICEID : Device Identification
 		    deviceID( STE );
@@ -95,6 +95,8 @@ void parseBtByte( String fn )
       case DELVOLATILE :
         //  DELVOLATILE : Delete Volatile Directory
       break;
+
+      // Device-Specific Functions ==================================================================  //
 	    case STARTREC :
         // STARTREC : Start Recording
         Serial.println( "received: STARTREC..." );
@@ -119,40 +121,38 @@ void parseBtByte( String fn )
   	    // STARTPASSTHRU : Start Audio Passthrough from Mic
   	    startAudioPassThrough();
   	  break;
-  	  case STARTTRACKING :
-  	    // STARTTRACKING : Start Tracking Microphone Stream for Peaks
-  	    startTrackingMicStream();
+  	  case STARTHBMONITOR :
+  	    // STARTTRACKING : Start Heart Rate monitoring
+  	    startHeartBeatMonitoring();
   	  break;
-  	  case STOPTRACKING :
-  	    // STOPTRACKING : Stop Tracking Microphone Stream for Peaks
-  	    stopTrackingMicStream();
+  	  case STOPHBMONITOR :
+  	    // STOPTRACKING : Stop Heart Rate monitoring
+  	    stopHeartBeatMonitoring();
   	  break;
-      case NORMALHB :
-        // NORMALHB : Playback of Normal Heart Beat
-        normalHBPlayback();
-      break;
-      case ESHMURMUR :
-        // ESHMURMUR : Playback of Early Systolic Heart Murmur
-        earlyHMPlayback();
-      break;
-      case BEDHMUR :
-        // STARTBLEND : Start Blending of Early Systolic Heart Murmur
-        startBlending( ses.filePly3 );
-      break;
+      case STARTBLEND :
+        // STARTBLEND : Start Blending default audio file
       case STOPBLEND :
-        // STOPBLEND : Stop Blending of Early Systolic Heart Murmur
+        // STOPBLEND : Stop Blending default audio file
         stopBlending();
       break;
-      case BPEJECT :
-        startBlending( ses.filePly4 );
+
+      // Simulation Functions =======================================================================  //
+      case NHBSYN :
+        // NHBSYN : Blending of Synthetic, Normal Heart Beat
+        NHBSBlend();
       break;
-      case BSPLITP :
-        startBlending( ses.filePly5 );
+      case ESMSYN :
+        // ESMSYN : Blending of Synthetic, Early Systolic Heart Murmur
+        ESMSBlend();
       break;
-      case BASYSL :
-        startBlending( ses.filePly6 );
+      case NHBREC   :
+        // NHBREC   : Blending of Recorded, Normal Heart Beat
+        NHBRBlend();
       break;
- 
+      case EHBREC   :
+        // EHBREC   : Blending of Recorded, Exercised Heart Beat
+        EHBRBlend();
+      break;  
       case STARTBPNORM :
         // STARTBPNORM : Start Augmenting BP Heart Sounds (normal rate)
         ses.heartRate = normalSinus;
@@ -172,11 +172,7 @@ void parseBtByte( String fn )
         // STOPBPALL : Stop Augmenting BP Heart Sounds (return to passthrough)
         stopAugmentingBP();
       break;
-      case BRECORD   :
-        // BRECORD   : Start Augmented On-Board Recording
-        startBlending( ses.fileRec );
-      break;   
-      
+
       default :
         Serial.print( (char)inByte );
       break;
@@ -189,3 +185,4 @@ void parseBtByte( String fn )
     Serial.print( "(post) BPAugmentState:  " ); Serial.println( stateToText( BPAugmentState ) );
     delay( 10 );
 }
+

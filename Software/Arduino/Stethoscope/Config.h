@@ -9,8 +9,6 @@ struct Session
     String    filePly2;
     String    filePly3;
     String    filePly4;
-    String    filePly5;
-    String    filePly6;
     String    fileDat;
     int       heartRate;
 };
@@ -26,16 +24,15 @@ void SessionInit( String SID )
     /* ...load the data into the configuration */
     /*    object:                              */
     
-    ses = (Session)
-                  {
-                      SID,
-                      "RECORD.RAW",              // 
-                      "NORMAL.RAW",              // Normal Heart Beat
-                      "ESMUR.RAW",               // Early Systolic Heart Murmur
-                      "EDMUR.RAW",               // Early Diastolic Heart Murmur
-                      "PEJECT.RAW",
-                      "PSPLITP.RAW",
-                      "ASYSL.RAW",
-                      "HRATE.DAT"                // 
-                  };
+    ses = (Session)                     // Note that the string must be 6 characters long
+          {
+              SID,
+              "RECORD.RAW",             // Recording 
+              "NHBSYN.RAW",             // Normal Heart Beat            - Synthetic
+              "ESMSYN.RAW",             // Early Systolic Heart Murmur  - Synthetic
+              "NHBREC.RAW",             // Normal Heart Beat            - Recorded
+              "EHBREC.RAW",             // Exercised Heart Beat         - Recorded
+              "HRATE.DAT"               // Heart Rate data file 
+          };
 }
+
