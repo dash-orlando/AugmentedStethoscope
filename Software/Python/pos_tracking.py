@@ -15,6 +15,7 @@ from    UISetup         import  Ui_Form
 from    threading       import  Thread
 from    Queue           import  Queue
 from    usbProtocol     import  createUSBPort
+from    time            import  sleep
 
 ######################################################
 #                   FUNCTION DEFINITIONS
@@ -38,8 +39,7 @@ def update():
         print( "Caught error in update()"       )
         print( "Error type %s" %str(type(e))    )
         print( "Error Arguments " + str(e.args) )
-        ser.close()
-        
+            
 # Define getData (pool data from Arduino), started as a thread; always updating values to queue Q_getData
 def getData( Q_getData ):
 
@@ -59,7 +59,7 @@ def getData( Q_getData ):
 
             #Throwing out bad data. Waiting for the sensor to calibrate itself to ambient fields. 
             if len(col) < 6:
-                print "Waiting."
+                print "Waiting..."
 
             else:
                 #Casting the split input values as floats.
@@ -74,7 +74,7 @@ def getData( Q_getData ):
                 imuB0 = math.sqrt( math.pow(imux0,2) + math.pow(imuy0,2) + math.pow(imuz0,2) )
                 imuB1 = math.sqrt( math.pow(imux1,2) + math.pow(imuy1,2) + math.pow(imuz1,2) )
 
-                #Each sensor has its own calibration empirically derived calibration curve:
+                #Each sensor has its own empirically derived calibration curve:
                 #Sensor0: [AbsoluteDistance_to_Sensor0] = 95.01*[Magnitude_B0]^(-0.308)
                 #Sensor1: [AbsoluteDistance_to_Sensor0] = 105.41*[Magnitude_B1]^(-0.325)
                 
@@ -91,21 +91,44 @@ def getData( Q_getData ):
                 #length_apart is the minimum distance between the center of the two IMU sensors in [millimeters], given by design.
 
                 length_apart    =   225
-                cosnum          =   math.pow(length_apart, 2) + math.pow(d0, 2) - math.pow(d1, 2)
-                cosden          =   2*d1*length_apart
-                thetarad        =   np.arccos(cosnum/cosden)
-                theta           =   math.degrees(thetarad)
+                # If in the left quadrant
+                if d0 < d1:
+                    cosnum          =   math.pow(length_apart, 2) + math.pow(d0, 2) - math.pow(d1, 2)
+                    cosden          =   2*d1*length_apart
+                    thetarad        =   np.arccos(cosnum/cosden)
+                    #theta           =   math.degrees(thetarad)
 
-                x = float( d0 * ( math.cos(thetarad) ) )
-                y = float( d0 * ( math.sin(thetarad) ) )
+                    # Calculate distances
+                    x = float( d0 * math.cos(thetarad) )
+                    y = float( d0 * math.sin(thetarad) )
                 
-                valu0.append(x)
-                valu1.append(y)
+                # If in the right quadrant
+                elif d0 > d1:
+                    cosnum          =   math.pow(length_apart, 2) + math.pow(d1, 2) - math.pow(d0, 2)
+                    cosden          =   2*d0*length_apart
+                    thetarad        =   np.arccos(cosnum/cosden)
+                    #theta           =   math.degrees(thetarad)
+
+                    # Calculate distances
+                    x = float( length_apart - d1 * math.cos(thetarad))
+                    y = float( d1 * math.sin(thetarad)   )
+
+                else:
+                    pass
+
+##                cosine0 = (math.pow(length_apart, 2) + math.pow(d0, 2) - math.pow(d1, 2)) / (2*d1*length_apart)
+##                sine0   = math.sqrt(1-math.pow(cosine0, 2))
+
+
+                if (math.isnan(x) == False) and (math.isnan(y) == False):
+                    valu0.append(x)
+                    valu1.append(y)
                 
                 if ( len(valu0) and len(valu1) ) == n:
                     # Place data in queue for retrieval
-                    print( "Placed items in Q_getData" )
                     Q_getData.put( [valu0, valu1] )
+                    print( "x: %r, y: %r" %(valu0[0], valu1[0]) )
+                    print( "d0: %r, d1: %r" %(d0, d1) )
                     # Reset arrays
                     del valu0[:]
                     del valu1[:]
@@ -114,7 +137,6 @@ def getData( Q_getData ):
             print( "Caught error in getData()"      )
             print( "Error type %s" %str(type(e))    )
             print( "Error Arguments " + str(e.args) )
-            ser.close()
 
 # Define function to update from pooled data
 def queueBuffers( Q_getData, Q_stuff ):
@@ -123,7 +145,7 @@ def queueBuffers( Q_getData, Q_stuff ):
             #print ("Waiting for values")
             # Fetch data from stack
             if Q_getData.qsize() > 0:
-                print ("Got values")
+                #print ("Got values")
                 data = Q_getData.get()
                 Q_stuff.put( data )
 
@@ -131,8 +153,6 @@ def queueBuffers( Q_getData, Q_stuff ):
         print( "Caught error in queueBuffers()" )
         print( "Error type %s" %str(type(e)) )
         print( " Error Arguments " + str(e.args) )
-        ser.close()
-
 
 ######################################################
 #                   SETUP PROGRAM
@@ -147,16 +167,27 @@ win.show()
 
 # Setup Plot
 p = ui.plot
-p.setRange(xRange=[0, 150], yRange=[0,150])
+p.setRange(xRange=[0, 225], yRange=[0,150])
 
 # Establish connection with Arduino
-ser = createUSBPort( "Arduino", 6, 115200 )
-if ser.is_open == False:
-    ser.open()
+try:
+    ser = createUSBPort( "Arduino", 39, 115200 )
+    if ser.is_open == False:
+        ser.open()
+    print( "Serial Port OPEN" )
+
+except Exception as e:
+    print( "Could NOT open serial port" )
+    print( "Error type %s" %str(type(e)) )
+    print( " Error Arguments " + str(e.args) )
+    sleep( 5 )
+    quit()
 
 # Setup queues for data communication
 Q_getData   = Queue( maxsize=0 )    #Pooled data from arduino
 Q_stuff     = Queue( maxsize=0 )    #
+
+sleep( 2.5 )      # Delay for stability
 
 # Retrieve data
 t_getData = Thread( target=getData, args=( Q_getData, ) )
@@ -168,11 +199,12 @@ t_queueBuffers.start()
 
 # Plot data
 while Q_stuff.qsize() == 0:
-    print( "Waiting" )
+    doStuff = True
 
 # Fetch data from stack
 if Q_stuff.qsize() > 0:
-    print ("Got stuff")
+    #print ("Got stuff")
+    sleep( 2.5 )            # For stability
     data = Q_stuff.get()
     
 # Call for update
