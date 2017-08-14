@@ -18,7 +18,7 @@ from    sympy           import  nsolve
 ######################################################
 
 # Function to print obtained values:
-def printVals(H1, H2, angle, virPos1, virPos2):
+def printVals(H1, H2, angle, virPos1, virPos2, realPos1, realPos2):
     
     start = time()
     for i in range(len( H1[0] )):
@@ -38,19 +38,73 @@ def printVals(H1, H2, angle, virPos1, virPos2):
         print( "H_y_1 = %.5f" %H1[1][i])
         print( "H_z_1 = %.5f\n" %H2[2][i])
 
-        print( "Value of x_1: %.4f" %virPos1[0][i] )
-        print( "Value of y_1: %.4f\n" %virPos1[1][i] )
-
+        print( "Virtual x_1: %.4f" %virPos1[0][i] )
+        print( "Virtual y_1: %.4f" %virPos1[1][i] )
+        print( "Real x_1: %.4f" %realPos1[0][i] )
+        print( "Real y_1: %.4f" %realPos1[1][i] )
+        print( "Real z_1: %.4f\n" %realPos1[2][i] )
+        
         print( "SENSOR TWO 2:" )
         print( "=======================================" )
         print( "H_x_2 = %.5f" %H2[0][i])
         print( "H_y_2 = %.5f" %H2[1][i])
         print( "H_z_2 = %.5f\n" %H2[2][i])
 
-        print( "Value of x_2: %.4f" %virPos2[0][i] )
-        print( "Value of y_2: %.4f" %virPos2[1][i] )
+        print( "Virtual x_2: %.4f" %virPos2[0][i] )
+        print( "Virtual y_2: %.4f" %virPos2[1][i] )
+        print( "Real x_2: %.4f" %realPos2[0][i] )
+        print( "Real y_2: %.4f" %realPos2[1][i] )
+        print( "Real z_2: %.4f\n" %realPos2[2][i] )
     print( "Time to print %i iterations: %.3f" %( len(H1[0]), time()-start) )
     
+# Solve matrices for location
+def solveMatrix(a, b, y, p, loc_x, loc_y, sensor):
+
+    a11 = cos(b)*cos(y)
+    a12 = -cos(b)*sin(y)
+    a13 = sin(b)
+    a21 = cos(a)*sin(y)+cos(y)*sin(a)*sin(b)
+    a22 = cos(a)*cos(y)-sin(a)*sin(b)*sin(y)
+    a23 = -cos(b)*sin(a)
+    a31 = sin(a)*sin(y)-cos(a)*cos(y)*sin(b)
+    a32 = cos(y)*sin(a)+cos(a)*sin(b)*sin(y)
+    a33 = cos(a)*cos(b)
+
+    location = []
+    
+    if sensor == 1:
+        T = np.mat(((a11, a12, a13),
+                    (a21, a22, a23),
+                    (a31, a32, a33)), dtype='f')
+
+        T_inverse   = np.linalg.inv(T)
+        virLocation = np.array( ([loc_x],
+                                 [loc_y],
+                                 [0]    ), dtype='f')
+
+##        reLoc[0] = (T_inverse*virLocation).item(0)
+##        reLoc[1] = (T_inverse*virLocation).item(1)
+##        reLoc[2] = (T_inverse*virLocation).item(2)
+        reLoc = T_inverse*virLocation
+
+        return reLoc.item(0), reLoc.item(1), reLoc.item(2)
+        
+    elif sensor == 2:
+        T = np.mat(((a11*cos(p)+a12*sin(p), -a11*sin(p)+a12*cos(p), a13),
+                    (a21*cos(p)+a22*sin(p), -a21*sin(p)+a22*cos(p), a23),
+                    (a31*cos(p)+a32*sin(p), -a31*sin(p)+a32*cos(p), a33)), dtype='f')
+
+        T_inverse   = np.linalg.inv(T)
+        virLocation = np.array( ([loc_x],
+                                 [loc_y],
+                                 [0]    ), dtype='f')
+
+##        reLoc[0] = (T_inverse*virLocation).item(0)
+##        reLoc[1] = (T_inverse*virLocation).item(1)
+##        reLoc[2] = (T_inverse*virLocation).item(2)
+        reLoc = T_inverse*virLocation
+
+        return reLoc.item(0), reLoc.item(1), reLoc.item(2)
         
 ### Define equations:
 # Hx
@@ -130,7 +184,7 @@ def location_virtual (p, H_x, H_y):
 global B_x_1, B_y_1, B_z_1  # IMU readings from sensor 1
 global B_x_2, B_y_2, B_z_2  # IMU readings from sensor 2
 global K
-K   = 120    /(4*np.pi)
+K   = 19.081e-4
 
 # Sensor 1 readings
 B_x_1 = random.random()*5
@@ -155,6 +209,9 @@ angles = [[] for i in range(4)]     # [0]:alpha || [1]:beta || [2]:gamma || [3]:
 # Location in virtual space
 virLoc_1 = [[] for i in range(2)]   # [0]:x     || [1]:y
 virLoc_2 = [[] for i in range(2)]   # [0]:x     || [1]:y
+# Location in our real physical meaningful(less?) world
+reaLoc_1 = [[] for i in range(3)]   # [0]:x     || [1]:y    || [3]:z
+reaLoc_2 = [[] for i in range(3)]   # [0]:x     || [1]:y    || [3]:z
 
 
 ######################################################
@@ -210,9 +267,10 @@ for i in range(1,N,1):
                     pass
 
                 
-                # If constraint 1 is met find rotation in z-axis that can
-                # impose constraint 2
-                
+                # Convert values back to real space by multiplying with
+                # the inverse of the transformation matrices
+                xx_1, yy_1, zz_1 = solveMatrix(aa, bb, yy, phi, x_1, y_1, 1)
+                xx_2, yy_2, zz_2 = solveMatrix(aa, bb, yy, phi, x_2, y_2, 2)
                 
                 
                 # Append values to array for printing
@@ -230,6 +288,12 @@ for i in range(1,N,1):
                 virLoc_1[1].append(y_1)
                 virLoc_2[0].append(x_2)
                 virLoc_2[1].append(y_2)
+                reaLoc_1[0].append(xx_1)
+                reaLoc_1[1].append(yy_1)
+                reaLoc_1[2].append(zz_1)
+                reaLoc_2[0].append(xx_2)
+                reaLoc_2[1].append(yy_2)
+                reaLoc_2[2].append(zz_2)
                 continue
         
 end = time() - start
@@ -237,7 +301,7 @@ print( "Time to complete %r iterations: %.5f" %(N*N, end) )
 print( "Solutions found: %i" %len(H_1[0]) )
 sleep( 2.5 )
 
-printVals( H_1, H_2, angles, virLoc_1, virLoc_2)
+printVals( H_1, H_2, angles, virLoc_1, virLoc_2, reaLoc_1, reaLoc_2)
 
 
 ### List equations:
@@ -301,4 +365,33 @@ soln = nsolve(  [B_x*( sin(aa)*sin(yy)-cos(aa)*cos(yy)*sin(bb) ) +
                 [1] )
 print( soln )
 
+================================================================================
+
+# Solve matrices for location
+def solveMatrix(a, b, y, p, sensor):
+
+    a11 = cos(b)*cos(y)
+    a12 = -cos(b)*sin(y)
+    a13 = sin(b)
+    a21 = cos(a)*sin(y)+cos(y)*sin(a)*sin(b)
+    a22 = cos(a)*cos(y)-sin(a)*sin(b)*sin(y)
+    a23 = -cos(b)*sin(a)
+    a31 = sin(a)*sin(y)-cos(a)*cos(y)*sin(b)
+    a32 = cos(y)*sin(a)+cos(a)*sin(b)*sin(y)
+    a33 = cos(a)*cos(b)
+
+    if sensor == 1:
+        T = np.mat(((a11, a12, a13),
+                    (a21, a22, a23),
+                    (a31, a32, a33)), dtype='f')
+
+        T_inverse = np.linalg.inv(T)
+
+    elif sensor == 2:
+        T = np.mat(((a11*cos(p)+a12*sin(p), -a11*sin(p)+a12*cos(p), a13),
+                    (a21*cos(p)+a22*sin(p), -a21*sin(p)+a22*cos(p), a23),
+                    (a31*cos(p)+a32*sin(p), -a31*sin(p)+a32*cos(p), a33)), dtype='f')
+
+        T_inverse = np.linalg.inv(T)
+        
 '''
