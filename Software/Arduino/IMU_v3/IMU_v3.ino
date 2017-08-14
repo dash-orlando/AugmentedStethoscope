@@ -3,13 +3,12 @@
 #include <SPI.h>
 #include <SparkFunLSM9DS1.h>
 
-// Define importatnt constants
+// Define important constants
 #define LSM9DS1_M             0x1E    // Would be 0x1C if SDO_M is LOW
 #define LSM9DS1_AG            0x6B    // Would be 0x6A if SDO_AG is LOW
-#define PRINT_DELAY           20      // Milliseconds
+#define PRINT_DELAY           200      // 40Hz data readings @ 20 [Milliseconds]
 #define CALIBRATION_INDEX     50      // Accounting for ambient magnetic fields
 #define DECLINATION           6.55    // Accounting for the Earth's magnetic field
-#define NPASS                 10      // Single reading sample size
 #define BAUDRATE              115200  // Serial communication baudrate
 #define SELECT_PIN            13      // Multiplexer "Select pin"
 

@@ -11,11 +11,14 @@ import  numpy           as      np
 from    time            import  sleep, time
 from    math            import  *
 from    scipy.optimize  import  fsolve
-from    sympy           import  nsolve
+##from    sympy           import  nsolve
+from    usbProtocol     import  createUSBPort
 
 ######################################################
 #                   FUNCTION DEFINITIONS
 ######################################################
+
+#
 
 # Function to print obtained values:
 def printVals(H1, H2, angle, virPos1, virPos2, realPos1, realPos2):
@@ -105,7 +108,37 @@ def solveMatrix(a, b, y, p, loc_x, loc_y, sensor):
         reLoc = T_inverse*virLocation
 
         return reLoc.item(0), reLoc.item(1), reLoc.item(2)
-        
+
+# Pool data from Arduino
+def getData(ser):
+    global B_x_1, B_y_1, B_z_1  # IMU readings from sensor 1
+    global B_x_2, B_y_2, B_z_2  # IMU readings from sensor 2
+    ser.reset_input_buffer()
+    ser.reset_output_buffer()
+    try:
+        line = ser.readline()[:-1]
+        col = line.split(",")
+
+        #Throwing out bad data. Waiting for the sensor to calibrate itself to ambient fields. 
+        if len(col) < 6:
+            print "Waiting..."
+            return False
+
+        else:
+            #Casting the split input values as floats.
+            B_x_1=float(col[0])
+            B_y_1=float(col[1])
+            B_z_1=float(col[2])
+            B_x_2=float(col[3])
+            B_y_2=float(col[4])
+            B_z_2=float(col[5])
+            return True
+
+    except Exception as e:
+        print( "Caught error in getData()"      )
+        print( "Error type %s" %str(type(e))    )
+        print( "Error Arguments " + str(e.args) )
+
 ### Define equations:
 # Hx
 def H_X( aa, bb, yy, phi, B_x, B_y, B_z, sensor ):
@@ -186,20 +219,6 @@ global B_x_2, B_y_2, B_z_2  # IMU readings from sensor 2
 global K
 K   = 19.081e-4
 
-# Sensor 1 readings
-B_x_1 = random.random()*5
-B_y_1 = random.random()*5
-B_z_1 = random.random()*5
-print( "Sensor 1 readings:" )
-print( B_x_1, B_y_1, B_z_1 )
-
-# Sensor 2 readings
-B_x_2 = random.random()*5
-B_y_2 = random.random()*5
-B_z_2 = random.random()*5
-print( "\nSensor 2 readings:" )
-print( B_x_2, B_y_2, B_z_2 )
-
 ### Declare arrays to store values:
 # Computed values of H
 H_1 = [[] for i in range(3)]        # [0]:Hx    || [1]:Hy   || [2]:Hz
@@ -213,95 +232,181 @@ virLoc_2 = [[] for i in range(2)]   # [0]:x     || [1]:y
 reaLoc_1 = [[] for i in range(3)]   # [0]:x     || [1]:y    || [3]:z
 reaLoc_2 = [[] for i in range(3)]   # [0]:x     || [1]:y    || [3]:z
 
+# Establish connection with Arduino
+try:
+    ser = createUSBPort( "Arduino", 6, 115200 )
+    if ser.is_open == False:
+        ser.open()
+    print( "Serial Port OPEN" )
+
+except Exception as e:
+    print( "Could NOT open serial port" )
+    print( "Error type %s" %str(type(e)) )
+    print( " Error Arguments " + str(e.args) )
+    sleep( 5 )
+    quit()
+
+### Sensor 1 readings
+##B_x_1 = random.random()*5
+##B_y_1 = random.random()*5
+##B_z_1 = random.random()*5
+##print( "Sensor 1 readings:" )
+##print( B_x_1, B_y_1, B_z_1 )
+
+### Sensor 2 readings
+##B_x_2 = random.random()*5
+##B_y_2 = random.random()*5
+##B_z_2 = random.random()*5
+##print( "\nSensor 2 readings:" )
+##print( B_x_2, B_y_2, B_z_2 )
+
 
 ######################################################
 #                   START PROGRAM
 ######################################################
 
-# Start iteration
-start = time()
-N=25
-for i in range(1,N,1):
-    for j in range(1,N,1):
-        bb=i*np.pi/180.
-        yy=j*np.pi/180.
+check = getData(ser)
+while check == False:
+    check = getData(ser)
+
+print( "READY in 5seconds" )
+sleep(1)
+print( "Ready in 4seconds" )
+sleep(1)
+print( "Ready in 3seconds" )
+sleep(1)
+print( "Ready in 2seconds" )
+sleep(1)
+print( "Ready in 1seconds" )
+sleep(1)
+print( "GO!" )
+
+while True:
+    # Get one more "fresh" set of readings
+    getData(ser)
         
-        # Find angle alpha that imposes constraint 1 (sensor 1)
-        try:
-            aa = fsolve(LHS_1, 0.1, args=(bb, yy, B_x_1, B_y_1, B_z_1) )
-            sen1_constraint1 = LHS_1(aa, bb, yy, B_x_1, B_y_1, B_z_1)
-        except Exception as e:
-            print( "Caught ERROR:\n%r" %type(e) )
-            pass
+    ### Sensor 1 readings
+    print( "Sensor 1 readings:" )
+    print( B_x_1, B_y_1, B_z_1 )
 
-        # Check if constraint 1 is met (sensor 1)
-        if (sen1_constraint1 <= 1e-6) and (sen1_constraint1 >= -1e-6):
-            H_x_1 = H_X(aa, bb, yy, 0, B_x_1, B_y_1, B_z_1, 1)
-            H_y_1 = H_Y(aa, bb, yy, 0, B_x_1, B_y_1, B_z_1, 1)
-            H_z_1 = H_Z(aa, bb, yy, 0, B_x_1, B_y_1, B_z_1, 1)
-
-            # Obtain (x, y) in "virtual" space (sensor 1)
+    ### Sensor 2 readings
+    print( "Sensor 2 readings:" )
+    print( B_x_2, B_y_2, B_z_2 )
+    # Start iteration
+    start = time()
+    N=25
+    for i in range(1,N,1):
+        for j in range(1,N,1):
+            bb=i*np.pi/180.
+            yy=j*np.pi/180.
+            
+            # Find angle alpha that imposes constraint 1 (sensor 1)
             try:
-                x_1 , y_1 = fsolve(location_virtual, (0.1,0.1), args=(H_x_1, H_y_1) )
-            except:
-                pass
-
-            # Find angle phi that imposes constraint 1 (sensor 2)
-            try:
-                phi = fsolve(LHS_2, 0.1, args=(aa, bb, yy, B_x_2, B_y_2, B_z_2))
-                sen2_constraint1 = LHS_2(phi, aa, bb, yy, B_x_2, B_y_2, B_z_2)
+                aa = fsolve(LHS_1, 0.1, args=(bb, yy, B_x_1, B_y_1, B_z_1) )
+                sen1_constraint1 = LHS_1(aa, bb, yy, B_x_1, B_y_1, B_z_1)
             except Exception as e:
                 print( "Caught ERROR:\n%r" %type(e) )
                 pass
-            
-            # Check if constraint 1 is met (sensor 2)
-            if (sen2_constraint1 <= 1e-6) and (sen2_constraint1 >= -1e-6):
-                H_x_2 = H_X(aa, bb, yy, phi, B_x_2, B_y_2, B_z_2, 2)
-                H_y_2 = H_Y(aa, bb, yy, phi, B_x_2, B_y_2, B_z_2, 2)
-                H_z_2 = H_Z(aa, bb, yy, phi, B_x_2, B_y_2, B_z_2, 2)
 
-                # Obtain (x, y) in "virtual" space (sensor 2)
+            # Check if constraint 1 is met (sensor 1)
+            if (sen1_constraint1 <= 1e-6) and (sen1_constraint1 >= -1e-6):
+                H_x_1 = H_X(aa, bb, yy, 0, B_x_1, B_y_1, B_z_1, 1)
+                H_y_1 = H_Y(aa, bb, yy, 0, B_x_1, B_y_1, B_z_1, 1)
+                H_z_1 = H_Z(aa, bb, yy, 0, B_x_1, B_y_1, B_z_1, 1)
+
+                # Obtain (x, y) in "virtual" space (sensor 1)
                 try:
-                    x_2 , y_2 = fsolve(location_virtual, (0.1,0.1), args=(H_x_2, H_y_2))
+                    x_1 , y_1 = fsolve(location_virtual, (0.1,0.1), args=(H_x_1, H_y_1) )
                 except:
                     pass
 
+                # Find angle phi that imposes constraint 1 (sensor 2)
+                try:
+                    phi = fsolve(LHS_2, 0.1, args=(aa, bb, yy, B_x_2, B_y_2, B_z_2))
+                    sen2_constraint1 = LHS_2(phi, aa, bb, yy, B_x_2, B_y_2, B_z_2)
+                except Exception as e:
+                    print( "Caught ERROR:\n%r" %type(e) )
+                    pass
                 
-                # Convert values back to real space by multiplying with
-                # the inverse of the transformation matrices
-                xx_1, yy_1, zz_1 = solveMatrix(aa, bb, yy, phi, x_1, y_1, 1)
-                xx_2, yy_2, zz_2 = solveMatrix(aa, bb, yy, phi, x_2, y_2, 2)
-                
-                
-                # Append values to array for printing
-                H_1[0].append(H_x_1)
-                H_1[1].append(H_y_1)
-                H_1[2].append(H_z_1)
-                H_2[0].append(H_x_2)
-                H_2[1].append(H_y_2)
-                H_2[2].append(H_z_2)
-                angles[0].append((aa*180/np.pi))
-                angles[1].append((bb*180/np.pi))
-                angles[2].append((yy*180/np.pi))
-                angles[3].append((phi*180/np.pi))
-                virLoc_1[0].append(x_1)
-                virLoc_1[1].append(y_1)
-                virLoc_2[0].append(x_2)
-                virLoc_2[1].append(y_2)
-                reaLoc_1[0].append(xx_1)
-                reaLoc_1[1].append(yy_1)
-                reaLoc_1[2].append(zz_1)
-                reaLoc_2[0].append(xx_2)
-                reaLoc_2[1].append(yy_2)
-                reaLoc_2[2].append(zz_2)
-                continue
-        
-end = time() - start
-print( "Time to complete %r iterations: %.5f" %(N*N, end) )
-print( "Solutions found: %i" %len(H_1[0]) )
-sleep( 2.5 )
+                # Check if constraint 1 is met (sensor 2)
+                if (sen2_constraint1 <= 1e-6) and (sen2_constraint1 >= -1e-6):
+                    H_x_2 = H_X(aa, bb, yy, phi, B_x_2, B_y_2, B_z_2, 2)
+                    H_y_2 = H_Y(aa, bb, yy, phi, B_x_2, B_y_2, B_z_2, 2)
+                    H_z_2 = H_Z(aa, bb, yy, phi, B_x_2, B_y_2, B_z_2, 2)
 
-printVals( H_1, H_2, angles, virLoc_1, virLoc_2, reaLoc_1, reaLoc_2)
+                    # Obtain (x, y) in "virtual" space (sensor 2)
+                    try:
+                        x_2 , y_2 = fsolve(location_virtual, (0.1,0.1), args=(H_x_2, H_y_2))
+                    except:
+                        pass
+
+                    
+                    # Convert values back to real space by multiplying with
+                    # the inverse of the transformation matrices
+                    xx_1, yy_1, zz_1 = solveMatrix(aa, bb, yy, phi, x_1, y_1, 1)
+                    xx_2, yy_2, zz_2 = solveMatrix(aa, bb, yy, phi, x_2, y_2, 2)
+
+                    # Impose 2nd constraint
+                    
+                    
+                    # Append values to array for printing
+                    H_1[0].append(H_x_1)
+                    H_1[1].append(H_y_1)
+                    H_1[2].append(H_z_1)
+                    H_2[0].append(H_x_2)
+                    H_2[1].append(H_y_2)
+                    H_2[2].append(H_z_2)
+                    angles[0].append((aa*180/np.pi))
+                    angles[1].append((bb*180/np.pi))
+                    angles[2].append((yy*180/np.pi))
+                    angles[3].append((phi*180/np.pi))
+                    virLoc_1[0].append(x_1)
+                    virLoc_1[1].append(y_1)
+                    virLoc_2[0].append(x_2)
+                    virLoc_2[1].append(y_2)
+                    reaLoc_1[0].append(xx_1)
+                    reaLoc_1[1].append(yy_1)
+                    reaLoc_1[2].append(zz_1)
+                    reaLoc_2[0].append(xx_2)
+                    reaLoc_2[1].append(yy_2)
+                    reaLoc_2[2].append(zz_2)
+                    continue
+            
+    end = time() - start
+    print( "Time to complete %r iterations: %.5f" %(N*N, end) )
+    print( "Solutions found: %i" %len(H_1[0]) )
+    sleep( 2.5 )
+
+    print( "SENSOR ONE 1:" )
+    print( "=======================================" )
+    print( "Real x_1: %.4f" %reaLoc_1[0][-1] )
+    print( "Real y_1: %.4f" %reaLoc_1[1][-1] )
+    print( "Real z_1: %.4f\n" %reaLoc_1[2][-1] )
+    
+    print( "SENSOR TWO 2:" )
+    print( "=======================================" )
+    print( "Real x_2: %.4f" %reaLoc_2[0][-1] )
+    print( "Real y_2: %.4f" %reaLoc_2[1][-1] )
+    print( "Real z_2: %.4f\n" %reaLoc_2[2][-1] )
+
+    # Reset arrays
+    for i in range (0,3):
+        del H_1[i][:]
+        del H_2[i][:]
+        if i > 1:
+            pass
+        else:
+            del virLoc_1[i][:]
+            del virLoc_2[i][:]
+        del reaLoc_1[i][:]
+        del reaLoc_2[i][:]
+        if i == 2:
+            del angles[i+1][:]
+        else:
+            del angles[i][:]
+    
+
+##printVals( H_1, H_2, angles, virLoc_1, virLoc_2, reaLoc_1, reaLoc_2)
 
 
 ### List equations:
