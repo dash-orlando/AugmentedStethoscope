@@ -18,36 +18,42 @@ from    sympy           import  nsolve
 ######################################################
 
 # Function to print obtained values:
-def printVals(a_1, b_1, c_1, a_2, b_2, c_2, d, e, f, fprime, g_1, h_1, g_2, h_2):
-    for i in range(len(a_1)):
-        print( "SENSOR ONE 1:\n" )
-        print( "Value of alpha: %.5f" %(d[i]) )
-        print( "Value of beta : %.5f" %(e[i]) )
-        print( "Value of gamma: %.5f" %(f[i]) )
-        print( "H_x_1 = %.5f" %a_1[i])
-        print( "H_y_1 = %.5f" %b_1[i])
-        print( "H_z_1 = %.5f\n" %c_1[i])
-
-        print( "Value of x_1: %.4f" %g_1[i] )
-        print( "Value of y_1: %.4f" %h_1[i] )
+def printVals(H1, H2, angle, virPos1, virPos2):
+    
+    start = time()
+    for i in range(len( H1[0] )):
+        print( "\n=======================================" )
+        print( "============ITERATION: %4i============" %i )
+        print( "=======================================\n" )
+        print( "ANGLES:" )
         print( "=======================================" )
-        print( "SENSOR TWO 2:\n" )
-        print( "Value of alpha : %.5f" %(d[i]) )
-        print( "Value of beta  : %.5f" %(e[i]) )
-        print( "Value of gamma : %.5f" %(f[i]) )
-        print( "Value of gamma': %.5f" %(fprime[i]) )
-        print( "H_x_2 = %.5f" %a_2[i])
-        print( "H_y_2 = %.5f" %b_2[i])
-        print( "H_z_2 = %.5f\n" %c_2[i])
-
-        print( "Value of x_2: %.4f" %g_2[i] )
-        print( "Value of y_2: %.4f" %h_2[i] )
+        print( "Value of alpha : %.5f" %(angle[0][i]) )
+        print( "Value of beta  : %.5f" %(angle[1][i]) )
+        print( "Value of gamma : %.5f" %(angle[2][i]) )
+        print( "Value of gamma': %.5f\n" %(angle[3][i]) )
+        
+        print( "SENSOR ONE 1:" )
         print( "=======================================" )
+        print( "H_x_1 = %.5f" %H1[0][i])
+        print( "H_y_1 = %.5f" %H1[1][i])
+        print( "H_z_1 = %.5f\n" %H2[2][i])
+
+        print( "Value of x_1: %.4f" %virPos1[0][i] )
+        print( "Value of y_1: %.4f\n" %virPos1[1][i] )
+
+        print( "SENSOR TWO 2:" )
         print( "=======================================" )
-        print( "=======================================\n\n" )
+        print( "H_x_2 = %.5f" %H2[0][i])
+        print( "H_y_2 = %.5f" %H2[1][i])
+        print( "H_z_2 = %.5f\n" %H2[2][i])
 
-
-# Define equations:
+        print( "Value of x_2: %.4f" %virPos2[0][i] )
+        print( "Value of y_2: %.4f" %virPos2[1][i] )
+    print( "Time to print %i iterations: %.3f" %( len(H1[0]), time()-start) )
+    
+        
+### Define equations:
+# Hx
 def H_X( aa, bb, yy, phi, B_x, B_y, B_z, sensor ):
     if sensor == 1:
         # Equation for sensor 1
@@ -60,6 +66,7 @@ def H_X( aa, bb, yy, phi, B_x, B_y, B_z, sensor ):
         # Equation for sensor 2
         return( B_x*( a_11*cos(phi) + a_12*sin(phi) ) + B_y*(a_12*cos(phi)-a_11*sin(phi)) + B_z*(a_13) )
 
+# Hy
 def H_Y( aa, bb, yy, phi, B_x, B_y, B_z, sensor ):
     if sensor == 1:
         # Equation for sensor 1
@@ -74,7 +81,7 @@ def H_Y( aa, bb, yy, phi, B_x, B_y, B_z, sensor ):
         a_23 = -cos(bb)*sin(aa)
         return( B_x*(a_21*cos(phi)+a_22*sin(phi)) + B_y*(a_22*cos(phi)-a_21*sin(phi)) + B_z*(a_23) )
 
-
+# Hz
 def H_Z( aa, bb, yy, phi, B_x, B_y, B_z, sensor ):
     if sensor == 1:
         # Equation for sensor 1
@@ -91,33 +98,32 @@ def H_Z( aa, bb, yy, phi, B_x, B_y, B_z, sensor ):
                  B_y*( a_32*cos(phi) - a_31*sin(phi) ) +
                  B_z*( a_33 ) ) )
 
-def equations( x0, beta, gamma, B_x, B_y, B_z ):
+# LHS of [H] of sensor 1
+def LHS_1( x0, beta, gamma, B_x, B_y, B_z ):
 
     alpha = x0
     return( (B_x*( sin(alpha)*sin(gamma)-cos(alpha)*cos(gamma)*sin(beta) ) +
              B_y*( cos(gamma)*sin(alpha)+cos(alpha)*sin(beta)*sin(gamma) ) +
              B_z*( cos(alpha)*cos(gamma) ) ) )
 
-def equations_2( x0, aa, beta, gamma, B_x, B_y, B_z ):
+# LHS of [H] of sensor 2
+def LHS_2( x0, aa, bb, yy, B_x, B_y, B_z ):
 
-    gamma2 = x0
+    phi = x0
     a_31 = sin(aa)*sin(yy)-cos(aa)*cos(yy)*sin(bb)
     a_32 = cos(yy)*sin(aa)+cos(aa)*sin(bb)*sin(yy)
     a_33 = cos(aa)*cos(bb)
-    return( (B_x*( a_31*cos(gamma2) + a_32*sin(gamma2) ) +
-             B_y*( a_32*cos(gamma2) - a_31*sin(gamma2) ) +
+    return( (B_x*( a_31*cos(phi) + a_32*sin(phi) ) +
+             B_y*( a_32*cos(phi) - a_31*sin(phi) ) +
              B_z*( a_33 ) ) )
 
+# Location in virtual space
 def location_virtual (p, H_x, H_y):
     x, y = p
     return ( (K*(2*x*x+y*y)/pow(sqrt(x*x+y*y), 5) - H_x), (K*(3*x*y)/pow(sqrt(x*x+y*y), 5) - H_y) )
 
 ######################################################
 #                   SETUP PROGRAM
-######################################################
-
-######################################################
-#                   START PROGRAM
 ######################################################
 
 # Magnetic field vector components
@@ -140,21 +146,20 @@ B_z_2 = random.random()*5
 print( "\nSensor 2 readings:" )
 print( B_x_2, B_y_2, B_z_2 )
 
-# Declare arrays to store values:
-H_xx_1 = []
-H_yy_1 = []
-H_zz_1 = []
-H_xx_2 = []
-H_yy_2 = []
-H_zz_2 = []
-alpha = []
-beta  = []
-gamma = []
-gammaprime = []
-location_x_1 = []
-location_y_1 = []
-location_x_2 = []
-location_y_2 = []
+### Declare arrays to store values:
+# Computed values of H
+H_1 = [[] for i in range(3)]        # [0]:Hx    || [1]:Hy   || [2]:Hz
+H_2 = [[] for i in range(3)]        # [0]:Hx    || [1]:Hy   || [2]:Hz
+# Numerically evaluated angles
+angles = [[] for i in range(4)]     # [0]:alpha || [1]:beta || [2]:gamma || [3]:phi
+# Location in virtual space
+virLoc_1 = [[] for i in range(2)]   # [0]:x     || [1]:y
+virLoc_2 = [[] for i in range(2)]   # [0]:x     || [1]:y
+
+
+######################################################
+#                   START PROGRAM
+######################################################
 
 # Start iteration
 start = time()
@@ -163,10 +168,11 @@ for i in range(1,N,1):
     for j in range(1,N,1):
         bb=i*np.pi/180.
         yy=j*np.pi/180.
+        
+        # Find angle alpha that imposes constraint 1 (sensor 1)
         try:
-            # Impose constraint 1 (sensor 1)
-            aa = fsolve(equations, 0.1, args=(bb, yy, B_x_1, B_y_1, B_z_1) )
-            sen1_constraint1 = equations(aa, bb, yy, B_x_1, B_y_1, B_z_1)
+            aa = fsolve(LHS_1, 0.1, args=(bb, yy, B_x_1, B_y_1, B_z_1) )
+            sen1_constraint1 = LHS_1(aa, bb, yy, B_x_1, B_y_1, B_z_1)
         except Exception as e:
             print( "Caught ERROR:\n%r" %type(e) )
             pass
@@ -179,19 +185,23 @@ for i in range(1,N,1):
 
             # Obtain (x, y) in "virtual" space (sensor 1)
             try:
-                x_1 , y_1 = fsolve(location_virtual, (0.1,0.1), args=(H_x_1, H_y_1))
+                x_1 , y_1 = fsolve(location_virtual, (0.1,0.1), args=(H_x_1, H_y_1) )
             except:
                 pass
 
-            # Impose constraint 1 (sensor 2)
-            gamma2 = fsolve(equations_2, 0.1, args=(aa, bb, yy, B_x_2, B_y_2, B_z_2))
-            sen2_constraint1 = equations_2(gamma2, aa, bb, yy, B_x_2, B_y_2, B_z_2)
-
+            # Find angle phi that imposes constraint 1 (sensor 2)
+            try:
+                phi = fsolve(LHS_2, 0.1, args=(aa, bb, yy, B_x_2, B_y_2, B_z_2))
+                sen2_constraint1 = LHS_2(phi, aa, bb, yy, B_x_2, B_y_2, B_z_2)
+            except Exception as e:
+                print( "Caught ERROR:\n%r" %type(e) )
+                pass
+            
             # Check if constraint 1 is met (sensor 2)
             if (sen2_constraint1 <= 1e-6) and (sen2_constraint1 >= -1e-6):
-                H_x_2 = H_X(aa, bb, yy, gamma2, B_x_2, B_y_2, B_z_2, 2)
-                H_y_2 = H_Y(aa, bb, yy, gamma2, B_x_2, B_y_2, B_z_2, 2)
-                H_z_2 = H_Z(aa, bb, yy, gamma2, B_x_2, B_y_2, B_z_2, 2)
+                H_x_2 = H_X(aa, bb, yy, phi, B_x_2, B_y_2, B_z_2, 2)
+                H_y_2 = H_Y(aa, bb, yy, phi, B_x_2, B_y_2, B_z_2, 2)
+                H_z_2 = H_Z(aa, bb, yy, phi, B_x_2, B_y_2, B_z_2, 2)
 
                 # Obtain (x, y) in "virtual" space (sensor 2)
                 try:
@@ -206,31 +216,28 @@ for i in range(1,N,1):
                 
                 
                 # Append values to array for printing
-                H_xx_1.append(H_x_1)
-                H_yy_1.append(H_y_1)
-                H_zz_1.append(H_z_1)
-                H_xx_2.append(H_x_2)
-                H_yy_2.append(H_y_2)
-                H_zz_2.append(H_z_2)
-                alpha.append((aa*180/np.pi))
-                beta.append ((bb*180/np.pi))
-                gamma.append((yy*180/np.pi))
-                gammaprime.append((gamma2*180/np.pi))
-                location_x_1.append(x_1)
-                location_y_1.append(y_1)
-                location_x_2.append(x_2)
-                location_y_2.append(y_2)
+                H_1[0].append(H_x_1)
+                H_1[1].append(H_y_1)
+                H_1[2].append(H_z_1)
+                H_2[0].append(H_x_2)
+                H_2[1].append(H_y_2)
+                H_2[2].append(H_z_2)
+                angles[0].append((aa*180/np.pi))
+                angles[1].append((bb*180/np.pi))
+                angles[2].append((yy*180/np.pi))
+                angles[3].append((phi*180/np.pi))
+                virLoc_1[0].append(x_1)
+                virLoc_1[1].append(y_1)
+                virLoc_2[0].append(x_2)
+                virLoc_2[1].append(y_2)
                 continue
         
 end = time() - start
 print( "Time to complete %r iterations: %.5f" %(N*N, end) )
+print( "Solutions found: %i" %len(H_1[0]) )
 sleep( 2.5 )
 
-printVals( H_xx_1, H_yy_1, H_zz_1,
-           H_xx_2, H_yy_2, H_zz_2,
-           alpha, beta, gamma, gammaprime,
-           location_x_1, location_y_1,
-           location_x_2, location_y_2)
+printVals( H_1, H_2, angles, virLoc_1, virLoc_2)
 
 
 ### List equations:
