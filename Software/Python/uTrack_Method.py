@@ -219,6 +219,8 @@ global B_x_2, B_y_2, B_z_2  # IMU readings from sensor 2
 global K
 K   = 19.081e-4
 
+distance_apart = 0.350
+
 ### Declare arrays to store values:
 # Computed values of H
 H_1 = [[] for i in range(3)]        # [0]:Hx    || [1]:Hy   || [2]:Hz
@@ -281,7 +283,8 @@ print( "Ready in 1seconds" )
 sleep(1)
 print( "GO!" )
 
-while True:
+loop = True
+while(loop==True):
     # Get one more "fresh" set of readings
     getData(ser)
         
@@ -294,11 +297,11 @@ while True:
     print( B_x_2, B_y_2, B_z_2 )
     # Start iteration
     start = time()
-    N=25
-    for i in range(1,N,1):
-        for j in range(1,N,1):
-            bb=i*np.pi/180.
-            yy=j*np.pi/180.
+    N=3600
+    for i in range(0,N,1):
+        for j in range(0,N,1):
+            bb=i*np.pi/1800.
+            yy=j*np.pi/1800.
             
             # Find angle alpha that imposes constraint 1 (sensor 1)
             try:
@@ -346,7 +349,27 @@ while True:
                     xx_1, yy_1, zz_1 = solveMatrix(aa, bb, yy, phi, x_1, y_1, 1)
                     xx_2, yy_2, zz_2 = solveMatrix(aa, bb, yy, phi, x_2, y_2, 2)
 
+                    # Find difference
+                    dx = xx_1 - xx_2
+                    dy = yy_2 - yy_1
+                    dz = zz_2 - zz_1
+
+                    # Print differences
+##                    print( "x=%.6f" %dx )
+##                    print( "y=%.6f" %dy )
+##                    print( "z=%.6f" %dz )
+                    
                     # Impose 2nd constraint
+                    if (dz <= 1e-3 ) and (dz >= -1e-3):
+                        #print( "Imposed z=%.6f" %dz )
+                        if (dy <= 1e-3) and (dy >= -1e-3):
+                            #print( "Imposed y=%.6f" %dy )
+                            if ((dx - distance_apart) <= 1e-3) and ((dx - distance_apart) >= -1e-3):
+                                #print( "Imposed x=%.6f" %dx )
+                                print( "ACTUAL LOCATION AT (%.3f, %.3f, %.3f)" %(xx_1, yy_1, zz_1) )
+                                print( "Found at indices i: %.3f AND j: %.3f" %(i, j) )
+                        
+                    
                     
                     
                     # Append values to array for printing
@@ -374,37 +397,37 @@ while True:
             
     end = time() - start
     print( "Time to complete %r iterations: %.5f" %(N*N, end) )
-    print( "Solutions found: %i" %len(H_1[0]) )
-    sleep( 2.5 )
+    print( "Solutions found: %i\n" %len(H_1[0]) )
+    loop = false
+##    sleep( 2.5 )
+##
+##    print( "SENSOR ONE 1:" )
+##    print( "=======================================" )
+##    print( "Real x_1: %.4f" %reaLoc_1[0][-1] )
+##    print( "Real y_1: %.4f" %reaLoc_1[1][-1] )
+##    print( "Real z_1: %.4f\n" %reaLoc_1[2][-1] )
+##    
+##    print( "SENSOR TWO 2:" )
+##    print( "=======================================" )
+##    print( "Real x_2: %.4f" %reaLoc_2[0][-1] )
+##    print( "Real y_2: %.4f" %reaLoc_2[1][-1] )
+##    print( "Real z_2: %.4f\n" %reaLoc_2[2][-1] )
 
-    print( "SENSOR ONE 1:" )
-    print( "=======================================" )
-    print( "Real x_1: %.4f" %reaLoc_1[0][-1] )
-    print( "Real y_1: %.4f" %reaLoc_1[1][-1] )
-    print( "Real z_1: %.4f\n" %reaLoc_1[2][-1] )
-    
-    print( "SENSOR TWO 2:" )
-    print( "=======================================" )
-    print( "Real x_2: %.4f" %reaLoc_2[0][-1] )
-    print( "Real y_2: %.4f" %reaLoc_2[1][-1] )
-    print( "Real z_2: %.4f\n" %reaLoc_2[2][-1] )
-
-    # Reset arrays
-    for i in range (0,3):
-        del H_1[i][:]
-        del H_2[i][:]
-        if i > 1:
-            pass
-        else:
-            del virLoc_1[i][:]
-            del virLoc_2[i][:]
-        del reaLoc_1[i][:]
-        del reaLoc_2[i][:]
-        if i == 2:
-            del angles[i+1][:]
-        else:
-            del angles[i][:]
-    
+##    # Reset arrays
+##    for i in range (0,3):
+##        del H_1[i][:]
+##        del H_2[i][:]
+##        if i > 1:
+##            pass
+##        else:
+##            del virLoc_1[i][:]
+##            del virLoc_2[i][:]
+##        del reaLoc_1[i][:]
+##        del reaLoc_2[i][:]
+##        if i == 2:
+##            del angles[i+1][:]
+##        else:
+##            del angles[i][:]    
 
 ##printVals( H_1, H_2, angles, virLoc_1, virLoc_2, reaLoc_1, reaLoc_2)
 
