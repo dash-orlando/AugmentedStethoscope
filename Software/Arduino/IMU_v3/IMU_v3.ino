@@ -1,3 +1,16 @@
+/*
+ * Obtain magnetic field vector using multiplexed LSM9DS1 IMU sensors.
+ * Obtained values take into account the magnetic field of the earth
+ * and the immediate surrounding area and SUBTRACTS them from the readings
+ * to give a calibrated reading independent of the surrounding magnetic field.
+ * 
+ * AUTHOR     : Daniel Nichols
+ * DATE       : UNKNOWN, 2017, Year of Our Lord
+ * 
+ * MODIFIED BY: Mohammad Odeh
+ * DATE       : Aug. 18th, 2017
+ */
+
 // Include required libraries
 #include <Wire.h>
 #include <SPI.h>
@@ -6,163 +19,160 @@
 // Define important constants
 #define LSM9DS1_M             0x1E    // Would be 0x1C if SDO_M is LOW
 #define LSM9DS1_AG            0x6B    // Would be 0x6A if SDO_AG is LOW
-#define PRINT_DELAY           200      // 40Hz data readings @ 20 [Milliseconds]
+#define PRINT_DELAY           50      // 40Hz data readings @ 20 [Milliseconds]
 #define CALIBRATION_INDEX     50      // Accounting for ambient magnetic fields
 #define DECLINATION           6.55    // Accounting for the Earth's magnetic field
 #define BAUDRATE              115200  // Serial communication baudrate
-#define SELECT_PIN            13      // Multiplexer "Select pin"
+#define NPINS                 3       // Number of select pins
+#define NSENS                 3       // Number of select pins
 
-static byte setSensor = 0;
-static unsigned long lastPrint = 0;
 
-// Sensor 0 calibration
-static double cal_imu0_x = 0,
-              cal_imu0_y = 0,
-              cal_imu0_z = 0;
+LSM9DS1 imu;                    // Declare sensor class
+byte Sx_pin[3]  = {13, 12, 11}; // Select pins: {S0, S1, S2}
 
-// Sensor 1 calibration
-static double cal_imu1_x = 0,
-              cal_imu1_y = 0,
-              cal_imu1_z = 0;
-
-static double d0 = 0,
-              d1 = 0;
-
-// Declare sensor class
-LSM9DS1 imu;
+// Calibration (BASE) readings
+static double imu_BASE[3][3] =  { {0, 0, 0},    //  {1x, 1y, 1z}
+                                  {0, 0, 0},    //  {2x, 2y, 2z}
+                                  {0, 0, 0} };  //  {3x, 3y, 3z}
 
 void setup() {
-  Serial.begin( BAUDRATE );           // Start serial monitor
+  Serial.begin( BAUDRATE );             // Start serial monitor
 
-  pinMode( SELECT_PIN, OUTPUT );      // Set "Select pin" as an output
+  for ( byte i = 0; i < NPINS; i++ ) {
+    pinMode( Sx_pin[i], OUTPUT );       // Set "Select Pins" as output
+  }
 
-  imu.settings.device.commInterface = IMU_MODE_I2C; //
-  imu.settings.device.mAddress = LSM9DS1_M;         // Load IMU settings
-  imu.settings.device.agAddress = LSM9DS1_AG;       //
-
-
-  // Initialize sensor 0
-  digitalWrite( SELECT_PIN, LOW );
-  if ( !imu.begin() ) {
-    Serial.println( F("Failed to communicate with LSM9DS1 0.") );
-    while (1);
-  } else {
-    Serial.println( F("Calibrating. Please Wait.") );
-    double imux_hold = 0, imuy_hold = 0, imuz_hold = 0;
-
-    for (int i = 0; i < CALIBRATION_INDEX ; i++) {
-      delay( 50 );
-      while ( !imu.magAvailable() );
-      imu.readMag();
-
-      imux_hold += imu.calcMag( imu.mx );
-      imuy_hold += imu.calcMag( imu.my );
-      imuz_hold += imu.calcMag( imu.mz );
-
-      if (i == CALIBRATION_INDEX - 1) {
-        cal_imu0_x = imux_hold / CALIBRATION_INDEX;
-        cal_imu0_y = imuy_hold / CALIBRATION_INDEX;
-        cal_imu0_z = imuz_hold / CALIBRATION_INDEX;
-      };
-    };
-  };
-
-  // Initialize sensor 1
-  digitalWrite( SELECT_PIN, HIGH );
-  if ( !imu.begin() ) {
-    Serial.println( F("Failed to communicate with LSM9DS1 0.") );
-    while (1);
-  } else {
-    double imux_hold = 0, imuy_hold = 0, imuz_hold = 0;
-
-    for (int i = 0; i < CALIBRATION_INDEX ; i++) {
-      delay( 50 );
-      while ( !imu.magAvailable() );
-      imu.readMag();
-
-      imux_hold += imu.calcMag( imu.mx );
-      imuy_hold += imu.calcMag( imu.my );
-      imuz_hold += imu.calcMag( imu.mz );
-
-      if (i == CALIBRATION_INDEX - 1) {
-        cal_imu1_x = imux_hold / CALIBRATION_INDEX;
-        cal_imu1_y = imuy_hold / CALIBRATION_INDEX;
-        cal_imu1_z = imuz_hold / CALIBRATION_INDEX;
-      };
-    };
-  };
-
-  Serial.println( F("Success.") );
+  // Initialize sensors and load settings
+  for (byte i = 0; i < NSENS; i++) {
+    setSensor(i);         // Switch between sensors
+    setupIMU();           // Setup IMUs
+    calibrateIMU(i);      // Calibrate Sensors
+  } Serial.println( F("Success.") );
 }
 
 void loop() {
-  // Initialize IMU 0 reading variables
-  double  imux0 = 0,
-          imuy0 = 0,
-          imuz0 = 0,
-          imuB0 = 0;
 
-  // Initialize IMU 1 reading variables
-  double  imux1 = 0,
-          imuy1 = 0,
-          imuz1 = 0,
-          imuB1 = 0;
+  // IMU readings (CALIBRATED) matrix
+  static double B[3][3]       = { {0, 0, 0},      //  {B1_x, B1_y, B1_z}
+                                  {0, 0, 0},      //  {B2_x, B2_y, B2_z}
+                                  {0, 0, 0} };    //  {B3_x, B3_y, B3_z}
 
-  //Sensor Selector Loop
-  if (setSensor == 0) {
-    digitalWrite( SELECT_PIN, LOW );  // Toggle sensor 0 ON, sensor 1 OFF
-    delay( PRINT_DELAY / 2 );         // Print speed
-    
-    while ( !imu.magAvailable() );    // Check if sensor is ready
+  // IMU readings (RAW) matrix
+  static double imu_RAW[3][3] = { {0, 0, 0},    //  {B1_x, B1_y, B1_z}
+                                  {0, 0, 0},    //  {B2_x, B2_y, B2_z}
+                                  {0, 0, 0} };  //  {B3_x, B3_y, B3_z}
 
-    // Do readings
-    imu.readMag();
-    imux0 = double( imu.calcMag(imu.mx) ) - cal_imu0_x;
-    imuy0 = double( imu.calcMag(imu.my) ) - cal_imu0_y;
-    imuz0 = double( imu.calcMag(imu.mz) ) - cal_imu0_z;
+  // Obtain readings from ALL sensors
+  for (byte i = 0; i < NSENS; i++) {    // Loop over ROWS
+    for (byte j = 0; j < NSENS; j++) {  // Loop over COLUMNS
+      setSensor(i);                     // Loop over sensors
+      delay( PRINT_DELAY / 2 );         // Print speed
 
-    // Print magnetic field magnitude
-    //      imuB0 = sqrt(pow(imux0, 2) + pow(imuy0, 2) + pow(imuz0, 2));
-    //      Serial.print(imuB0, 5);
-    //      Serial.print(", ");
+      while ( !imu.magAvailable() );    // Check if sensor is ready
 
-    // Print readings to Serial
-    Serial.print(imux0, 5);
-    Serial.print(", ");
-    Serial.print(imuy0, 5);
-    Serial.print(", ");
-    Serial.print(imuz0, 5);
-    Serial.print(", ");
+      imu.readMag();                    // Do readings
+      imu_RAW[i][0] = double( imu.calcMag(imu.mx) );
+      imu_RAW[i][1] = double( imu.calcMag(imu.my) );
+      imu_RAW[i][2] = double( imu.calcMag(imu.mz) );
+
+      // Subtract BASE readings from RAW readings to get CALIBRATED readings
+      B[i][j] =  imu_RAW[i][j] - imu_BASE[i][j];
+
+      // Print readings to Serial
+      Serial.print(B[i][j], 5);
+      if ( (i == NSENS - 1) && (j == NSENS - 1) ) {
+        Serial.print("\n");
+      }
+      else {
+        Serial.print(", ");
+      }
+    }
+  }
+}
+
+// =========================    Setup IMU       ========================
+void setupIMU() {
+  imu.settings.device.commInterface = IMU_MODE_I2C; //
+  imu.settings.device.mAddress      = LSM9DS1_M;    // Load IMU settings
+  imu.settings.device.agAddress     = LSM9DS1_AG;   //
+
+  imu.settings.gyro.enabled         = false;        // Disable gyro
+  imu.settings.accel.enabled        = false;        // Disable accelerometer
+  imu.settings.mag.enabled          = true;         // Enable magnetometer
+  imu.settings.temp.enabled         = true;         // Enable temperature sensor
+
+  imu.settings.mag.scale            = 16;           // Set mag scale to +/-12 Gs
+  imu.settings.mag.sampleRate       = 5;            // Set OD rate to 20Hz
+  imu.settings.mag.tempCompensationEnable = true;   // Enable temperature compensation (good stuff!)
+
+  imu.settings.mag.XYPerformance    = 3;            // 0 = Low || 1 = Medium || 2 = High || 3 = Ultra-high
+  imu.settings.mag.ZPerformance     = 3;            // Ultra-high performance
+
+  imu.settings.mag.lowPowerEnable   = false;        // Disable low power mode
+  imu.settings.mag.operatingMode    = 0;            // 0 = Continuous || 1 = Single || 2 = OFF
+}
+
+// =========================   Calibrate IMU    ========================
+void calibrateIMU(byte i) {
+  // Temporary value holders needed for calibration
+  double imu_hold[3] = {0, 0, 0};         // {x, y, z}
+
+  if ( !imu.begin() ) {
+    Serial.print( F("Failed to communicate with LSM9DS1 ") );
+    Serial.println( i + 1 );
+    while (1);
+  } else {
+    Serial.println( F("Calibrating. Please Wait.") );
+    imu.calibrateMag();
+
+    for (int j = 0; j < CALIBRATION_INDEX ; j++) {
+      delay( 50 );                        // Delay for stability
+      while ( !imu.magAvailable() );      // Wait until readings are available
+
+      imu.readMag();                      // Perform readings and store into temp holders
+      imu_hold[0] += imu.calcMag( imu.mx );
+      imu_hold[1] += imu.calcMag( imu.my );
+      imu_hold[2] += imu.calcMag( imu.mz );
+
+      // Get average
+      if (j == CALIBRATION_INDEX - 1) {
+        for ( byte k = 0; k < NSENS; k++) {
+          imu_BASE[i][k] = imu_hold[k] / CALIBRATION_INDEX;
+        }
+      }
+    }
+  }
+}
+
+// =========================    Set Sensor      ========================
+// Set the value on the multiplexer to set the sensor to use
+void setSensor( byte sensorIndex ) {
+  // Sensor 1
+  if (sensorIndex == 0 ) {
+    for (byte i = 0; i < NPINS; i++) {
+      digitalWrite(Sx_pin[i], LOW);
+    }
   }
 
-  else if (setSensor == 1) {
-    digitalWrite( SELECT_PIN, HIGH ); // Toggle sensor 1 ON, sensor 0 OFF
-    delay( PRINT_DELAY / 2 );         // Print speed
-    
-    while ( !imu.magAvailable() );    // Check if sensor is ready
-
-    // Do readings
-    imu.readMag();
-    imux1 = double( imu.calcMag(imu.mx) ) - cal_imu1_x;
-    imuy1 = double( imu.calcMag(imu.my) ) - cal_imu1_y;
-    imuz1 = double( imu.calcMag(imu.mz) ) - cal_imu1_z;
-
-    //      imuB1 = sqrt(pow(imux1, 2) + pow(imuy1, 2) + pow(imuz1, 2));
-    //      Serial.print(imuB1, 5);
-    //      Serial.print(", ");
-
-    // Print readings to Serial
-    Serial.print(imux1, 5);
-    Serial.print(", ");
-    Serial.print(imuy1, 5);
-    Serial.print(", ");
-    Serial.print(imuz1, 5);
-    Serial.print("\n");
+  // Sensor 2
+  else if (sensorIndex == 1 ) {
+    for (byte i = 0; i < NPINS; i++) {
+      if (i == 0) {
+        digitalWrite(Sx_pin[i], HIGH);
+      } else digitalWrite(Sx_pin[i], LOW);
+    }
   }
 
-  // Switch sensors
-  if (setSensor == 0) setSensor++;
-  else setSensor = 0;
 
+  // Sensor 3
+  else if (sensorIndex == 2) {
+    for (byte i = 0; i < NPINS; i++) {
+      if (i == 1) {
+        digitalWrite(Sx_pin[i], HIGH);
+      } else digitalWrite(Sx_pin[i], LOW);
+    }
+  }
+
+  else Serial.println( F("Invalid Index") );
 }
 
