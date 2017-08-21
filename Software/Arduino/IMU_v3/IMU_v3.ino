@@ -4,11 +4,11 @@
  * and the immediate surrounding area and SUBTRACTS them from the readings
  * to give a calibrated reading independent of the surrounding magnetic field.
  * 
- * AUTHOR     : Daniel Nichols
- * DATE       : UNKNOWN, 2017, Year of Our Lord
+ * AUTHOR     : Edward Daniel Nichols
+ * DATE       : Jun. 27th, 2017, Year of Our Lord
  * 
  * MODIFIED BY: Mohammad Odeh
- * DATE       : Aug. 18th, 2017
+ * DATE       : Aug. 18th, 2017, Year of Our Lord
  */
 
 // Include required libraries
@@ -19,7 +19,7 @@
 // Define important constants
 #define LSM9DS1_M             0x1E    // Would be 0x1C if SDO_M is LOW
 #define LSM9DS1_AG            0x6B    // Would be 0x6A if SDO_AG is LOW
-#define PRINT_DELAY           50      // 40Hz data readings @ 20 [Milliseconds]
+#define PRINT_DELAY           10      // 40Hz data readings @ 20 [Milliseconds]
 #define CALIBRATION_INDEX     50      // Accounting for ambient magnetic fields
 #define DECLINATION           6.55    // Accounting for the Earth's magnetic field
 #define BAUDRATE              115200  // Serial communication baudrate
@@ -57,26 +57,30 @@ void loop() {
                                   {0, 0, 0},      //  {B2_x, B2_y, B2_z}
                                   {0, 0, 0} };    //  {B3_x, B3_y, B3_z}
 
-  // IMU readings (RAW) matrix
-  static double imu_RAW[3][3] = { {0, 0, 0},    //  {B1_x, B1_y, B1_z}
-                                  {0, 0, 0},    //  {B2_x, B2_y, B2_z}
-                                  {0, 0, 0} };  //  {B3_x, B3_y, B3_z}
+  // IMU readings (RAW)
+  static double imu_RAW = 0;
 
   // Obtain readings from ALL sensors
   for (byte i = 0; i < NSENS; i++) {    // Loop over ROWS
     for (byte j = 0; j < NSENS; j++) {  // Loop over COLUMNS
       setSensor(i);                     // Loop over sensors
-      delay( PRINT_DELAY / 2 );         // Print speed
+      //delay( PRINT_DELAY / 2 );         // Print speed
 
       while ( !imu.magAvailable() );    // Check if sensor is ready
 
       imu.readMag();                    // Do readings
-      imu_RAW[i][0] = double( imu.calcMag(imu.mx) );
-      imu_RAW[i][1] = double( imu.calcMag(imu.my) );
-      imu_RAW[i][2] = double( imu.calcMag(imu.mz) );
+      if (j == 0){
+        imu_RAW = double( imu.calcMag(imu.mx) );
+      }
+      else if ( j == 1) {
+        imu_RAW = double( imu.calcMag(imu.my) );
+      }
+      else if ( j == 2) {
+        imu_RAW = double( imu.calcMag(imu.mz) );
+      }
 
       // Subtract BASE readings from RAW readings to get CALIBRATED readings
-      B[i][j] =  imu_RAW[i][j] - imu_BASE[i][j];
+      B[i][j] =  imu_RAW - imu_BASE[i][j];
 
       // Print readings to Serial
       Serial.print(B[i][j], 5);
@@ -102,7 +106,7 @@ void setupIMU() {
   imu.settings.temp.enabled         = true;         // Enable temperature sensor
 
   imu.settings.mag.scale            = 16;           // Set mag scale to +/-12 Gs
-  imu.settings.mag.sampleRate       = 5;            // Set OD rate to 20Hz
+  imu.settings.mag.sampleRate       = 7;            // Set OD rate to 80Hz
   imu.settings.mag.tempCompensationEnable = true;   // Enable temperature compensation (good stuff!)
 
   imu.settings.mag.XYPerformance    = 3;            // 0 = Low || 1 = Medium || 2 = High || 3 = Ultra-high
