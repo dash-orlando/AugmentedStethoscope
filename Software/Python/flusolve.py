@@ -10,6 +10,7 @@ from    math                    import  *
 from    scipy.optimize          import  fsolve
 from    scipy.optimize          import  broyden1
 from    scipy.optimize          import  newton_krylov
+from    scipy.optimize          import  anderson
 from    scipy.optimize          import  root
 from    scipy.linalg            import  norm
 
@@ -43,25 +44,34 @@ def backward_lhs( root ):
     sensor3 = ( K*( (x-.05)**2. + (y-.05)**2. + z**2. )**(-3.) *
               ( 3.*( z**2./((x-.05)**2. + (y-.05)**2. + z**2.) ) + 1 ))
     
-    return ( sensor1**2 - sol1, sensor2**2 - sol2, sensor3**2 - sol3)
+    return ( sensor1 - sol1, sensor2 - sol2, sensor3 - sol3)
 
 
 
 # Evaluate normal function with an arbitrary value
 const = 1.20                                                # random value of K
-vals = [1.0,2.0,0.5]                                        # random positions
+vals = [2.0,1.0,0.5]                                        # random positions
 sol1, sol2, sol3 = forward_lhs(const, vals)                 # forward solution
 
 
 # Solve function using approximate intitial guess
-guess = [1.0,2.0,0.50]
+guess = [2.0,1.0,0.70]
 
-sol = root(backward_lhs, guess, method='lm', options={'maxiter':250000})
-print( sol ) 
-print( "SOLUTION:" )
-print( "x = %.5f || y = %.5f || z = %.5f" %(sol.x[0], sol.x[1], sol.x[2]) )
-solution = np.array((sol.x[0], sol.x[1], sol.x[2]), dtype='f')
-print( backward_lhs(solution) )
-sleep( .5 )
+
+
+# Based on the SciPy documentation, the following solvers are best for the task
+#   root()
+
+print( "SOLVING USING root():" )
+solv1 = root(backward_lhs, guess, method='lm', options={'xtol':1e-20,'ftol':1e-8,'maxiter':250000})
+print( solv1 ) 
+print( "SOLUTION 1:" )
+print( "x = %.5f || y = %.5f || z = %.5f" %(solv1.x[0], solv1.x[1], solv1.x[2]) )
+solution1 = np.array((solv1.x[0], solv1.x[1], solv1.x[2]), dtype='f')
+print( backward_lhs(solution1) )
+
+print( "..." )
+print( "..." )
+print( "..." )
 
 
