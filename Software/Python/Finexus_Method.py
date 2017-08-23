@@ -47,22 +47,22 @@ def getData(ser):
         # Construct magnetic field array
         else:
             # Sensor 1
-            Bx=float(col[0])#*1e-4
+            Bx=float(col[0])
             By=float(col[1])
             Bz=float(col[2])
-            B1 = np.array( ([Bx],[By],[Bz]), dtype='f')
+            B1 = np.array( ([Bx],[By],[Bz]), dtype='f') # Units { G }
 
             # Sensor 2
             Bx=float(col[3])
             By=float(col[4])
             Bz=float(col[5])
-            B2 = np.array( ([Bx],[By],[Bz]), dtype='f')
+            B2 = np.array( ([Bx],[By],[Bz]), dtype='f') # Units { G }
 
             # Sensor 3
             Bx=float(col[6])
             By=float(col[7])
             Bz=float(col[8])
-            B3 = np.array( ([Bx],[By],[Bz]), dtype='f')
+            B3 = np.array( ([Bx],[By],[Bz]), dtype='f') # Units { G }
             
             return (B1, B2, B3)
 
@@ -87,49 +87,41 @@ def LHS( root ):
     return ( sensor1 - H1_L2**2, sensor2 - H2_L2**2, sensor3 - H3_L2**2 )
     
 # Construct equations to solve for:
-def LHS1( x ):
-    H1_L2, H2_L2, H3_L2 = HNorm
-    sensor1 = ( K*( x[0]**2 + x[1]**2 + x[2]**2 )**(-3.) *
-              ( 3*( x[2]**2/(x[0]**2 + x[1]**2 + x[2]**2) ) + 1 ))
+def LHS1( root ):
+    # Extract x, y, and z
+    x, y, z = root
     
-    sensor2 = ( K*( (x[0]+.050)**2 + (x[1]-.050)**2 + x[2]**2 )**(-3.) *
-              ( 3*( x[2]**2/((x[0]+.050)**2 + (x[1]-.050)**2 + x[2]**2) ) + 1 ))
-    
-    sensor3 = ( K*( (x[0]-.050)**2 + (x[1]-.050)**2 + x[2]**2 )**(-3.) *
-              ( 3*( x[2]**2/((x[0]-.050)**2 + (x[1]-.050)**2 + x[2]**2) ) + 1 ))
+    # Construct the (r) terms for each sensor
+    r1 = float( ( (x+0.00)**2. + (y+0.00)**2. + (z+0.00)**2. )**(1/2.) )
+    r2 = float( ( (x+0.05)**2. + (y-0.05)**2. + (z+0.00)**2. )**(1/2.) )
+    r3 = float( ( (x-0.05)**2. + (y-0.05)**2. + (z+0.00)**2. )**(1/2.) )
 
-    f = [sensor1 - H1_L2**2, sensor2 - H2_L2**2, sensor3 - H3_L2**2]
+    # Extract the vector norms
+    H1_L2, H2_L2, H3_L2 = HNorm
+
+    # Construct the equations
+    sensor1 = ( K*( r1 )**(-6.) * ( 3.*( z/r1 )**2. + 1 ) )
     
+    sensor2 = ( K*( r2 )**(-6.) * ( 3.*( z/r2 )**2. + 1 ) )
+    
+    sensor3 = ( K*( r3 )**(-6.) * ( 3.*( z/r3 )**2. + 1 ) )
+
+    # Construct a vector of the equations
+    f = [sensor1 - H1_L2**2, sensor2 - H2_L2**2, sensor3 - H3_L2**2]
+
+    # Return vector
     return ( f )
 
 ######################################################
 #                   SETUP PROGRAM
 ######################################################
 
-# Magnetic field vector components
-global B1_x, B1_y, B1_z  # IMU readings from sensor 1
-global B2_x, B2_y, B2_z  # IMU readings from sensor 2
-global B3_x, B3_y, B3_z  # IMU readings from sensor 3
+# Useful variables
 global K, check, HNorm
 check = True
 
-### Sensor 1 readings
-##B1_x = 0.0880           #
-##B1_y = -0.059           # Units { G }
-##B1_z = 2.0600           #
-##
-### Sensor 2 readings
-##B2_x = 0.0030           #
-##B2_y = 0.0200           # Units { G }
-##B2_z = 0.1890           #
-##
-### Sensor 3 readings
-##B3_x = -0.003           #
-##B3_y = 0.0200           # Units { G }
-##B3_z = 0.1940           #
-
 # Magnet's constant (K)
-K   = 1.09 #(19.081)**2    # Units { T.m^3 }
+K   = 1.09              # Units { G^2.m^6}
 
 # Establish connection with Arduino
 try:
@@ -141,7 +133,7 @@ try:
 except Exception as e:
     print( "Could NOT open serial port" )
     print( "Error type %s" %str(type(e)) )
-    print( " Error Arguments " + str(e.args) )
+    print( "Error Arguments " + str(e.args) )
     sleep( 5 )
     quit()
 
@@ -149,48 +141,26 @@ except Exception as e:
 #                   START PROGRAM
 ######################################################
 initialGuess = np.array( (.5, .1, .1), dtype='f' )
+# Start iteration
 while( True ):
     # Pool data from Arduino
     (H1, H2, H3) = getData(IMU)
 
-##    ### Sensor 1 readings
-##    print( "Sensor 1 readings:" )
-##    print( "x = %.4f || y = %.4f || z = %.4f\n"
-##           %(H1.item(0), H1.item(1), H1.item(2)) )
-##
-##
-##    ### Sensor 2 readings
-##    print( "Sensor 2 readings:" )
-##    print( "x = %.4f || y = %.4f || z = %.4f\n"
-##           %(H2.item(0), H2.item(1), H2.item(2)) )
-##
-##    ### Sensor 3 readings
-##    print( "Sensor 3 readings:" )
-##    print( "x = %.4f || y = %.4f || z = %.4f\n"
-##           %(H3.item(0), H3.item(1), H3.item(2)) )
-##
-    
-    # Start iteration
-    # Find L2 vector norms
+    # Compute L2 vector norms
     H1_norm = norm(H1)
     H2_norm = norm(H2)
     H3_norm = norm(H3)
     HNorm = [float(H1_norm), float(H2_norm), float(H3_norm)]
 
-##    # Invoke solver
-##    sol = fsolve(LHS, initialGuess)
-##    print( "SOLUTION:" )
-##    print( "x = %.5f || y = %.5f || z = %.5f" %(sol[0], sol[1], sol[2]) )
-##    sleep( .5 )
-##    initialGuess = sol
-
-    sol = root(LHS1, initialGuess, method='lm', options={'maxiter':250000})
+    # Invoke solver
+    sol = root(LHS1, initialGuess, method='lm',
+               options={'ftol': 1e-10, 'xtol':1e-10, 'maxiter':250000, 'epsfcn':1e-8, 'factor':0.1})
     print( sol )
     
-    print( "SOLUTION:" )
+    print( "\nSOLUTION:" )
     print( "x = %.5f || y = %.5f || z = %.5f" %(sol.x[0], sol.x[1], sol.x[2]) )
-    root = np.array((sol.x[0], sol.x[1], sol.x[2]), dtype='f')
-    print( LHS1(root) )
+    solution = np.array((sol.x[0], sol.x[1], sol.x[2]), dtype='f')
+    print( LHS1(solution) )
     sleep( .5 )
     #initialGuess = np.array( (sol.x[0], sol.x[1], sol.x[2]), dtype='f' )
 
