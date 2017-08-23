@@ -10,6 +10,7 @@ DATE    : Aug. 22nd, 2017
 import  numpy           as      np
 import  numpy.matlib    as      npmat
 from    numpy.linalg    import  norm
+from    numpy.linalg    import  inv
 from    math            import  cos
 from    math            import  sin
 
@@ -168,17 +169,50 @@ def jacobian( i, j, x0, h=1e-5 ):
     return ( df )
     
 # Newton Raphson for a system of non-linear equations
+##def NR_NL( x0, TOL=1e-5, NMAX=100 ):
+##    """
+##    INPUT : (function, derivative, initial guess, OPTIONAL)
+##
+##    RETURN: tuple(SOLUTION, RESIDUAL, ITERATIVE CONVERGENCE, ITERATIONS)
+##    """
+##    n=0                                 # Counter
+##    res = []                            # Residual
+##    iter_conv = []                      # Iterative convergance
+##    N = len(x0)                         # Get vector length for matrix construction
+##    J = npmat.zeros((N,N), dtype='f')   # Construct matrix of size (NxN)
+##    print(type(J))
+##    b = npmat.zeros((N,1), dtype='f')
+##    while( n <= NMAX ):
+##        for i in range( N ):
+##            for j in range( N ):
+##                J[i, j] = jacobian(i, j, x0)
+##            b[i] = -func(i, x0)
+##
+##        z = J.I*b                       # Array
+##        x0 = x0 + z                     # Update solution
+##        res.append( norm(b) )           # Evaluate residual
+##        iter_conv.append( norm(z) )     # Evaluate iterative convergence
+##
+##        if (abs(res[-1]) < TOL) and (iter_conv[-1] < TOL):
+##            return (x0, res, iter_conv, n)
+##
+##        else:
+##            n = n + 1                   # Increment counter
+##
+##    return(0, res, iter_conv, n)
+##    #return False                        # No solution found within iteration limit
+
 def NR_NL( x0, TOL=1e-5, NMAX=100 ):
     """
     INPUT : (function, derivative, initial guess, OPTIONAL)
 
     RETURN: tuple(SOLUTION, RESIDUAL, ITERATIVE CONVERGENCE, ITERATIONS)
     """
-    n=1                                 # Counter
+    n=0                                 # Counter
     res = []                            # Residual
     iter_conv = []                      # Iterative convergance
     N = len(x0)                         # Get vector length for matrix construction
-    J = npmat.zeros((N,N), dtype='f')   # Construct matrix of size (NxN)
+    J = np.empty((N,N), dtype='f')      # Construct matrix of size (NxN)
     b = np.empty((N,1), dtype='f')
     while( n <= NMAX ):
         for i in range( N ):
@@ -186,27 +220,25 @@ def NR_NL( x0, TOL=1e-5, NMAX=100 ):
                 J[i, j] = jacobian(i, j, x0)
             b[i] = -func(i, x0)
 
-        x0_old = x0
-        z = np.asarray(J.I*b)           # Array
+        #print("J^-1")
+        #print(inv(J))
+        #print("b")
+        #print(b)
+        z = inv(J).dot(b)               # Array
+        print("z")
+        print(z)
         x0 = x0 + z                     # Update solution
-        print( "Updated guess = ")
-        print(x0)
-
         res.append( norm(b) )           # Evaluate residual
-        print( "Residual =")
-        print(res[-1])
         iter_conv.append( norm(z) )     # Evaluate iterative convergence
-        print( "Iter Conv.=")
-        print(iter_conv[-1])
 
         if (abs(res[-1]) < TOL) and (iter_conv[-1] < TOL):
             return (x0, res, iter_conv, n)
 
         else:
             n = n + 1                   # Increment counter
-    return(1, res, iter_conv, n)
-    #return False                        # No solution found within iteration limit
-        
+
+    return(0, res, iter_conv, n)
+    #return False                        # No solution found within iteration limit       
 
 ######################################################
 #                   SETUP PROGRAM
@@ -262,11 +294,9 @@ if __name__ == "__main__":
             print('')
 
     # Invoking Newton-Raphson for nonlinear system
-    #x0 = [100, 100, 100, 100]
     x0 = np.array(([100], [100], [100], [100]), dtype='f')
-    #x0 = np.array(([1.5], [1.5]), dtype='f')
     print( "Newton-Raphson Method - NON-LINEAR" )
-    sln, res, conv, n = NR_NL(x0, TOL=1e-10)
+    sln, res, conv, n = NR_NL(x0, NMAX=15, TOL=1e-10)
     print( "SOLUTION:" )
     print(sln)
     print( "Iterations: %3.3f" %( n) )
