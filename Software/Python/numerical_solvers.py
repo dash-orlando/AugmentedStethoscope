@@ -175,6 +175,50 @@ def NR_NL( x0, TOL=1e-5, NMAX=100 ):
 
     return(False, res, iter_conv, n)    # No solution found within iteration limit
 
+# Levenberg-Marquardt
+def LM( x0, TOL=1e-5, NMAX=100 ):
+    """
+    INPUT : - np.array[Initial Guess]
+            - OPTIONAL: Tolerance
+            - OPTIONAL: Maximum Number of Iterations
+
+    RETURN: - np.array[Solution]
+            - Residual
+            - Iterative Convergence
+            - # of Iterations
+    """
+    n=0                                     # Counter
+    res = []                                # Residual
+    iter_conv = []                          # Iterative convergance
+    N = len(x0)                             # Get vector length for matrix construction
+    J = np.empty((N,N), dtype='float64')    # Construct matrix of size  (NxN)
+    b = np.empty((N,1), dtype='float64')    # Construct array of size   (Nx1)
+    I = np.identity(N, dtype='float64')     # Construct identity matrix (NxN)
+    Y = float(1e8)
+
+    # Start iterating
+    while( n <= NMAX ):
+        # Construct Jacobian
+        for i in range( N ):
+            for j in range( N ):
+                J[i, j] = jacobian(i, j, x0)# Evaluate Jacobian
+            b[i] = func(i, x0)              # Evaluate function
+
+        x_old = x0
+        H = inv(np.transpose(J).dot(J)+Y*I).dot(np.transpose(J))
+        x0 = x0 - H.dot(b)                  # Update solution
+        res.append( norm(b) )               # Evaluate residual
+        iter_conv.append( norm(x0-x_old) )  # Evaluate iterative convergence
+
+        if (abs(res[-1]) < TOL) and (iter_conv[-1] < TOL):
+            # Return solution
+            return (x0, res, iter_conv, n)
+
+        else:
+            n = n + 1                       # Increment counter
+            Y = Y*0.01
+
+    return(False, res, iter_conv, n)        # No solution found within iteration limit
 
 ######################################################
 #               AUXILLIARY FUNCTIONS
@@ -328,6 +372,19 @@ if __name__ == "__main__":
     x0 = np.array(([100], [100], [100], [100]), dtype='float64')
     print( "Newton-Raphson Method - NON-LINEAR" )
     sln, res, conv, n = NR_NL(x0, TOL=1e-10)
+    print( "SOLUTION:" )
+    print(sln)
+    print( "Iterations: %3.3f" %( n) )
+    print( "   Residual\t  ||   Convergence" )
+    for i in range( len(res) ):
+        print( "%2i: %1.2e\t  ||\t%1.2e" %(i, res[i], conv[i]) )
+        if ( i == len(res) - 1):
+            print('')
+
+    # Invoking Levenberg-Marquardt
+    x0 = np.array(([100], [100], [100], [100]), dtype='float64')
+    print( "Levenberg-Marquardt Method" )
+    sln, res, conv, n = LM(x0, TOL=1e-10)
     print( "SOLUTION:" )
     print(sln)
     print( "Iterations: %3.3f" %( n) )
