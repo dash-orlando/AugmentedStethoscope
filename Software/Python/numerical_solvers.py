@@ -1,18 +1,16 @@
 """
 Numerical solvers:
 
-Bisection, Secant & Newton Raphson Method.
+Bisection, Secant & Newton Raphson Method (Linear & Non-Linear).
 
 AUTHOR  : Mohammad Odeh
 DATE    : Aug. 22nd, 2017
+MODIFIED: Aug. 24th, 2017
 """
 
 import  numpy           as      np
-import  numpy.matlib    as      npmat
 from    numpy.linalg    import  norm
 from    numpy.linalg    import  inv
-from    math            import  cos
-from    math            import  sin
 
 '''
 *
@@ -24,6 +22,7 @@ from    math            import  sin
 *
 '''
 
+
 ######################################################
 #                   FUNCTION DEFINITIONS
 ######################################################
@@ -33,9 +32,15 @@ from    math            import  sin
 ###
 def bisection( f, a, b, TOL=1e-5, NMAX=500 ):
     """
-    INPUT : (function, lower bound, uppper bound, OPTIONAL)
+    INPUT : - Function
+            - Lower Bound
+            - Upper Bound
+            - OPTIONAL: Tolerance
+            - OPTIONAL: Maximum Number of Iterations
 
-    RETURN: tuple(SOLUTION, RESIDUAL, ITERATIONS)
+    RETURN: - Solution
+            - Residual
+            - # of Iterations
     """
     n=1                                 # Counter
     res = []                            # Residual
@@ -59,11 +64,18 @@ def bisection( f, a, b, TOL=1e-5, NMAX=500 ):
 
     return False                        # No solution found within iteration limit
 
-def secant( f, x0, x1, TOL1=1e-5, TOL2=1e-5, NMAX=500 ):
+def secant( f, x0, x1, TOL=1e-5, NMAX=500 ):
     """
-    INPUT : (function, initial guess (1), initial guess (2), OPTIONAL)
+    INPUT : - Function
+            - Initial Guess (1)
+            - Initial Guess (2)
+            - OPTIONAL: Tolerance
+            - OPTIONAL: Maximum Number of Iterations
 
-    RETURN: tuple(SOLUTION, RESIDUAL, ITERATIVE CONVERGENCE, ITERATIONS)
+    RETURN: - Solution
+            - Residual
+            - Iterative Convergence
+            - # of Iterations
     """
     n=1                                 # Counter
     res = []                            # Residual
@@ -75,7 +87,7 @@ def secant( f, x0, x1, TOL1=1e-5, TOL2=1e-5, NMAX=500 ):
         iter_conv.append( (x2 - x1) )   # Evaluate iterative convergance
         
         # If within tolerance, stop
-        if (abs( iter_conv[-1] ) < TOL1) and (abs(res[-1]) < TOL2):
+        if (abs( iter_conv[-1] ) < TOL) and (abs(res[-1]) < TOL):
             # Return solution
             return (x2, res, iter_conv, n)
 
@@ -89,9 +101,16 @@ def secant( f, x0, x1, TOL1=1e-5, TOL2=1e-5, NMAX=500 ):
 
 def NR( f, f_, x0, TOL=1e-5, NMAX=100 ):
     """
-    INPUT : (function, derivative, initial guess, OPTIONAL)
+    INPUT : - Function
+            - Derivative of Function
+            - Initial Guess
+            - OPTIONAL: Tolerance
+            - OPTIONAL: Maximum Number of Iterations
 
-    RETURN: tuple(SOLUTION, RESIDUAL, ITERATIVE CONVERGENCE, ITERATIONS)
+    RETURN: - Solution
+            - Residual
+            - Iterative Convergence
+            - # of Iterations
     """
     n=1                                 # Counter
     res = []                            # Residual
@@ -103,16 +122,63 @@ def NR( f, f_, x0, TOL=1e-5, NMAX=100 ):
         res.append( f(x1) )             # Evaluate residual
         iter_conv.append( (x1-x0) )     # Evaluate iterative convergence
         if (abs(iter_conv[-1]) < TOL):
+            # Return solution
             return (x1, res, iter_conv, n)
+        
         else:
             x0 = x1                     # Update solution/guess
             n = n + 1                   # Increment counter
 
-    return False                        # No solution found within iteration limit
+    return (False, res, iter_conv, n)   # No solution found within iteration limit
 
 ###
 ### NON-LINEAR SOLVERS
 ###
+# Newton Raphson for a system of non-linear equations
+def NR_NL( x0, TOL=1e-5, NMAX=100 ):
+    """
+    INPUT : - np.array[Initial Guess]
+            - OPTIONAL: Tolerance
+            - OPTIONAL: Maximum Number of Iterations
+
+    RETURN: - np.array[Solution]
+            - Residual
+            - Iterative Convergence
+            - # of Iterations
+    """
+    n=0                                 # Counter
+    res = []                            # Residual
+    iter_conv = []                      # Iterative convergance
+    N = len(x0)                         # Get vector length for matrix construction
+    J = np.empty((N,N), dtype='float64')# Construct matrix of size  (NxN)
+    b = np.empty((N,1), dtype='float64')# Construct array of size   (Nx1)
+
+    # Start iterating
+    while( n <= NMAX ):
+        # Construct Jacobian
+        for i in range( N ):
+            for j in range( N ):
+                J[i, j] = jacobian(i, j, x0)
+            b[i] = -func(i, x0)         # Evaluate function
+
+        z = inv(J).dot(b)               # Calculate Z Array
+        x0 = x0 + z                     # Update solution
+        res.append( norm(b) )           # Evaluate residual
+        iter_conv.append( norm(z) )     # Evaluate iterative convergence
+
+        if (abs(res[-1]) < TOL) and (iter_conv[-1] < TOL):
+            # Return solution
+            return (x0, res, iter_conv, n)
+
+        else:
+            n = n + 1                   # Increment counter
+
+    return(False, res, iter_conv, n)    # No solution found within iteration limit
+
+
+######################################################
+#               AUXILLIARY FUNCTIONS
+######################################################
 def func(i, x0):
     #x, y = x0
     k  = 15
@@ -144,101 +210,66 @@ def func(i, x0):
     else:
         raise Exception
 
-# Approximate Jacobian using forward finite difference (FFD)
-##def jacobian( i, j, x0, h=1e-5 ):
-##    a = x0[:]                   # Create a local copy of the initial guess
-##    a[j] = a[j] + h             # Add the finite difference to the corresponding variable
-##
-##    # Estimate derivative
-##    df = (func(i, (a)) - func(i, (x0)))/(h)
-##
-##    # Return answer
-##    return ( df )
+# Approximate derivative using either FFD, BFD, or CFD
+def df_approx( f, x0, dx=1e-5, METHOD='FFD' ):
+    """
+    INPUT : - Function
+            - Point of Interest
+            - OPTIONAL: Tolerance
+            - OPTIONAL: FD Method
 
-def jacobian( i, j, x0, h=1e-5 ):
-    x = []
-    for k in range(len(x0)):
-        x.append(x0.item(k))
-    a = x[:]                    # Create a local copy of the initial guess
-    a[j] = a[j] + h             # Add the finite difference to the corresponding variable
+    RETURN: - Derivative at Point
+    """
+    a = x0                      # Create a copy
+    # Estimate derivative using FFD
+    if (METHOD == 'FFD'):
+        a = x0 + dx             # Add the finite difference
+        df = (f(a) - f(x0))/(dx)
 
-    # Estimate derivative
-    df = (func(i, (a)) - func(i, (x)))/(h)
+    # Estimate derivative using BFD
+    elif (METHOD == 'BFD'):
+        a = a - dx              # Subtract the finite difference
+        df = (f(x0) - f(a))/(dx)
+
+    # Estimate derivative using CFD
+    elif (METHOD == 'CFD'):
+        a = x0 + dx             # Add the finite difference
+        pstv = f(a)             # Evaluate function
+        a = x0 - dx             # Subtract the finite difference
+        ngtv = f(a)             # Evaluate function
+        df = (pstv-ngtv)/(2*dx)  # Approximate derivative
+
+
+    # Invalid method specified
+    else:
+        print( "INVALID OPTION: %r" %METHOD)
+        return False
 
     # Return answer
     return ( df )
-    
-# Newton Raphson for a system of non-linear equations
-##def NR_NL( x0, TOL=1e-5, NMAX=100 ):
-##    """
-##    INPUT : (function, derivative, initial guess, OPTIONAL)
-##
-##    RETURN: tuple(SOLUTION, RESIDUAL, ITERATIVE CONVERGENCE, ITERATIONS)
-##    """
-##    n=0                                 # Counter
-##    res = []                            # Residual
-##    iter_conv = []                      # Iterative convergance
-##    N = len(x0)                         # Get vector length for matrix construction
-##    J = npmat.zeros((N,N), dtype='f')   # Construct matrix of size (NxN)
-##    print(type(J))
-##    b = npmat.zeros((N,1), dtype='f')
-##    while( n <= NMAX ):
-##        for i in range( N ):
-##            for j in range( N ):
-##                J[i, j] = jacobian(i, j, x0)
-##            b[i] = -func(i, x0)
-##
-##        z = J.I*b                       # Array
-##        x0 = x0 + z                     # Update solution
-##        res.append( norm(b) )           # Evaluate residual
-##        iter_conv.append( norm(z) )     # Evaluate iterative convergence
-##
-##        if (abs(res[-1]) < TOL) and (iter_conv[-1] < TOL):
-##            return (x0, res, iter_conv, n)
-##
-##        else:
-##            n = n + 1                   # Increment counter
-##
-##    return(0, res, iter_conv, n)
-##    #return False                        # No solution found within iteration limit
 
-def NR_NL( x0, TOL=1e-5, NMAX=100 ):
+# Build the Jacobian matrix
+def jacobian( i, j, x0, dx=1e-5 ):
     """
-    INPUT : (function, derivative, initial guess, OPTIONAL)
+    INPUT : - Row
+            - Column
+            - Point of Interest
+            - OPTIONAL: Tolerance
 
-    RETURN: tuple(SOLUTION, RESIDUAL, ITERATIVE CONVERGENCE, ITERATIONS)
+    RETURN: - Partial Derivative at Point
     """
-    n=0                                 # Counter
-    res = []                            # Residual
-    iter_conv = []                      # Iterative convergance
-    N = len(x0)                         # Get vector length for matrix construction
-    J = np.empty((N,N), dtype='f')      # Construct matrix of size (NxN)
-    b = np.empty((N,1), dtype='f')
-    while( n <= NMAX ):
-        for i in range( N ):
-            for j in range( N ):
-                J[i, j] = jacobian(i, j, x0)
-            b[i] = -func(i, x0)
+    x = []
+    for k in range(len(x0)):
+        x.append(x0.item(k))    # Extract elements from array and put in list 'cause Python!
+    a = x[:]                    # Create a local copy of the initial guess
+    a[j] = a[j] + dx            # Add the finite difference to the corresponding variable
 
-        #print("J^-1")
-        #print(inv(J))
-        #print("b")
-        #print(b)
-        z = inv(J).dot(b)               # Array
-        print("z")
-        print(z)
-        x0 = x0 + z                     # Update solution
-        res.append( norm(b) )           # Evaluate residual
-        iter_conv.append( norm(z) )     # Evaluate iterative convergence
+    # Estimate derivative
+    df = (func(i, (a)) - func(i, (x)))/(dx)
 
-        if (abs(res[-1]) < TOL) and (iter_conv[-1] < TOL):
-            return (x0, res, iter_conv, n)
+    # Return answer
+    return ( df )                           
 
-        else:
-            n = n + 1                   # Increment counter
-
-    return(0, res, iter_conv, n)
-    #return False                        # No solution found within iteration limit       
 
 ######################################################
 #                   SETUP PROGRAM
@@ -294,9 +325,9 @@ if __name__ == "__main__":
             print('')
 
     # Invoking Newton-Raphson for nonlinear system
-    x0 = np.array(([100], [100], [100], [100]), dtype='f')
+    x0 = np.array(([100], [100], [100], [100]), dtype='float64')
     print( "Newton-Raphson Method - NON-LINEAR" )
-    sln, res, conv, n = NR_NL(x0, NMAX=15, TOL=1e-10)
+    sln, res, conv, n = NR_NL(x0, TOL=1e-10)
     print( "SOLUTION:" )
     print(sln)
     print( "Iterations: %3.3f" %( n) )
@@ -305,3 +336,8 @@ if __name__ == "__main__":
         print( "%2i: %1.2e\t  ||\t%1.2e" %(i, res[i], conv[i]) )
         if ( i == len(res) - 1):
             print('')
+
+"""
+References
+1 - http://kestrel.nmt.edu/~raymond/software/python_notes/paper003.html
+"""
