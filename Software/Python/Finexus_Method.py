@@ -1,38 +1,69 @@
 '''
-Position tracking of magnet
-
-Author: Danny, Moe
-Date: Aug. 4th, 2017th year of our Lord
+* NOTE: the current method as it stands has a limitation in which
+*       the magnet has to be placed at a predefined initial position
+*       for the solver to successfully converge (find x, y, and z)
+*
+* Position tracking of magnet based on Finexus
+* https://ubicomplab.cs.washington.edu/pdfs/finexus.pdf
+*
+* VERSION: 0.1
+*   - First working version.
+*
+* KNOWN ISSUES:
+*   - Sometimes the buffer is not filled entirely, causing
+*     the .split() to insert the delimiter ( , ) into the
+*     constructed vector of the magnet.
+*     (Look into a better approach for seperating the incoming data)
+*   - Calculations are accurate to around +/-3mm
+*     (look into improving K estimate)
+*
+* AUTHOR  :   Daniel Nichols, Mohammad Odeh
+* DATE    :   Aug. 4th, 2017 Year of Our Lord
+* 
+* MODIFIED:   Mohammad Odeh
+* DATE    :   Aug. 28th, 2017 Year of Our Lord
+*
 '''
 
 # Import Modules
-#import  serial, random
-import  random
-import  numpy                   as      np
-from    time                    import  sleep, time
-from    math                    import  *
-from    scipy.optimize          import  fsolve
-from    scipy.optimize          import  broyden1
-from    scipy.optimize          import  newton_krylov
-from    scipy.optimize          import  root
-from    scipy.linalg            import  norm
-##from    sympy                   import  nsolve
-from    usbProtocol             import  createUSBPort
-from    sympy.core.symbol       import symbols
-from    sympy.solvers.solveset   import nonlinsolve
+import  numpy               as      np              # Import Numpy
+from    time                import  sleep           # Sleep for stability
+from    scipy.optimize      import  root            # Solve System of Eqns for (x, y, z)
+from    scipy.linalg        import  norm            # Calculate vector norms (magnitude)
+from    usbProtocol         import  createUSBPort   # Create USB port (serial comm. w\ Arduino)
+import  argparse                                    # Feed in arguments to the program
 
-######################################################
-#                   FUNCTION DEFINITIONS
-######################################################
+# ************************************************************************
+# =====================> CONSTRUCT ARGUMENT PARSER <=====================
+# ************************************************************************
+ap = argparse.ArgumentParser()
 
-# Pool data from Arduino
+ap.add_argument("-d", "--debug", action='store_true',
+                help="invoke flag to enable debugging")
+
+args = vars( ap.parse_args() )
+
+args["debug"] = False
+
+# ************************************************************************
+# =====================> DEFINE NECESSARY FUNCTIONS <=====================
+# ************************************************************************
+
+# ****************************************************
+# Define function to pool & return data from Arduino
+# ****************************************************
 def getData(ser):
-    global check
+    global CALIBRATING
+
     # Flush buffer
     ser.reset_input_buffer()
     ser.reset_output_buffer()
-    sleep(0.5)
+
+    # Allow data to fill-in buffer
+    sleep(0.25)
+
     try:
+        # Read incoming data and seperate
         line = ser.readline()[:-1]
         col = line.split(",")
 
@@ -40,9 +71,9 @@ def getData(ser):
         while( len(col) < 9 ):
             line = ser.readline()[:-1]
             col = line.split(",")
-            if(check == True):
-                print "Waiting..."
-                check = False
+            if(CALIBRATING == True):
+                print( "Calibrating...\n" )
+                CALIBRATING = False
 
         # Construct magnetic field array
         else:
@@ -50,20 +81,21 @@ def getData(ser):
             Bx=float(col[0])
             By=float(col[1])
             Bz=float(col[2])
-            B1 = np.array( ([Bx],[By],[Bz]), dtype='f') # Units { G }
+            B1 = np.array( ([Bx],[By],[Bz]), dtype='float64') # Units { G }
 
             # Sensor 2
             Bx=float(col[3])
             By=float(col[4])
             Bz=float(col[5])
-            B2 = np.array( ([Bx],[By],[Bz]), dtype='f') # Units { G }
+            B2 = np.array( ([Bx],[By],[Bz]), dtype='float64') # Units { G }
 
             # Sensor 3
             Bx=float(col[6])
             By=float(col[7])
             Bz=float(col[8])
-            B3 = np.array( ([Bx],[By],[Bz]), dtype='f') # Units { G }
-            
+            B3 = np.array( ([Bx],[By],[Bz]), dtype='float64') # Units { G }
+
+            # Return vectors
             return (B1, B2, B3)
 
     except Exception as e:
@@ -71,57 +103,44 @@ def getData(ser):
         print( "Error type %s" %str(type(e))    )
         print( "Error Arguments " + str(e.args) )
 
-# Construct equations to solve for:
-def LHS( root ):
-    x, y, z = root
-    H1_L2, H2_L2, H3_L2 = HNorm
-    sensor1 = ( K*( x**2. + y**2. + z**2. )**(-3.) *
-              ( 3.*( z**2./(x**2. + y**2. + z**2.) ) + 1 ))
-    
-    sensor2 = ( K*( (x+.05)**2. + (y-.05)**2. + z**2. )**(-3.) *
-              ( 3.*( z**2./((x+.05)**2. + (y-.05)**2. + z**2.) ) + 1 ))
-    
-    sensor3 = ( K*( (x-.05)**2. + (y-.05)**2. + z**2. )**(-3.) *
-              ( 3.*( z**2./((x-.05)**2. + (y-.05)**2. + z**2.) ) + 1 ))
-    
-    return ( sensor1 - H1_L2**2, sensor2 - H2_L2**2, sensor3 - H3_L2**2 )
-    
-# Construct equations to solve for:
-def LHS1( root ):
+# ****************************************************
+# Define function to construct equations to solve for
+# ****************************************************
+def LHS( root, K, norms ):
     # Extract x, y, and z
     x, y, z = root
     
     # Construct the (r) terms for each sensor
-    r1 = float( ( (x+0.00)**2. + (y+0.00)**2. + (z+0.00)**2. )**(1/2.) )
-    r2 = float( ( (x+0.05)**2. + (y-0.05)**2. + (z+0.00)**2. )**(1/2.) )
-    r3 = float( ( (x-0.05)**2. + (y-0.05)**2. + (z+0.00)**2. )**(1/2.) )
-
-    # Extract the vector norms
-    H1_L2, H2_L2, H3_L2 = HNorm
+    r1 = float( ( (x+0.00)**2. + (y+0.00)**2. + (z+0.00)**2. )**(1/2.) )    # Sensor 1
+    r2 = float( ( (x+0.05)**2. + (y-0.05)**2. + (z+0.00)**2. )**(1/2.) )    # Sensor 2
+    r3 = float( ( (x-0.05)**2. + (y-0.05)**2. + (z+0.00)**2. )**(1/2.) )    # Sensor 3
 
     # Construct the equations
-    sensor1 = ( K*( r1 )**(-6.) * ( 3.*( z/r1 )**2. + 1 ) )
-    
-    sensor2 = ( K*( r2 )**(-6.) * ( 3.*( z/r2 )**2. + 1 ) )
-    
-    sensor3 = ( K*( r3 )**(-6.) * ( 3.*( z/r3 )**2. + 1 ) )
+    Eqn1 = ( K*( r1 )**(-6.) * ( 3.*( z/r1 )**2. + 1 ) ) - norms[0]**2.     # Sensor 1
+    Eqn2 = ( K*( r2 )**(-6.) * ( 3.*( z/r2 )**2. + 1 ) ) - norms[1]**2.     # Sensor 2
+    Eqn3 = ( K*( r3 )**(-6.) * ( 3.*( z/r3 )**2. + 1 ) ) - norms[2]**2.     # Sensor 3
 
     # Construct a vector of the equations
-    f = [sensor1 - H1_L2**2, sensor2 - H2_L2**2, sensor3 - H3_L2**2]
+    f = [Eqn1, Eqn2, Eqn3]
 
     # Return vector
     return ( f )
 
-######################################################
-#                   SETUP PROGRAM
-######################################################
+# ************************************************************************
+# ===========================> SETUP PROGRAM <===========================
+# ************************************************************************
 
 # Useful variables
-global K, check, HNorm
-check = True
+global CALIBRATING
 
-# Magnet's constant (K)
-K   = 1.09              # Units { G^2.m^6}
+CALIBRATING = True                          # Boolean to indicate that device is calibrating
+READY       = False                         # Give time for user to palce magnet
+
+K           = 1.09e-6                       # Magnet's constant (K) || Units { G^2.m^6}
+dx          = 1e-5                          # Differential step size (Needed for solver)
+initialGuess = np.array((.01, .075, -.01), 
+                        dtype='float64' )   # Initial position/guess
+
 
 # Establish connection with Arduino
 try:
@@ -137,36 +156,62 @@ except Exception as e:
     sleep( 5 )
     quit()
 
-######################################################
-#                   START PROGRAM
-######################################################
-initialGuess = np.array( (.5, .1, .1), dtype='f' )
+
+# ************************************************************************
+# =========================> MAKE IT ALL HAPPEN <=========================
+# ************************************************************************
+
 # Start iteration
 while( True ):
     # Pool data from Arduino
     (H1, H2, H3) = getData(IMU)
 
+    # Inform user that system is almost ready
+    if(READY == False):
+        print( "Place magnet @ (x, y, z) = (0, 75, 0)mm\n" )
+        sleep( 2.5 )
+        print( "Ready in 5" )
+        sleep( 1.0 )
+        print( "Ready in 4" )
+        sleep( 1.0 )
+        print( "Ready in 3" )
+        sleep( 1.0 )
+        print( "Ready in 2" )
+        sleep( 1.0 )
+        print( "Ready in 1" )
+        sleep( 1.0 )
+        print( "GO!" )
+
+        # Set the device to ready!!
+        READY = True
+        
     # Compute L2 vector norms
-    H1_norm = norm(H1)
-    H2_norm = norm(H2)
-    H3_norm = norm(H3)
-    HNorm = [float(H1_norm), float(H2_norm), float(H3_norm)]
+    HNorm = [float(norm(H1)), float(norm(H2)), float(norm(H3))]
 
     # Invoke solver
-    sol = root(LHS1, initialGuess, method='lm',
-               options={'ftol': 1e-10, 'xtol':1e-10, 'maxiter':250000, 'epsfcn':1e-8, 'factor':0.1})
-    print( sol )
-    
-    print( "\nSOLUTION:" )
-    print( "x = %.5f || y = %.5f || z = %.5f" %(sol.x[0], sol.x[1], sol.x[2]) )
-    solution = np.array((sol.x[0], sol.x[1], sol.x[2]), dtype='f')
-    print( LHS1(solution) )
-    sleep( .5 )
-    #initialGuess = np.array( (sol.x[0], sol.x[1], sol.x[2]), dtype='f' )
+    sol = root(LHS, initialGuess, args=(K, HNorm), method='lm',
+               options={'ftol':1e-10, 'xtol':1e-10, 'maxiter':1000,
+                        'eps':1e-8, 'factor':0.001})
+
+    # Print solution (coordinates) to screen
+    print( "Current position (x , y , z):" )
+    print( "(%.5f , %.5f , %.5f)mm\n" %(sol.x[0]*1000, sol.x[1]*1000, sol.x[2]*1000) )
+
+    # If in debug/verbose mode:
+    if (args["debug"]):
+        # Print complete solution returned by vector
+        print( sol )
+        print("")
+
+    # Sleep for stability
+    sleep( 0.25 )
+
+    # Update initial guess with current position and feed back to solver
+    initialGuess = np.array( (sol.x[0]+dx, sol.x[1]+dx, sol.x[2]+dx), dtype='float64' )
 
 
-######################################################
-#                   DEPRACATED
-######################################################
+# ************************************************************************
+# =============================> DEPRECATED <=============================
+# ************************************************************************
 '''
 '''
