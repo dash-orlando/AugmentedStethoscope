@@ -8,10 +8,10 @@
  * DATE       : Jun. 27th, 2017, Year of Our Lord
  * 
  * MODIFIED BY: Mohammad Odeh
- * DATE       : Sep. 06th, 2017, Year of Our Lord
+ * DATE       : Sep. 25th, 2017, Year of Our Lord
  * 
  * CHANGELOG:-
- *  1- Error check to verify if sensor is connected/working or not
+ *  1- Added 4th sensor
  */
 
 // Include required libraries
@@ -25,10 +25,10 @@
 #define CALIBRATION_INDEX     50      // Accounting for ambient magnetic fields
 #define BAUDRATE              115200  // Serial communication baudrate
 #define NPINS                 3       // Number of select pins
-#define NSENS                 3       // Number of sensors
+#define NSENS                 4       // Number of sensors
 
 LSM9DS1 imu;                    // Instantiate sensors
-byte Sx_pin[3]  = {13, 12, 11}; // Select pins: {S0, S1, S2}
+byte Sx_pin[3]  = {10, 9, 8}; // Select pins: {S0, S1, S2}
 
 // Calibration (BASE) readings
 static double imu_BASE[3][3] =  { {0, 0, 0},    //  {1x, 1y, 1z}
@@ -37,7 +37,7 @@ static double imu_BASE[3][3] =  { {0, 0, 0},    //  {1x, 1y, 1z}
 
 // Enumerate sensor states ( 0==sensor1, 1==sensor2, ..., n==sensor(n+1) )
 enum State { SEN_OK, SEN_ERR };
-State sensorState[3]  = { SEN_ERR, SEN_ERR, SEN_ERR };  // Is the sensor detected and working?
+State sensorState[NSENS]  = { SEN_ERR, SEN_ERR, SEN_ERR, SEN_ERR };  // Is the sensor detected and working?
 
 void setup() {
   Serial.begin( BAUDRATE );             // Start serial monitor
@@ -184,6 +184,15 @@ void setSensor( byte sensorIndex ) {
       if (i == 1) {
         digitalWrite(Sx_pin[i], HIGH);
       } else digitalWrite(Sx_pin[i], LOW);
+    }
+  }
+
+  // Sensor 4
+  else if (sensorIndex == 3) {
+    for (byte i = 0; i < NPINS; i++) {
+      if (i == 2) {
+        digitalWrite(Sx_pin[i], LOW);
+      } else digitalWrite(Sx_pin[i], HIGH);
     }
   }
 

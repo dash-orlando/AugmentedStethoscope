@@ -6,22 +6,24 @@
 * Position tracking of magnet based on Finexus
 * https://ubicomplab.cs.washington.edu/pdfs/finexus.pdf
 *
-* VERSION: 0.1
+* VERSION: 0.1.1
 *   - First working version.
+*   - FIXED: Resolved buffer issue by switching from Arduino to Teensy
+*     for the data acquisition and communications.
+*   - FIXED: Added a check to verify that solutions (distances) make
+*     physical sense. If check fails, the code readjusts calculations.
 *
 * KNOWN ISSUES:
-*   - Sometimes the buffer is not filled entirely, causing
-*     the .split() to insert the delimiter ( , ) into the
-*     constructed vector of the magnet.
+*   - Small grid size
 *     (Look into a better approach for seperating the incoming data)
 *   - Calculations are accurate to around +/-3mm
-*     (look into improving K estimate)
+*     (Look into improving K estimate)
 *
 * AUTHOR  :   Daniel Nichols, Mohammad Odeh
-* DATE    :   Aug. 4th, 2017 Year of Our Lord
+* DATE    :   Aug. 04th, 2017 Year of Our Lord
 * 
 * MODIFIED:   Mohammad Odeh
-* DATE    :   Aug. 28th, 2017 Year of Our Lord
+* DATE    :   Sep. 25th, 2017 Year of Our Lord
 *
 '''
 
@@ -43,7 +45,7 @@ ap.add_argument("-d", "--debug", action='store_true',
 
 args = vars( ap.parse_args() )
 
-args["debug"] = False
+#args["debug"] = False
 
 # ************************************************************************
 # =====================> DEFINE NECESSARY FUNCTIONS <=====================
@@ -60,7 +62,7 @@ def getData(ser):
     ser.reset_output_buffer()
 
     # Allow data to fill-in buffer
-    sleep(0.25)
+    sleep(0.1)
 
     try:
         # Read incoming data and seperate
@@ -111,9 +113,10 @@ def LHS( root, K, norms ):
     x, y, z = root
     
     # Construct the (r) terms for each sensor
+    # NOTE: relative distance terms are in meters
     r1 = float( ( (x+0.00)**2. + (y+0.00)**2. + (z+0.00)**2. )**(1/2.) )    # Sensor 1
-    r2 = float( ( (x+0.05)**2. + (y-0.05)**2. + (z+0.00)**2. )**(1/2.) )    # Sensor 2
-    r3 = float( ( (x-0.05)**2. + (y-0.05)**2. + (z+0.00)**2. )**(1/2.) )    # Sensor 3
+    r2 = float( ( (x+0.10)**2. + (y-0.10)**2. + (z+0.00)**2. )**(1/2.) )    # Sensor 2
+    r3 = float( ( (x-0.10)**2. + (y-0.10)**2. + (z+0.00)**2. )**(1/2.) )    # Sensor 3
 
     # Construct the equations
     Eqn1 = ( K*( r1 )**(-6.) * ( 3.*( z/r1 )**2. + 1 ) ) - norms[0]**2.     # Sensor 1
@@ -133,18 +136,17 @@ def LHS( root, K, norms ):
 # Useful variables
 global CALIBRATING
 
-CALIBRATING = True                          # Boolean to indicate that device is calibrating
-READY       = False                         # Give time for user to palce magnet
+CALIBRATING = True                              # Boolean to indicate that device is calibrating
+READY       = False                             # Give time for user to palce magnet
 
-K           = 1.09e-6                       # Magnet's constant (K) || Units { G^2.m^6}
-dx          = 1e-5                          # Differential step size (Needed for solver)
-initialGuess = np.array((.01, .075, -.01), 
-                        dtype='float64' )   # Initial position/guess
-
+K           = 1.09e-6                           # Magnet's constant (K) || Units { G^2.m^6}
+dx          = 1e-5                              # Differential step size (Needed for solver)
+initialGuess= np.array((.01, .075, -.01), 
+                        dtype='float64' )       # Initial position/guess
 
 # Establish connection with Arduino
 try:
-    IMU = createUSBPort( "Arduino", 39, 115200 )
+    IMU = createUSBPort( "Arduino", 31, 115200 )
     if IMU.is_open == False:
         IMU.open()
     print( "Serial Port OPEN" )
@@ -204,14 +206,18 @@ while( True ):
         print("")
 
     # Sleep for stability
-    sleep( 0.25 )
+    sleep( 0.1 )
 
+    # Check if solution makes sense
+    if (abs(sol.x[0]*1000) > 500) or (abs(sol.x[1]*1000) > 500) or (abs(sol.x[2]*1000) > 500):
+        print( "Invalid solution. Resetting Calculations" )
+        initialGuess = np.array( (.01, .075, -.01), dtype='float64' )
+        
     # Update initial guess with current position and feed back to solver
-    initialGuess = np.array( (sol.x[0]+dx, sol.x[1]+dx, sol.x[2]+dx), dtype='float64' )
-
+    else:    
+        initialGuess = np.array( (sol.x[0]+dx, sol.x[1]+dx, sol.x[2]+dx), dtype='float64' )
 
 # ************************************************************************
 # =============================> DEPRECATED <=============================
 # ************************************************************************
-'''
-'''
+#
