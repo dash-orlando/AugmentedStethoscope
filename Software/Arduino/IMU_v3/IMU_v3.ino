@@ -8,10 +8,12 @@
  * DATE       : Jun. 27th, 2017, Year of Our Lord
  * 
  * MODIFIED BY: Mohammad Odeh
- * DATE       : Sep. 25th, 2017, Year of Our Lord
+ * DATE       : Sep. 27th, 2017, Year of Our Lord
  * 
  * CHANGELOG:-
- *  1- Added 4th sensor
+ *  1- Incorporated 4th sensor
+ *  2- Constrained code to defined values (to add an nth sensor only
+ *     modify #define NESENS and nothing else)
  */
 
 // Include required libraries
@@ -26,21 +28,26 @@
 #define BAUDRATE              115200  // Serial communication baudrate
 #define NPINS                 3       // Number of select pins
 #define NSENS                 4       // Number of sensors
+#define NAXES                 3       // Number of axes
 
-LSM9DS1 imu;                    // Instantiate sensors
-byte Sx_pin[3]  = {10, 9, 8}; // Select pins: {S0, S1, S2}
+LSM9DS1 imu;                          // Instantiate sensors
+byte Sx_pin[3]  = {10, 9, 8};         // Select pins: {S0, S1, S2}
 
 // Calibration (BASE) readings
-static double imu_BASE[3][3] =  { {0, 0, 0},    //  {1x, 1y, 1z}
-                                  {0, 0, 0},    //  {2x, 2y, 2z}
-                                  {0, 0, 0} };  //  {3x, 3y, 3z}
+static double imu_BASE[NSENS][NAXES] =  { {0, 0, 0},    //  {1x, 1y, 1z}
+                                          {0, 0, 0},    //  {2x, 2y, 2z}
+                                          {0, 0, 0},    //  {3x, 3y, 3z}
+                                          {0, 0, 0} };  //  {4x, 4y, 4z}
 
 // Enumerate sensor states ( 0==sensor1, 1==sensor2, ..., n==sensor(n+1) )
-enum State { SEN_OK, SEN_ERR };
-State sensorState[NSENS]  = { SEN_ERR, SEN_ERR, SEN_ERR, SEN_ERR };  // Is the sensor detected and working?
+enum State { SEN_ERR, SEN_OK };
+State sensorState[NSENS]  = { };      // Is the sensor detected and working?
 
 void setup() {
   Serial.begin( BAUDRATE );             // Start serial monitor
+  
+  pinMode(13, OUTPUT);                  // Turn LED ON to know
+  digitalWrite(13, HIGH);               // Teensy ain't dead
 
   for ( byte i = 0; i < NPINS; i++ ) {
     pinMode( Sx_pin[i], OUTPUT );       // Set "Select Pins" as output
@@ -57,16 +64,17 @@ void setup() {
 void loop() {
 
   // IMU readings (CALIBRATED) matrix
-  static double B[3][3]       = { {0, 0, 0},      //  {B1_x, B1_y, B1_z}
+  static double B[NSENS][NAXES]={ {0, 0, 0},      //  {B1_x, B1_y, B1_z}
                                   {0, 0, 0},      //  {B2_x, B2_y, B2_z}
-                                  {0, 0, 0} };    //  {B3_x, B3_y, B3_z}
+                                  {0, 0, 0},      //  {B3_x, B3_y, B3_z}
+                                  {0, 0, 0} };    //  {B4_x, B4_y, B4_z}
 
   // IMU readings (RAW)
   static double imu_RAW = 0;
 
   // Obtain readings from ALL sensors
   for (byte i = 0; i < NSENS; i++) {      // Loop over ROWS     (Sensors)
-    for (byte j = 0; j < NSENS; j++) {    // Loop over COLUMNS  (Axes)
+    for (byte j = 0; j < NAXES; j++) {    // Loop over COLUMNS  (Axes)
       
       if (sensorState[i] == SEN_OK) {     // Set Sensor IFF it was INITIALIZED
         setSensor(i);                     // Loop over sensors
@@ -89,7 +97,7 @@ void loop() {
 
       // Make output look pretty
       Serial.print(B[i][j], 5);           // Print readings to Serial
-      if ( (i == NSENS - 1) && (j == NSENS - 1) ) {
+      if ( (i == NSENS - 1) && (j == NAXES - 1) ) {
         Serial.print("\n");               // Print new line after last sensor and last axis
       } else {
         Serial.print(", ");               // Print a comma between sensor axes
@@ -124,19 +132,19 @@ void setupIMU() {
 // =========================   Calibrate IMU    ========================
 void calibrateIMU(byte i) {
   // Temporary value holders needed for calibration
-  double imu_hold[3] = {0, 0, 0};         // {x, y, z}
+  double imu_hold[NAXES] = {0, 0, 0};     // {x, y, z}
 
-  if ( !imu.begin() ) {       // Check if device is initialized
-    sensorState[i] = SEN_ERR; // Sensor ERROR
+  if ( !imu.begin() ) {                   // Check if device is initialized
+    sensorState[i] = SEN_ERR;             // Sensor ERROR
     
     Serial.print( F("Failed to communicate with LSM9DS1 ") );
     Serial.println( i + 1 );
 
   } else {
-    sensorState[i] = SEN_OK;  // Sensor is OK
+    sensorState[i] = SEN_OK;              // Sensor is OK
     
     Serial.println( F("Calibrating. Please Wait.") );
-    imu.calibrateMag();       // Call built-in function to calculate bias
+    imu.calibrateMag();                   // Call built-in function to calculate bias
 
     // Perform our own calibration process to further clear noise
     for (int j = 0; j < CALIBRATION_INDEX ; j++) {
