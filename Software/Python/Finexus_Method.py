@@ -6,7 +6,7 @@
 * Position tracking of magnet based on Finexus
 * https://ubicomplab.cs.washington.edu/pdfs/finexus.pdf
 *
-* VERSION: 0.1.6
+* VERSION: 0.1.7
 *   - First working version.
 *   - FIXED: Resolved buffer issue by switching from Arduino to Teensy
 *     for the data acquisition and communications.
@@ -18,7 +18,6 @@
 * KNOWN ISSUES:
 *   - Calculations are accurate to around +/-3mm
 *     (Look into improving K estimate)
-*   - Solutions do NOT make any sense! :c
 *
 *
 * AUTHOR  :   Edward Nichols
@@ -157,12 +156,12 @@ def LHS( root, K, norms ):
     # I was in the process of verifying the definitions to match the axis definitions on the IMUs and our physical motion.
     # Needless to say, the magnitude of motion is not accurate either.
 
-    r1 = float( ( (x+0.000)**2. + (y-0.125)**2. + (z+0.00)**2. )**(1/2.) )    # Sensor 1
-    r2 = float( ( (x-0.100)**2. + (y-0.175)**2. + (z+0.00)**2. )**(1/2.) )    # Sensor 2
-    r3 = float( ( (x-0.200)**2. + (y-0.125)**2. + (z+0.00)**2. )**(1/2.) )    # Sensor 3
-    r4 = float( ( (x+0.000)**2. + (y+0.000)**2. + (z+0.00)**2. )**(1/2.) )    # Sensor 4
-    r5 = float( ( (x-0.100)**2. + (y+0.050)**2. + (z+0.00)**2. )**(1/2.) )    # Sensor 5
-    r6 = float( ( (x-0.200)**2. + (y-0.000)**2. + (z+0.00)**2. )**(1/2.) )    # Sensor 6
+    r1 = float( ( (x+0.000)**2. + (y-0.125)**2. + (z+0.00)**2. )**(1/2.) )  # Sensor 1
+    r2 = float( ( (x-0.100)**2. + (y-0.175)**2. + (z+0.00)**2. )**(1/2.) )  # Sensor 2
+    r3 = float( ( (x-0.200)**2. + (y-0.125)**2. + (z+0.00)**2. )**(1/2.) )  # Sensor 3
+    r4 = float( ( (x+0.000)**2. + (y+0.000)**2. + (z+0.00)**2. )**(1/2.) )  # Sensor 4 (ORIGIN)
+    r5 = float( ( (x-0.100)**2. + (y+0.050)**2. + (z+0.00)**2. )**(1/2.) )  # Sensor 5
+    r6 = float( ( (x-0.200)**2. + (y-0.000)**2. + (z+0.00)**2. )**(1/2.) )  # Sensor 6
 
     # Construct the equations
     Eqn1 = ( K*( r1 )**(-6.) * ( 3.*( z/r1 )**2. + 1 ) ) - norms[0]**2.     # Sensor 1
@@ -215,7 +214,7 @@ dx          = 1e-7                              # Differential step size (Needed
 
 ##initialGuess= np.array((.01, .075, -.01), 
 ##                        dtype='float64' )     # Initial position/guess
-initialGuess= np.array((.100, 0.000, 0.000), 
+initialGuess= np.array((0.10, 0.01, -0.01), 
                         dtype='float64' )       # Initial position/guess
 
 # Establish connection with Arduino
@@ -249,10 +248,6 @@ while( True ):
     if(READY == False):
         print( "Place magnet @ the starting location! \n" )
         sleep( 2.5 )
-        print( "Ready in 5" )
-        sleep( 1.0 )
-        print( "Ready in 4" )
-        sleep( 1.0 )
         print( "Ready in 3" )
         sleep( 1.0 )
         print( "Ready in 2" )
@@ -292,7 +287,7 @@ while( True ):
     # Check if solution makes sense
     if (abs(sol.x[0]*1000) > 500) or (abs(sol.x[1]*1000) > 500) or (abs(sol.x[2]*1000) > 500):
         print( "Invalid solution. Resetting Calculations" )
-        initialGuess = np.array( (-0.100, -0.025, 0.005), dtype='float64' )
+        initialGuess = np.array( (0.10, 0.01, -0.01), dtype='float64' )
         
     # Update initial guess with current position and feed back to solver
     else:    
