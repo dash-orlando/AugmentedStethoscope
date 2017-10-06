@@ -6,24 +6,25 @@
 * Position tracking of magnet based on Finexus
 * https://ubicomplab.cs.washington.edu/pdfs/finexus.pdf
 *
-* VERSION: 0.2.0
+* VERSION: 0.2.2
 *   - MODIFIED: Removed limitation of needing to place magnet at a
 *               predefined position at program start up.
 *   - ADDED   : 6 sensors placed around an ellipse
 *   - ADDED   : Visualize what sensors are being used for calculations
+*   - ADDED   : Finding the initial guess on program startup is now
+*               dynamic; it is calculated on the spot rather than
+*               choosing from a hardcoded list of all the possible
+*               initial guesses.
 *
 * KNOWN ISSUES:
-*   - Calculations are accurate to around +/-3mm
-*     (Look into improving K estimate)
-*   - Calculations are accurate up to the x=175mm
-*     mark, beyond that, solutions lose accuracy.
-*     (i.e. x_actual=200 | x_calc=181 <-- no bueno)
+*   - Calculations are accurate to around +/-2mm
+*     (this is very beuno, if not perfect)
 *   - At certain times, the z position goes cray-cray
 *     while x & y are correct.
 *     (Look into what triggers this behaviour)
 *
 * AUTHOR  :   Edward Nichols
-* DATE    :   Sept. 29th, 2017 Year of Our Lord
+* DATE    :   Sep. 29th, 2017 Year of Our Lord
 * 
 * Modified:   Mohammad Odeh 
 * DATE    :   Oct. 06th, 2017 Year of Our Lord
@@ -59,6 +60,13 @@ args["visualize-position"] = True
 
 # ****************************************************
 # Define function to sort from lowest->highest value *
+# -------------------------------------------------- *
+# INPUT :   - A list                                 *
+# OUTPUT:   - A list containing the indices of the   *
+#             given list's elements arranged from    *
+#             the index of the element with the      *
+#             smallest value to the index of the     *
+#             element with the largest value         *
 # ****************************************************
 def argsort(seq):
     # http://stackoverflow.com/questions/3071415/efficient-method-to-calculate-the-rank-vector-of-a-list-in-python
@@ -66,6 +74,7 @@ def argsort(seq):
 
 # ****************************************************
 # Sort a list's elements from smallest to largest    *
+# -------------------------------------------------- *
 # INPUT :   - List to be sorted                      *
 #           - Number of elements in said list that   *
 #               you want to sort                     *
@@ -172,12 +181,6 @@ def LHS( root, K, norms ):
     #     : Standing on sensor(n), how many units in
     #       the x/y/z direction should I march to get
     #       back to sensor1 (origin)?
-
-    # NOTE TO MOE 9/29 6pm: The sensor array is rejigged to a circle. Motion doesn't follow the coordinate axis written on the paper:
-    # i.e. If the magnet was moved 25mm in positive X, the Y and Z axes were the ones that shifted.
-    # I was in the process of verifying the definitions to match the axis definitions on the IMUs and our physical motion.
-    # Needless to say, the magnitude of motion is not accurate either.
-
     r1 = float( ( (x+0.000)**2. + (y-0.125)**2. + (z+0.00)**2. )**(1/2.) )  # Sensor 1
     r2 = float( ( (x-0.100)**2. + (y-0.175)**2. + (z+0.00)**2. )**(1/2.) )  # Sensor 2
     r3 = float( ( (x-0.200)**2. + (y-0.125)**2. + (z+0.00)**2. )**(1/2.) )  # Sensor 3
@@ -212,6 +215,19 @@ def LHS( root, K, norms ):
 # magnetic field relative to all the sensors         *
 # ****************************************************
 def findIG(magFields):
+    # Define IMU positions on the grid
+    #      / sensor 1: (x, y, z)
+    #     /  sensor 2: (x, y, z)
+    # Mat=      :          :
+    #     \     :          :
+    #      \ sensor 6: (x, y, z)
+    IMU_pos = np.array(((0.0  , 0.125,   0.0) ,
+                        (0.100, 0.175,   0.0) ,
+                        (0.200, 0.125,   0.0) ,
+                        (0.0  , 0.0  ,   0.0) ,
+                        (0.100,-0.050,   0.0) ,
+                        (0.200, 0.0  ,   0.0)), dtype='float64')
+
     # Read current magnetic field from MCU
     (H1, H2, H3, H4, H5, H6) = magFields
 
@@ -225,60 +241,11 @@ def findIG(magFields):
     sort.reverse()                      # Python built-in function reverses elements of list
 
     IMUS = bubbleSort(sort, 3)
-    
-    ### Magnet between sensors (124)
-    if (IMUS[0]==0 and IMUS[1]==1 and IMUS[2]==3):
-        # Centroid of triangle at: (x, y) = (100/3, 100)mm
-        return ( np.array((100/3000., 0.100, -0.010), dtype='float64') )
 
-    ### Magnet between sensors (123)
-    elif (IMUS[0]==0 and IMUS[1]==1 and IMUS[2]==2):
-        # Centroid of triangle at: (x, y) = (100, 425/3)mm
-        return ( np.array((0.100, 425/3000., -0.010), dtype='float64') )
-
-    ### Magnet between sensors (236)
-    elif (IMUS[0]==1 and IMUS[1]==2 and IMUS[2]==5):
-        # Centroid of triangle at: (x, y) = (500/3, 100)mm
-        return ( np.array((500/3000., 0.100, -0.010), dtype='float64') )
-
-    ### Magnet between sensors (356)
-    elif (IMUS[0]==2 and IMUS[1]==4 and IMUS[2]==5):
-        # Centroid of triangle at: (x, y) = (500/3, 025)mm
-        return ( np.array((500/3000., 0.025, -0.010), dtype='float64') )
-
-    ### Magnet between sensors (456)
-    elif (IMUS[0]==3 and IMUS[1]==4 and IMUS[2]==5):
-        # Centroid of triangle at: (x, y) = (100, -50/3)mm
-        return ( np.array((0.100, -50/3000., -0.010), dtype='float64') )
-
-    ### Magnet between sensors (145)
-    elif (IMUS[0]==0 and IMUS[1]==3 and IMUS[2]==4):
-        # Centroid of triangle at: (x, y) = (100/3, 025)mm
-        return ( np.array((100/3000., 0.025, -0.010), dtype='float64') )
-
-    ### Magnet between sensors (245)
-    elif (IMUS[0]==1 and IMUS[1]==3 and IMUS[2]==4):
-        # Centroid of triangle at: (x, y) = (200/3, 125/3)mm
-        return ( np.array((200/3000., .125/3, -0.01), dtype='float64') )
-
-    ### Magnet between sensors (256)
-    elif (IMUS[0]==1 and IMUS[1]==4 and IMUS[2]==5):
-        # Centroid of triangle at: (x, y) = (400/3, 125/3)mm
-        return ( np.array((400/3000., .125/3, -0.01), dtype='float64') )
-
-    ### Magnet between sensors (125)
-    elif (IMUS[0]==0 and IMUS[1]==1 and IMUS[2]==4):
-        # Centroid of triangle at: (x, y) = (200/3, 250/3)mm
-        return ( np.array((200/3000., .250/3, -0.01), dtype='float64') )
-
-    ### Magnet between sensors (235)
-    elif (IMUS[0]==1 and IMUS[1]==2 and IMUS[2]==4):
-        # Centroid of triangle at: (x, y) = (400/3, 250/3)mm
-        return ( np.array((400/3000., .250/3, -0.01), dtype='float64') )
-    
-    ### Magnet in No Man's Land
-    else:
-        return ( np.array((0.100, 225/3000., -0.010), dtype='float64') )
+    # Return the initial guess as the centroid of the detected triangle
+    return ( np.array(((IMU_pos[IMUS[0]][0]+IMU_pos[IMUS[1]][0]+IMU_pos[IMUS[2]][0])/3.,
+                       (IMU_pos[IMUS[0]][1]+IMU_pos[IMUS[1]][1]+IMU_pos[IMUS[2]][1])/3.,
+                       (IMU_pos[IMUS[0]][2]+IMU_pos[IMUS[1]][2]+IMU_pos[IMUS[2]][2])/3. -0.01), dtype='float64') )
 
 # ****************************************************
 #               Light up LEDS for funzies            *
