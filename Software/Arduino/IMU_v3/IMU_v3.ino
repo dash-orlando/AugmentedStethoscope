@@ -5,15 +5,14 @@
    to give a calibrated reading independent of the surrounding magnetic field.
 
    AUTHOR     : Edward Daniel Nichols
-   DATE       : Sept. 29th, 2017, Year of Our Lord
+   DATE       : Sep. 29th, 2017, Year of Our Lord
 
-   AUTHOR     : Mohammad Odeh
-   DATE       : Sept. 29th, 2017, Year of Our Lord
+   MODIFIED   : Mohammad Odeh
+   DATE       : Oct. 06th, 2017, Year of Our Lord
 
    CHANGELOG:-
-    1- Incorporated 4th sensor
-    2- Constrained code to defined values (to add an nth sensor only
-       modify #define NSENS and nothing else)
+    1- Incorporated 6th sensor
+    2- Visualize what sensor is being used for calculations
 */
 
 // Include required libraries
@@ -29,10 +28,11 @@
 #define NPINS                 3       // Number of select pins
 #define NSENS                 6       // Number of sensors
 #define NAXES                 3       // Number of axes
-#define LED                   1       // "All iz Gud" Indicator LED
+#define LED                   1       // "Alles Gut" Indicator LED
 
-LSM9DS1 imu;                          // Instantiate sensors
-byte Sx_pin[3]  = {8, 9, 10};         // Select pins: {S0, S1, S2}
+LSM9DS1 imu;                            // Instantiate sensors
+byte Sx_pin[3]  = {8, 9, 10};           // Select pins: {S0, S1, S2}
+byte LED_pin[6] = {17,16,15,14,12,11};  // LED maps to Sensors {1, 2, 3, 4, 5, 6}, respectively.
 
 // Calibration (BASE) readings
 static double imu_BASE[NSENS][NAXES] =  { {0, 0, 0},    //  {1x, 1y, 1z}
@@ -59,6 +59,7 @@ void setup() {
 
   // Initialize sensors and load settings
   for (byte i = 0; i < NSENS; i++) {
+    pinMode(LED_pin[i], OUTPUT);      // Set LED pins to output
     setSensor(i);                     // Switch between sensors
     setupIMU();                       // Setup IMUs
     calibrateIMU(i);                  // Calibrate Sensors
@@ -111,6 +112,7 @@ void loop() {
       }
     }
   }
+  if (Serial.available()) toggleLED();  //Toggle LEDs to visualize which sensors come into play. Not very useful tbh
 }
 
 // =========================    Setup IMU       ========================
@@ -228,5 +230,110 @@ void setSensor( byte sensorIndex ) {
   }
 
   else Serial.println( F("Invalid Index") );
+}
+
+// =========================    LED Toggle      ========================
+void toggleLED(){
+  char buff[1] = {0};         // Buffer to store incoming byte
+  Serial.readBytes(buff, 1);  // Read incoming byte
+  byte inByte = buff[0];
+  
+  switch ( inByte ) {
+    // Combination: 1 || Sensors (124)
+    case 48 :
+      for (byte i=0; i<NSENS; i++){
+        if (i==0 || i==1 || i==3){
+          digitalWrite(LED_pin[i], HIGH);
+        } else digitalWrite(LED_pin[i], LOW);
+      }
+      break;
+
+    // Combination: 2 || Sensors (123)
+    case 49 :
+      for (byte i=0; i<NSENS; i++){
+        if (i==0 || i==1 || i==2){
+          digitalWrite(LED_pin[i], HIGH);
+        } else digitalWrite(LED_pin[i], LOW);
+      }
+      break;
+
+    // Combination: 3 || Sensors (236)
+    case 50 :
+      for (byte i=0; i<NSENS; i++){
+        if (i==1 || i==2 || i==5){
+          digitalWrite(LED_pin[i], HIGH);
+        } else digitalWrite(LED_pin[i], LOW);
+      }
+      break;
+
+    // Combination: 4 || Sensors (356)
+    case 51 :
+      for (byte i=0; i<NSENS; i++){
+        if (i==2 || i==4 || i==5){
+          digitalWrite(LED_pin[i], HIGH);
+        } else digitalWrite(LED_pin[i], LOW);
+      }
+      break;
+
+    // Combination: 5 || Sensors (456)
+    case 52 :
+      for (byte i=0; i<NSENS; i++){
+        if (i==3 || i==4 || i==5){
+          digitalWrite(LED_pin[i], HIGH);
+        } else digitalWrite(LED_pin[i], LOW);
+      }
+      break;
+
+    // Combination: 6 || Sensors (145)
+    case 53 :
+      for (byte i=0; i<NSENS; i++){
+        if (i==0 || i==3 || i==4){
+          digitalWrite(LED_pin[i], HIGH);
+        } else digitalWrite(LED_pin[i], LOW);
+      }
+      break; 
+
+    // Combination: 7 || Sensors (245)
+    case 54 :
+      for (byte i=0; i<NSENS; i++){
+        if (i==1 || i==3 || i==4){
+          digitalWrite(LED_pin[i], HIGH);
+        } else digitalWrite(LED_pin[i], LOW);
+      }
+      break;
+
+    // Combination: 8 || Sensors (256)
+    case 55 :
+      for (byte i=0; i<NSENS; i++){
+        if (i==1 || i==4 || i==5){
+          digitalWrite(LED_pin[i], HIGH);
+        } else digitalWrite(LED_pin[i], LOW);
+      }
+      break; 
+
+    // Combination: 9 || Sensors (125)
+    case 56 :
+      for (byte i=0; i<NSENS; i++){
+        if (i==0 || i==1 || i==4){
+          digitalWrite(LED_pin[i], HIGH);
+        } else digitalWrite(LED_pin[i], LOW);
+      }
+      break;
+
+    // Combination: 10 || Sensors (235)
+    case 57 :
+      for (byte i=0; i<NSENS; i++){
+        if (i==1 || i==2 || i==4){
+          digitalWrite(LED_pin[i], HIGH);
+        } else digitalWrite(LED_pin[i], LOW);
+      }
+      break; 
+      
+    default:
+    for (byte i=0; i<NSENS; i++){
+      digitalWrite(LED_pin[i], HIGH);
+    }
+      break;
+  } inByte = 0x00;
 }
 

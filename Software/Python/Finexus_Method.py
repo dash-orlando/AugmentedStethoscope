@@ -10,6 +10,7 @@
 *   - MODIFIED: Removed limitation of needing to place magnet at a
 *               predefined position at program start up.
 *   - ADDED   : 6 sensors placed around an ellipse
+*   - ADDED   : Visualize what sensors are being used for calculations
 *
 * KNOWN ISSUES:
 *   - Calculations are accurate to around +/-3mm
@@ -25,7 +26,7 @@
 * DATE    :   Sept. 29th, 2017 Year of Our Lord
 * 
 * Modified:   Mohammad Odeh 
-* DATE    :   Oct. 04th, 2017 Year of Our Lord
+* DATE    :   Oct. 06th, 2017 Year of Our Lord
 *
 '''
 
@@ -42,15 +43,15 @@ import  argparse                                    # Feed in arguments to the p
 # ************************************************************************
 ap = argparse.ArgumentParser()
 
-ap.add_argument("-hd", "--hardDebug", action='store_true',
+ap.add_argument("-d", "--debug", action='store_true',
                 help="invoke flag to enable debugging")
-ap.add_argument("-sd", "--softDebug", action='store_true',
-                help="invoke flag to enable debugging")
+ap.add_argument("-vp", "--visualize-position", action='store_true',
+                help="invoke flag to visualize position")
 
 args = vars( ap.parse_args() )
 
-##args["hardDebug"] = True
-args["softDebug"] = True
+args["debug"] = False
+args["visualize-position"] = True
 
 # ************************************************************************
 # =====================> DEFINE NECESSARY FUNCTIONS <====================*
@@ -63,6 +64,27 @@ def argsort(seq):
     # http://stackoverflow.com/questions/3071415/efficient-method-to-calculate-the-rank-vector-of-a-list-in-python
     return sorted(range(len(seq)), key=seq.__getitem__)
 
+# ****************************************************
+# Sort a list's elements from smallest to largest    *
+# INPUT :   - List to be sorted                      *
+#           - Number of elements in said list that   *
+#               you want to sort                     *
+# OUTPUT:   - A sorted list of size (N)              *
+# ****************************************************
+def bubbleSort(arr, N):
+    data = []
+    for i in range(0, N):
+        data.append( arr[i] )
+
+    for i in range(0, len(data)):
+        for j in range(0, len(data)-i-1):
+            if (data[j] > data[j+1]):
+                temp = data[j]
+                data[j] = data[j+1]
+                data[j+1] = temp
+            else:
+                continue
+    return (data)
 
 # ****************************************************
 # Define function to pool & return data from Arduino *
@@ -141,7 +163,6 @@ def getData(ser):
 # ****************************************************
 def LHS( root, K, norms ):
     global PRINT
-    global sort
     
     # Extract x, y, and z
     x, y, z = root
@@ -182,29 +203,17 @@ def LHS( root, K, norms ):
 
     for i in range(0, 3):               # Fill functions' array with the equations that correspond to
         f.append(Eqns[sort[i]])         # the sensors with the highest norm, thus closest to magnet
-
-    # If in debug/verbose mode:
-    if (args["hardDebug"]):
-        if (PRINT):
-            print( "\n=========================================" )
-            print( "Norms: %f, %f, %f, %f, %f, %f"  %(norms[0], norms[1],
-                                                      norms[2], norms[3],
-                                                      norms[4], norms[5]) )
-            print( "Using sensors: #%d, #%d, #%d"   %(sort[0]+1, sort[1]+1, sort[2]+1) )
-            print( "=========================================\n" )
-            sleep(1.5)
-            PRINT = False
         
     # Return vector
     return ( f )
 
 # ****************************************************
-# Determine initial guess based on magnitude of
-# magnetic field relative to all the sensors
+# Determine initial guess based on magnitude of      *
+# magnetic field relative to all the sensors         *
 # ****************************************************
-def findIG(H_fields):
+def findIG(magFields):
     # Read current magnetic field from MCU
-    (H1, H2, H3, H4, H5, H6) = getData(IMU)
+    (H1, H2, H3, H4, H5, H6) = magFields
 
     # Compute L2 vector norms
     HNorm = [ float(norm(H1)), float(norm(H2)),
@@ -215,39 +224,117 @@ def findIG(H_fields):
     sort = argsort(HNorm)               # Auxiliary function sorts norms from smallest to largest
     sort.reverse()                      # Python built-in function reverses elements of list
 
+    IMUS = bubbleSort(sort, 3)
+    
     ### Magnet between sensors (124)
-    if (sort[0] and sort[1] and sort[3]) > (sort[2] and sort[4] and sort[5]):
+    if (IMUS[0]==0 and IMUS[1]==1 and IMUS[2]==3):
         # Centroid of triangle at: (x, y) = (100/3, 100)mm
         return ( np.array((100/3000., 0.100, -0.010), dtype='float64') )
 
     ### Magnet between sensors (123)
-    elif (sort[0] and sort[1] and sort[2]) > (sort[3] and sort[4] and sort[5]):
+    elif (IMUS[0]==0 and IMUS[1]==1 and IMUS[2]==2):
         # Centroid of triangle at: (x, y) = (100, 425/3)mm
         return ( np.array((0.100, 425/3000., -0.010), dtype='float64') )
 
     ### Magnet between sensors (236)
-    elif (sort[1] and sort[2] and sort[5]) > (sort[0] and sort[3] and sort[4]):
+    elif (IMUS[0]==1 and IMUS[1]==2 and IMUS[2]==5):
         # Centroid of triangle at: (x, y) = (500/3, 100)mm
         return ( np.array((500/3000., 0.100, -0.010), dtype='float64') )
 
     ### Magnet between sensors (356)
-    elif (sort[2] and sort[4] and sort[5]) > (sort[0] and sort[1] and sort[3]):
+    elif (IMUS[0]==2 and IMUS[1]==4 and IMUS[2]==5):
         # Centroid of triangle at: (x, y) = (500/3, 025)mm
         return ( np.array((500/3000., 0.025, -0.010), dtype='float64') )
 
     ### Magnet between sensors (456)
-    elif (sort[3] and sort[4] and sort[5]) > (sort[0] and sort[1] and sort[2]):
+    elif (IMUS[0]==3 and IMUS[1]==4 and IMUS[2]==5):
         # Centroid of triangle at: (x, y) = (100, -50/3)mm
         return ( np.array((0.100, -50/3000., -0.010), dtype='float64') )
 
     ### Magnet between sensors (145)
-    elif (sort[0] and sort[3] and sort[4]) > (sort[1] and sort[2] and sort[5]):
+    elif (IMUS[0]==0 and IMUS[1]==3 and IMUS[2]==4):
         # Centroid of triangle at: (x, y) = (100/3, 025)mm
         return ( np.array((100/3000., 0.025, -0.010), dtype='float64') )
 
+    ### Magnet between sensors (245)
+    elif (IMUS[0]==1 and IMUS[1]==3 and IMUS[2]==4):
+        # Centroid of triangle at: (x, y) = (200/3, 125/3)mm
+        return ( np.array((200/3000., .125/3, -0.01), dtype='float64') )
+
+    ### Magnet between sensors (256)
+    elif (IMUS[0]==1 and IMUS[1]==4 and IMUS[2]==5):
+        # Centroid of triangle at: (x, y) = (400/3, 125/3)mm
+        return ( np.array((400/3000., .125/3, -0.01), dtype='float64') )
+
+    ### Magnet between sensors (125)
+    elif (IMUS[0]==0 and IMUS[1]==1 and IMUS[2]==4):
+        # Centroid of triangle at: (x, y) = (200/3, 250/3)mm
+        return ( np.array((200/3000., .250/3, -0.01), dtype='float64') )
+
+    ### Magnet between sensors (235)
+    elif (IMUS[0]==1 and IMUS[1]==2 and IMUS[2]==4):
+        # Centroid of triangle at: (x, y) = (400/3, 250/3)mm
+        return ( np.array((400/3000., .250/3, -0.01), dtype='float64') )
+    
     ### Magnet in No Man's Land
     else:
         return ( np.array((0.100, 225/3000., -0.010), dtype='float64') )
+
+# ****************************************************
+#               Light up LEDS for funzies            *
+# ****************************************************
+def visualizePos(HNorm, ser):
+    
+    # Determine which sensors to use based on magnetic field value (smallValue==noBueno!)
+    sort = argsort(HNorm)               # Auxiliary function sorts norms from smallest to largest
+    sort.reverse()                      # Python built-in function reverses elements of list
+
+    IMUS = bubbleSort(sort, 3)
+    print( "Using sensors: #%d, #%d, #%d\n\n" %(IMUS[0]+1, IMUS[1]+1, IMUS[2]+1) )
+    
+    ### Magnet between sensors (124)
+    if (IMUS[0]==0 and IMUS[1]==1 and IMUS[2]==3):
+        ser.write('0')
+
+    ### Magnet between sensors (123)
+    elif (IMUS[0]==0 and IMUS[1]==1 and IMUS[2]==2):
+        ser.write('1')
+
+    ### Magnet between sensors (236)
+    elif (IMUS[0]==1 and IMUS[1]==2 and IMUS[2]==5):
+        ser.write('2')
+
+    ### Magnet between sensors (356)
+    elif (IMUS[0]==2 and IMUS[1]==4 and IMUS[2]==5):
+        ser.write('3')
+
+    ### Magnet between sensors (456)
+    elif (IMUS[0]==3 and IMUS[1]==4 and IMUS[2]==5):
+        ser.write('4')
+
+    ### Magnet between sensors (145)
+    elif (IMUS[0]==0 and IMUS[1]==3 and IMUS[2]==4):
+        ser.write('5')
+
+    ### Magnet between sensors (245)
+    elif (IMUS[0]==1 and IMUS[1]==3 and IMUS[2]==4):
+        ser.write('6')
+
+    ### Magnet between sensors (256)
+    elif (IMUS[0]==1 and IMUS[1]==4 and IMUS[2]==5):
+        ser.write('7')
+
+    ### Magnet between sensors (125)
+    elif (IMUS[0]==0 and IMUS[1]==1 and IMUS[2]==4):
+        ser.write('8')
+
+    ### Magnet between sensors (235)
+    elif (IMUS[0]==1 and IMUS[1]==2 and IMUS[2]==4):
+        ser.write('9')
+
+    ### Magnet in No Man's Land
+    else:
+        ser.write('\0')
 
 # ************************************************************************
 # ===========================> SETUP PROGRAM <===========================
@@ -255,19 +342,15 @@ def findIG(H_fields):
 
 # Useful variables
 global CALIBRATING
-global PRINT
-global sort
 
 CALIBRATING = True                              # Boolean to indicate that device is calibrating
 READY       = False                             # Give time for user to place magnet
-PRINT       = True                              # A flag to print ONLY once!
-sort        = 'null'                            # Variable used for sorting 
 
 K           = 1.09e-6                           # Magnet's constant (K) || Units { G^2.m^6}
 dx          = 1e-7                              # Differential step size (Needed for solver)
 
-initialGuess= np.array((0.10, 0.01, -0.01), 
-                        dtype='float64' )       # Initial position/guess
+##initialGuess= np.array((0.10, 0.01, -0.01), 
+##                        dtype='float64' )       # Initial position/guess
 
 # Establish connection with Arduino
 DEVC = "Arduino"                                # Device Name (not very important)
@@ -281,6 +364,9 @@ try:
         IMU.open()
     print( "Serial Port OPEN" )
 
+    # Determine initial guess based on magnet's location
+    initialGuess = findIG(getData(IMU))
+
 # Error handling in case serial communcation fails (2/2)
 except Exception as e:
     print( "Could NOT open serial port" )
@@ -289,9 +375,6 @@ except Exception as e:
     sleep( 2.5 )
     quit()                                      # Shutdown entire program
 
-
-# Determine initial guess based on magnet's location
-initialGuess = findIG(getData(IMU))
 
 # ************************************************************************
 # =========================> MAKE IT ALL HAPPEN <=========================
@@ -304,8 +387,6 @@ while( True ):
 
     # Inform user that system is almost ready
     if(READY == False):
-        print( "Place magnet @ the starting location! \n" )
-        sleep( 2.5 )
         print( "Ready in 3" )
         sleep( 1.0 )
         print( "Ready in 2" )
@@ -331,17 +412,20 @@ while( True ):
     print( "Current position (x , y , z):" )
     print( "(%.5f , %.5f , %.5f)mm" %(sol.x[0]*1000, sol.x[1]*1000, sol.x[2]*1000) )
 
-    # If in softDebug mode:
-    if (args["softDebug"]):
-        print( "Using sensors: #%d, #%d, #%d\n\n" %(sort[0]+1, sort[1]+1, sort[2]+1) )
-
+    # If in -vp mode:
+    if (args["visualize-position"]):
+        visualizePos(HNorm, IMU)
     print('')
     
     # If in debug/verbose mode:
-    if (args["hardDebug"]):
-        PRINT = True
-        # Print complete solution returned by vector
+    # Print complete solution returned by vector
+    if (args["debug"]):
         print( sol )
+        print( "\n=========================================" )
+        print( "Norms: %f, %f, %f, %f, %f, %f"%(HNorm[0], HNorm[1],
+                                                HNorm[2], HNorm[3],
+                                                HNorm[4], HNorm[5]) )
+        print( "=========================================\n" )
         print("")
 
     # Sleep for stability
