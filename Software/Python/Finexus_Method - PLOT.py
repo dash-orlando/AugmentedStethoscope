@@ -12,11 +12,11 @@
 * KNOWN ISSUES:
 *   - None, it is perfect just like it's creator Moe the Great!
 *
-* AUTHOR  :   Edward Nichols
-* DATE    :   Sep. 29th, 2017 Year of Our Lord
+* AUTHOR                    :   Edward Nichols
+* LAST CONTRIBUTION DATE    :   Oct. 13th, 2017 Year of Our Lord
 * 
-* Modified:   Mohammad Odeh 
-* DATE    :   Oct. 13th, 2017 Year of Our Lord
+* AUTHOR                    :   Mohammad Odeh 
+* LAST CONTRIBUTION DATE    :   Oct. 13th, 2017 Year of Our Lord
 *
 '''
 
@@ -24,6 +24,7 @@
 import  numpy               as      np              # Import Numpy
 import  matplotlib.pyplot   as      plt             # Plot data
 from    time                import  sleep           # Sleep for stability
+from    time                import  clock
 from    scipy.optimize      import  root            # Solve System of Eqns for (x, y, z)
 from    scipy.linalg        import  norm            # Calculate vector norms (magnitude)
 from    usbProtocol         import  createUSBPort   # Create USB port (serial comm. w\ Arduino)
@@ -287,7 +288,8 @@ global CALIBRATING
 CALIBRATING = True                              # Boolean to indicate that device is calibrating
 READY       = False                             # Give time for user to place magnet
 
-K           = 1.09e-6                           # Magnet's constant (K) || Units { G^2.m^6}
+#K           = 1.615e-7
+K           = 1.092e-6                         # Magnet's constant (K) || Units { G^2.m^6}
 dx          = 1e-7                              # Differential step size (Needed for solver)
 calcPos     = []                                # Empty array to hold calculated positions
 
@@ -327,6 +329,8 @@ print( "1. Continuous." )
 print( "2. Point-by-Point." )
 mode = raw_input(">\ ")
 
+start = clock()
+
 # If continuous mode was selected:
 if ( mode == '1' ):
     print( "\n******************************************" )
@@ -363,8 +367,10 @@ if ( mode == '1' ):
                                 'eps':1e-8, 'factor':0.001})
 
             # Print solution (coordinates) to screen
-            pos = [sol.x[0]*1000, sol.x[1]*1000]
-            print( "(x, y): (%.3f, %.3f)" %(pos[0], pos[1]) )
+            pos = [sol.x[0]*1000, sol.x[1]*1000, float(clock())]
+            print( "(x, y): (%.3f, %.3f) Time: %.3f" %(pos[0], pos[1], pos[2]) )
+
+            
 
             # Check if solution makes sense
             if (abs(sol.x[0]*1000) > 500) or (abs(sol.x[1]*1000) > 500) or (abs(sol.x[2]*1000) > 500):
@@ -389,7 +395,7 @@ if ( mode == '1' ):
 
             for i in range( 0, len(calcPos) ):
                 with open(dataFile, "a") as f:
-                    f.write(str(calcPos[i][0]) + "," + str(calcPos[i][1]) + "\n")
+                    f.write(str(calcPos[i][0]) + "," + str(calcPos[i][1]) + "," + str(calcPos[i][2]) + "\n")
 
             break
 
