@@ -3,7 +3,10 @@
 * Position tracking of magnet based on Finexus
 * https://ubicomplab.cs.washington.edu/pdfs/finexus.pdf
 *
-* VERSION: 0.1
+* VERSION: 0.2
+*   - 2 Modes of operations
+*       (1) Continuous sampling
+*       (2) Guided Point-by-Point
 *   - Plot stuff
 *
 * KNOWN ISSUES:
@@ -13,7 +16,7 @@
 * DATE    :   Sep. 29th, 2017 Year of Our Lord
 * 
 * Modified:   Mohammad Odeh 
-* DATE    :   Oct. 12th, 2017 Year of Our Lord
+* DATE    :   Oct. 13th, 2017 Year of Our Lord
 *
 '''
 
@@ -24,25 +27,7 @@ from    time                import  sleep           # Sleep for stability
 from    scipy.optimize      import  root            # Solve System of Eqns for (x, y, z)
 from    scipy.linalg        import  norm            # Calculate vector norms (magnitude)
 from    usbProtocol         import  createUSBPort   # Create USB port (serial comm. w\ Arduino)
-import  argparse                                    # Feed in arguments to the program
-
-# ************************************************************************
-# =====================> CONSTRUCT ARGUMENT PARSER <=====================*
-# ************************************************************************
-ap = argparse.ArgumentParser()
-
-ap.add_argument("-d", "--debug", action='store_true',
-                help="invoke flag to enable debugging")
-ap.add_argument("-vp", "--visualize-position", action='store_true',
-                help="invoke flag to visualize position")
-ap.add_argument("-plt", "--plot", action='store_true',
-                help="invoke flag to visualize position")
-
-args = vars( ap.parse_args() )
-
-args["debug"]   = False
-args["plot"]    = False
-args["visualize-position"] = True
+import  os, platform                                # Directory/file manipulation
 
 # ************************************************************************
 # =====================> DEFINE NECESSARY FUNCTIONS <====================*
@@ -238,60 +223,6 @@ def findIG(magFields):
                        (IMU_pos[IMUS[0]][2]+IMU_pos[IMUS[1]][2]+IMU_pos[IMUS[2]][2])/3. -0.01), dtype='float64') )
 
 # ****************************************************
-#               Light up LEDS for funzies            *
-# ****************************************************
-def visualizePos(HNorm, ser):
-    
-    # Determine which sensors to use based on magnetic field value (smallValue==noBueno!)
-    sort = argsort(HNorm)               # Auxiliary function sorts norms from smallest to largest
-    sort.reverse()                      # Python built-in function reverses elements of list
-
-    IMUS = bubbleSort(sort, 3)
-    ### Magnet between sensors (124)
-    if (IMUS[0]==0 and IMUS[1]==1 and IMUS[2]==3):
-        ser.write('0')
-
-    ### Magnet between sensors (123)
-    elif (IMUS[0]==0 and IMUS[1]==1 and IMUS[2]==2):
-        ser.write('1')
-
-    ### Magnet between sensors (236)
-    elif (IMUS[0]==1 and IMUS[1]==2 and IMUS[2]==5):
-        ser.write('2')
-
-    ### Magnet between sensors (356)
-    elif (IMUS[0]==2 and IMUS[1]==4 and IMUS[2]==5):
-        ser.write('3')
-
-    ### Magnet between sensors (456)
-    elif (IMUS[0]==3 and IMUS[1]==4 and IMUS[2]==5):
-        ser.write('4')
-
-    ### Magnet between sensors (145)
-    elif (IMUS[0]==0 and IMUS[1]==3 and IMUS[2]==4):
-        ser.write('5')
-
-    ### Magnet between sensors (245)
-    elif (IMUS[0]==1 and IMUS[1]==3 and IMUS[2]==4):
-        ser.write('6')
-
-    ### Magnet between sensors (256)
-    elif (IMUS[0]==1 and IMUS[1]==4 and IMUS[2]==5):
-        ser.write('7')
-
-    ### Magnet between sensors (125)
-    elif (IMUS[0]==0 and IMUS[1]==1 and IMUS[2]==4):
-        ser.write('8')
-
-    ### Magnet between sensors (235)
-    elif (IMUS[0]==1 and IMUS[1]==2 and IMUS[2]==4):
-        ser.write('9')
-
-    ### Magnet in No Man's Land
-    else:
-        ser.write('\0')
-
-# ****************************************************
 #           Plot actual vs measured position         *
 # ****************************************************
 def plotPos(actual, calculated):
@@ -354,9 +285,11 @@ def plotPos(actual, calculated):
 global CALIBRATING
 
 CALIBRATING = True                              # Boolean to indicate that device is calibrating
+READY       = False                             # Give time for user to place magnet
 
 K           = 1.09e-6                           # Magnet's constant (K) || Units { G^2.m^6}
 dx          = 1e-7                              # Differential step size (Needed for solver)
+calcPos     = []                                # Empty array to hold calculated positions
 
 ##initialGuess= np.array((0.10, 0.01, -0.01), 
 ##                        dtype='float64' )       # Initial position/guess
@@ -384,78 +317,150 @@ except Exception as e:
     sleep( 2.5 )
     quit()                                      # Shutdown entire program
 
-
-calcPos   = []
-actualPos = [ [50 ,  25],
-              [50 ,  50],
-              [50 ,  75],
-              [50 ,  100],
-              [75 ,  25],
-              [75 ,  50],
-              [75 ,  75],
-              [75 ,  100],
-              [100,  25],
-              [100,  50],
-              [100,  75],
-              [100 ,  100] ]
-
 # ************************************************************************
 # =========================> MAKE IT ALL HAPPEN <=========================
 # ************************************************************************
 
-# Start iteration
-i=0
-while (i is not(len(actualPos))):
-    
-    print( "Place magnet at " + str(actualPos[i]) + "mm" )
-    sleep( 1.5 )
+# Choose mode of operation
+print( "Choose plotting mode:" )
+print( "1. Continuous." )
+print( "2. Point-by-Point." )
+mode = raw_input(">\ ")
 
-    var = raw_input("Ready? (Y/N): ")
+# If continuous mode was selected:
+if ( mode == '1' ):
+    print( "\n******************************************" )
+    print( "*NOTE: Press Ctrl-C to save data and exit." )
+    print( "******************************************\n" )
+    while ( True ):
+        try:
+            # Inform user that system is almost ready
+            if(READY == False):
+                print( "Place magnet on track" )
+                sleep( 2.5 )
+                print( "Ready in 3" )
+                sleep( 1.0 )
+                print( "Ready in 2" )
+                sleep( 1.0 )
+                print( "Ready in 1" )
+                sleep( 1.0 )
+                print( "GO!" )
 
-    if (var=='y' or var=='Y'):
-        print( "Collecting data!" )
+                # Set the device to ready!!
+                READY = True
+            
+            # Pool data from Arduino
+            (H1, H2, H3, H4, H5, H6) = getData(IMU)
+            
+            # Compute L2 vector norms
+            HNorm = [ float(norm(H1)), float(norm(H2)),
+                      float(norm(H3)), float(norm(H4)),
+                      float(norm(H5)), float(norm(H6)) ]
+            
+            # Invoke solver (using Levenberg-Marquardt)
+            sol = root(LHS, initialGuess, args=(K, HNorm), method='lm',
+                       options={'ftol':1e-10, 'xtol':1e-10, 'maxiter':1000,
+                                'eps':1e-8, 'factor':0.001})
 
-        # Pool data from Arduino
-        (H1, H2, H3, H4, H5, H6) = getData(IMU)
-        (H1, H2, H3, H4, H5, H6) = getData(IMU)
-        initialGuess = findIG(getData(IMU))
+            # Print solution (coordinates) to screen
+            pos = [sol.x[0]*1000, sol.x[1]*1000]
+            print( "(x, y): (%.3f, %.3f)" %(pos[0], pos[1]) )
+
+            # Check if solution makes sense
+            if (abs(sol.x[0]*1000) > 500) or (abs(sol.x[1]*1000) > 500) or (abs(sol.x[2]*1000) > 500):
+                # Determine initial guess based on magnet's location
+                #print("NOT STORED\n\n")
+                initialGuess = findIG(getData(IMU))
+                
+            # Update initial guess with current position and feed back to solver
+            else:
+                calcPos.append(pos)
+                initialGuess = np.array( (sol.x[0]+dx, sol.x[1]+dx, sol.x[2]+dx), dtype='float64' )
+                #print("STORED\n\n")
+
+        # Save data on EXIT
+        except KeyboardInterrupt:
+            if platform.system()=='Windows':
+
+                # Define useful paths
+                homeDir = os.getcwd()
+                dst     = homeDir + '\\output'
+                dataFile= dst + '\\data.txt'
+
+            for i in range( 0, len(calcPos) ):
+                with open(dataFile, "a") as f:
+                    f.write(str(calcPos[i][0]) + "," + str(calcPos[i][1]) + "\n")
+
+            break
+
+# --------------------------------------------------------------------------------------
+
+# Else if point-by-point mode was selected:
+elif ( mode == '2' ):
+    actualPos = [ [50 ,  25],   # Array of points on grid to plot against
+                  [50 ,  50],
+                  [50 ,  75],
+                  [50 , 100],
+                  [75 ,  25],
+                  [75 ,  50],
+                  [75 ,  75],
+                  [75 , 100],
+                  [100,  25],
+                  [100,  50],
+                  [100,  75],
+                  [100, 100] ]
+    i=0
+    while (i is not(len(actualPos))):
         
-        # Compute L2 vector norms
-        HNorm = [ float(norm(H1)), float(norm(H2)),
-                  float(norm(H3)), float(norm(H4)),
-                  float(norm(H5)), float(norm(H6)) ]
+        print( "Place magnet at " + str(actualPos[i]) + "mm" )
+        sleep( 1.5 )
 
-        # Light up LEDs 
-        if (args["visualize-position"]):
-            visualizePos(HNorm, IMU)
-        
-        # Invoke solver (using Levenberg-Marquardt)
-        sol = root(LHS, initialGuess, args=(K, HNorm), method='lm',
-                   options={'ftol':1e-10, 'xtol':1e-10, 'maxiter':1000,
-                            'eps':1e-8, 'factor':0.001})
+        var = raw_input("Ready? (Y/N): ")
 
-        # Print solution (coordinates) to screen
-        pos = [sol.x[0]*1000, sol.x[1]*1000]
-        print( "Calc: %.3f, %.3f" %(pos[0], pos[1]) )
-        
-        # Sleep for stability
-        sleep( 0.1 )
+        if (var=='y' or var=='Y'):
+            print( "Collecting data!" )
 
-        # Check if solution makes sense
-        if (abs(sol.x[0]*1000) > 500) or (abs(sol.x[1]*1000) > 500) or (abs(sol.x[2]*1000) > 500):
-            # Determine initial guess based on magnet's location
-            print("NOT STORED\n\n")
+            # Pool data from Arduino
+            (H1, H2, H3, H4, H5, H6) = getData(IMU)
+            (H1, H2, H3, H4, H5, H6) = getData(IMU)
             initialGuess = findIG(getData(IMU))
             
-        # Update initial guess with current position and feed back to solver
-        else:
-            calcPos.append(pos)
-            i=i+1
-            print("STORED\n\n")
-        
+            # Compute L2 vector norms
+            HNorm = [ float(norm(H1)), float(norm(H2)),
+                      float(norm(H3)), float(norm(H4)),
+                      float(norm(H5)), float(norm(H6)) ]
+            
+            # Invoke solver (using Levenberg-Marquardt)
+            sol = root(LHS, initialGuess, args=(K, HNorm), method='lm',
+                       options={'ftol':1e-10, 'xtol':1e-10, 'maxiter':1000,
+                                'eps':1e-8, 'factor':0.001})
 
-plotPos(actualPos, calcPos)
+            # Print solution (coordinates) to screen
+            pos = [sol.x[0]*1000, sol.x[1]*1000]
+            #print( "Calc: %.3f, %.3f" %(pos[0], pos[1]) )
+            
+            # Sleep for stability
+            sleep( 0.1 )
 
+            # Check if solution makes sense
+            if (abs(sol.x[0]*1000) > 500) or (abs(sol.x[1]*1000) > 500) or (abs(sol.x[2]*1000) > 500):
+                # Determine initial guess based on magnet's location
+                print("NOT STORED\n\n")
+                initialGuess = findIG(getData(IMU))
+                
+            # Update initial guess with current position and feed back to solver
+            else:
+                calcPos.append(pos)
+                i=i+1
+                print("STORED\n\n")
+            
+
+    plotPos(actualPos, calcPos)
+
+# --------------------------------------------------------------------------------------
+
+else:
+    print( "Really?? Restart script 'cause I ain't doing it for you" )
 # ************************************************************************
 # =============================> DEPRECATED <=============================
 # ************************************************************************

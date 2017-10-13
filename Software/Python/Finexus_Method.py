@@ -30,7 +30,6 @@
 
 # Import Modules
 import  numpy               as      np              # Import Numpy
-import  matplotlib.pyplot   as      plt             # Plot data
 from    time                import  sleep           # Sleep for stability
 from    scipy.optimize      import  root            # Solve System of Eqns for (x, y, z)
 from    scipy.linalg        import  norm            # Calculate vector norms (magnitude)
@@ -46,13 +45,10 @@ ap.add_argument("-d", "--debug", action='store_true',
                 help="invoke flag to enable debugging")
 ap.add_argument("-vp", "--visualize-position", action='store_true',
                 help="invoke flag to visualize position")
-ap.add_argument("-plt", "--plot", action='store_true',
-                help="invoke flag to visualize position")
 
 args = vars( ap.parse_args() )
 
 args["debug"]   = False
-args["plot"]    = False
 args["visualize-position"] = True
 
 # ************************************************************************
@@ -303,32 +299,6 @@ def visualizePos(HNorm, ser):
     ### Magnet in No Man's Land
     else:
         ser.write('\0')
-
-
-# ****************************************************
-#           Plot actual vs measured position         *
-# ****************************************************
-def plotPos():
-    N = 60
-    g1 = (0.6 + 0.6 * np.random.rand(N), np.random.rand(N))
-    g2 = (0.4+0.3 * np.random.rand(N), 0.5*np.random.rand(N))
-    g3 = (0.3*np.random.rand(N),0.3*np.random.rand(N))
-     
-    data = (g1, g2, g3)
-    colors = ("red", "green", "blue")
-    groups = ("coffee", "tea", "water") 
-     
-    # Create plot
-    fig = plt.figure()
-    ax = fig.add_subplot(1, 1, 1, axisbg="1.0")
-     
-    for data, color, group in zip(data, colors, groups):
-        x, y = data
-        ax.scatter(x, y, alpha=0.8, c=color, edgecolors='none', s=30, label=group)
-     
-    plt.title('Matplot scatter plot')
-    plt.legend(loc=2)
-    plt.show()
 
 # ************************************************************************
 # ===========================> SETUP PROGRAM <===========================
