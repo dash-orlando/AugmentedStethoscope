@@ -3,28 +3,17 @@
 * Position tracking of magnet based on Finexus
 * https://ubicomplab.cs.washington.edu/pdfs/finexus.pdf
 *
-* VERSION: 0.2.2
-*   - MODIFIED: Removed limitation of needing to place magnet at a
-*               predefined position at program start up.
-*   - ADDED   : 6 sensors placed around an ellipse
-*   - ADDED   : Visualize what sensors are being used for calculations
-*   - ADDED   : Finding the initial guess on program startup is now
-*               dynamic; it is calculated on the spot rather than
-*               choosing from a hardcoded list of all the possible
-*               initial guesses.
+* VERSION: 0.1
+*   - Plot stuff
 *
 * KNOWN ISSUES:
-*   - Calculations are accurate to around +/-2mm
-*     (this is very beuno, if not perfect)
-*   - At certain times, the z position goes cray-cray
-*     while x & y are correct.
-*     (Look into what triggers this behaviour)
+*   - None, it is perfect just like it's creator Moe the Great!
 *
 * AUTHOR  :   Edward Nichols
 * DATE    :   Sep. 29th, 2017 Year of Our Lord
 * 
 * Modified:   Mohammad Odeh 
-* DATE    :   Oct. 06th, 2017 Year of Our Lord
+* DATE    :   Oct. 12th, 2017 Year of Our Lord
 *
 '''
 
@@ -258,8 +247,6 @@ def visualizePos(HNorm, ser):
     sort.reverse()                      # Python built-in function reverses elements of list
 
     IMUS = bubbleSort(sort, 3)
-    print( "Using sensors: #%d, #%d, #%d\n\n" %(IMUS[0]+1, IMUS[1]+1, IMUS[2]+1) )
-    
     ### Magnet between sensors (124)
     if (IMUS[0]==0 and IMUS[1]==1 and IMUS[2]==3):
         ser.write('0')
@@ -304,29 +291,58 @@ def visualizePos(HNorm, ser):
     else:
         ser.write('\0')
 
-
 # ****************************************************
 #           Plot actual vs measured position         *
 # ****************************************************
-def plotPos():
-    N = 60
-    g1 = (0.6 + 0.6 * np.random.rand(N), np.random.rand(N))
-    g2 = (0.4+0.3 * np.random.rand(N), 0.5*np.random.rand(N))
-    g3 = (0.3*np.random.rand(N),0.3*np.random.rand(N))
+def plotPos(actual, calculated):
      
-    data = (g1, g2, g3)
-    colors = ("red", "green", "blue")
-    groups = ("coffee", "tea", "water") 
+    data = (actual, calculated)
      
     # Create plot
     fig = plt.figure()
-    ax = fig.add_subplot(1, 1, 1, axisbg="1.0")
-     
-    for data, color, group in zip(data, colors, groups):
-        x, y = data
-        ax.scatter(x, y, alpha=0.8, c=color, edgecolors='none', s=30, label=group)
-     
-    plt.title('Matplot scatter plot')
+    ax = fig.add_subplot(1, 1, 1, facecolor="1.0")
+
+
+    # major ticks every 5, minor ticks every 1                                      
+    major_ticks = np.arange(20, 116, 5)                                              
+    minor_ticks = np.arange(20 ,116, 1)                                               
+
+    ax.set_xticks(major_ticks)                                                       
+    ax.set_xticks(minor_ticks, minor=True)                                           
+    ax.set_yticks(major_ticks)                                                       
+    ax.set_yticks(minor_ticks, minor=True)
+
+    # Set xy-axes scale + labels
+    ax.set_xlim([30, 115])
+    ax.set_ylim([20, 105])
+    ax.set_xlabel('Distance (mm)')
+    ax.set_ylabel('Distance (mm)')
+
+    # Add a grid                                                       
+    ax.grid(which='both')                                                            
+
+    # Modify transperancy settings for the grids:                               
+    ax.grid(which='minor', alpha=0.2)                                                
+    ax.grid(which='major', alpha=0.5)
+
+    # Extract data
+    x_actual = []
+    y_actual = []
+    x_calc = []
+    y_calc = []
+    for i in range(0,len(actual)):
+        x_actual.append(actual[i][0])
+        y_actual.append(actual[i][1])
+        x_calc.append(calculated[i][0])
+        y_calc.append(calculated[i][1])
+    ax.scatter(x_actual, y_actual, alpha=0.8, color='r', s=30, label="Actual")
+    ax.scatter(x_calc, y_calc, alpha=0.8, color='g', s=30, label="Calculated")
+
+    # Annotate data points
+    for i, j, k, l in zip(x_calc, y_calc, x_actual, y_actual):
+        ax.annotate('($\Delta x=%.2f, \Delta y=%.2f$)'%(abs(i-k),abs(j-l)), xy=(i, j+0.5))
+    
+    plt.title('Actual vs Calculated Position')
     plt.legend(loc=2)
     plt.show()
 
@@ -338,7 +354,6 @@ def plotPos():
 global CALIBRATING
 
 CALIBRATING = True                              # Boolean to indicate that device is calibrating
-READY       = False                             # Give time for user to place magnet
 
 K           = 1.09e-6                           # Magnet's constant (K) || Units { G^2.m^6}
 dx          = 1e-7                              # Differential step size (Needed for solver)
@@ -370,70 +385,76 @@ except Exception as e:
     quit()                                      # Shutdown entire program
 
 
+calcPos   = []
+actualPos = [ [50 ,  25],
+              [50 ,  50],
+              [50 ,  75],
+              [50 ,  100],
+              [75 ,  25],
+              [75 ,  50],
+              [75 ,  75],
+              [75 ,  100],
+              [100,  25],
+              [100,  50],
+              [100,  75],
+              [100 ,  100] ]
+
 # ************************************************************************
 # =========================> MAKE IT ALL HAPPEN <=========================
 # ************************************************************************
 
 # Start iteration
-while( True ):
-    # Pool data from Arduino
-    (H1, H2, H3, H4, H5, H6) = getData(IMU)
-
-    # Inform user that system is almost ready
-    if(READY == False):
-        print( "Ready in 3" )
-        sleep( 1.0 )
-        print( "Ready in 2" )
-        sleep( 1.0 )
-        print( "Ready in 1" )
-        sleep( 1.0 )
-        print( "GO!" )
-
-        # Set the device to ready!!
-        READY = True
-        
-    # Compute L2 vector norms
-    HNorm = [ float(norm(H1)), float(norm(H2)),
-              float(norm(H3)), float(norm(H4)),
-              float(norm(H5)), float(norm(H6)) ]
-
-    # Invoke solver (using Levenberg-Marquardt)
-    sol = root(LHS, initialGuess, args=(K, HNorm), method='lm',
-               options={'ftol':1e-10, 'xtol':1e-10, 'maxiter':1000,
-                        'eps':1e-8, 'factor':0.001})
-
-    # Print solution (coordinates) to screen
-    print( "Current position (x , y , z):" )
-    print( "(%.5f , %.5f , %.5f)mm" %(sol.x[0]*1000, sol.x[1]*1000, sol.x[2]*1000) )
-
-    # If in -vp mode:
-    if (args["visualize-position"]):
-        visualizePos(HNorm, IMU)
-    print('')
+i=0
+while (i is not(len(actualPos))):
     
-    # If in debug/verbose mode:
-    # Print complete solution returned by vector
-    if (args["debug"]):
-        print( sol )
-        print( "\n=========================================" )
-        print( "Norms: %f, %f, %f, %f, %f, %f"%(HNorm[0], HNorm[1],
-                                                HNorm[2], HNorm[3],
-                                                HNorm[4], HNorm[5]) )
-        print( "=========================================\n" )
-        print("")
+    print( "Place magnet at " + str(actualPos[i]) + "mm" )
+    sleep( 1.5 )
 
-    # Sleep for stability
-    sleep( 0.1 )
+    var = raw_input("Ready? (Y/N): ")
 
-    # Check if solution makes sense
-    if (abs(sol.x[0]*1000) > 500) or (abs(sol.x[1]*1000) > 500) or (abs(sol.x[2]*1000) > 500):
-        print( "Invalid solution. Resetting Calculations" )
-        # Determine initial guess based on magnet's location
+    if (var=='y' or var=='Y'):
+        print( "Collecting data!" )
+
+        # Pool data from Arduino
+        (H1, H2, H3, H4, H5, H6) = getData(IMU)
+        (H1, H2, H3, H4, H5, H6) = getData(IMU)
         initialGuess = findIG(getData(IMU))
         
-    # Update initial guess with current position and feed back to solver
-    else:    
-        initialGuess = np.array( (sol.x[0]+dx, sol.x[1]+dx, sol.x[2]+dx), dtype='float64' )
+        # Compute L2 vector norms
+        HNorm = [ float(norm(H1)), float(norm(H2)),
+                  float(norm(H3)), float(norm(H4)),
+                  float(norm(H5)), float(norm(H6)) ]
+
+        # Light up LEDs 
+        if (args["visualize-position"]):
+            visualizePos(HNorm, IMU)
+        
+        # Invoke solver (using Levenberg-Marquardt)
+        sol = root(LHS, initialGuess, args=(K, HNorm), method='lm',
+                   options={'ftol':1e-10, 'xtol':1e-10, 'maxiter':1000,
+                            'eps':1e-8, 'factor':0.001})
+
+        # Print solution (coordinates) to screen
+        pos = [sol.x[0]*1000, sol.x[1]*1000]
+        print( "Calc: %.3f, %.3f" %(pos[0], pos[1]) )
+        
+        # Sleep for stability
+        sleep( 0.1 )
+
+        # Check if solution makes sense
+        if (abs(sol.x[0]*1000) > 500) or (abs(sol.x[1]*1000) > 500) or (abs(sol.x[2]*1000) > 500):
+            # Determine initial guess based on magnet's location
+            print("NOT STORED\n\n")
+            initialGuess = findIG(getData(IMU))
+            
+        # Update initial guess with current position and feed back to solver
+        else:
+            calcPos.append(pos)
+            i=i+1
+            print("STORED\n\n")
+        
+
+plotPos(actualPos, calcPos)
 
 # ************************************************************************
 # =============================> DEPRECATED <=============================

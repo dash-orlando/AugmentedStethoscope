@@ -1,5 +1,4 @@
 '''
-*
 * Position tracking of magnet based on Finexus
 * https://ubicomplab.cs.washington.edu/pdfs/finexus.pdf
 *
@@ -30,7 +29,6 @@
 
 # Import Modules
 import  numpy               as      np              # Import Numpy
-import  matplotlib.pyplot   as      plt             # Plot data
 from    time                import  sleep           # Sleep for stability
 from    scipy.optimize      import  root            # Solve System of Eqns for (x, y, z)
 from    scipy.linalg        import  norm            # Calculate vector norms (magnitude)
@@ -46,13 +44,10 @@ ap.add_argument("-d", "--debug", action='store_true',
                 help="invoke flag to enable debugging")
 ap.add_argument("-vp", "--visualize-position", action='store_true',
                 help="invoke flag to visualize position")
-ap.add_argument("-plt", "--plot", action='store_true',
-                help="invoke flag to visualize position")
 
 args = vars( ap.parse_args() )
 
-args["debug"]   = False
-args["plot"]    = False
+args["debug"] = False
 args["visualize-position"] = True
 
 # ************************************************************************
@@ -148,20 +143,9 @@ def getData(ser):
             Bz = float(col[11])
             B4 = np.array( ([Bx],[By],[Bz]), dtype='float64') # Units { G }
 
-            # Sensor 5
-            Bx = float(col[12])
-            By = float(col[13])
-            Bz = float(col[14])
-            B5 = np.array( ([Bx],[By],[Bz]), dtype='float64') # Units { G }
-
-            # Sensor 6
-            Bx = float(col[15])
-            By = float(col[16])
-            Bz = float(col[17])
-            B6 = np.array( ([Bx],[By],[Bz]), dtype='float64') # Units { G }
             
             # Return vectors
-            return (B1, B2, B3, B4, B5, B6)
+            return (B1, B2, B3, B4)
 
     except Exception as e:
         print( "Caught error in getData()"      )
@@ -186,19 +170,15 @@ def LHS( root, K, norms ):
     r2 = float( ( (x-0.100)**2. + (y-0.175)**2. + (z+0.00)**2. )**(1/2.) )  # Sensor 2
     r3 = float( ( (x-0.200)**2. + (y-0.125)**2. + (z+0.00)**2. )**(1/2.) )  # Sensor 3
     r4 = float( ( (x+0.000)**2. + (y+0.000)**2. + (z+0.00)**2. )**(1/2.) )  # Sensor 4 (ORIGIN)
-    r5 = float( ( (x-0.100)**2. + (y+0.050)**2. + (z+0.00)**2. )**(1/2.) )  # Sensor 5
-    r6 = float( ( (x-0.200)**2. + (y-0.000)**2. + (z+0.00)**2. )**(1/2.) )  # Sensor 6
 
     # Construct the equations
     Eqn1 = ( K*( r1 )**(-6.) * ( 3.*( z/r1 )**2. + 1 ) ) - norms[0]**2.     # Sensor 1
     Eqn2 = ( K*( r2 )**(-6.) * ( 3.*( z/r2 )**2. + 1 ) ) - norms[1]**2.     # Sensor 2
     Eqn3 = ( K*( r3 )**(-6.) * ( 3.*( z/r3 )**2. + 1 ) ) - norms[2]**2.     # Sensor 3
     Eqn4 = ( K*( r4 )**(-6.) * ( 3.*( z/r4 )**2. + 1 ) ) - norms[3]**2.     # Sensor 4
-    Eqn5 = ( K*( r5 )**(-6.) * ( 3.*( z/r5 )**2. + 1 ) ) - norms[4]**2.     # Sensor 5
-    Eqn6 = ( K*( r6 )**(-6.) * ( 3.*( z/r6 )**2. + 1 ) ) - norms[5]**2.     # Sensor 6
 
     # Construct a vector of the equations
-    Eqns = [Eqn1, Eqn2, Eqn3, Eqn4, Eqn5, Eqn6]
+    Eqns = [Eqn1, Eqn2, Eqn3, Eqn4]
 
     # Determine which sensors to use based on magnetic field value (smallValue==noBueno!)
     sort = argsort(norms)               # Auxiliary function sorts norms from smallest to largest
@@ -221,21 +201,18 @@ def findIG(magFields):
     #     /  sensor 2: (x, y, z)
     # Mat=      :          :
     #     \     :          :
-    #      \ sensor 6: (x, y, z)
+    #      \ sensor n: (x, y, z)
     IMU_pos = np.array(((0.0  , 0.125,   0.0) ,
                         (0.100, 0.175,   0.0) ,
                         (0.200, 0.125,   0.0) ,
-                        (0.0  , 0.0  ,   0.0) ,
-                        (0.100,-0.050,   0.0) ,
-                        (0.200, 0.0  ,   0.0)), dtype='float64')
+                        (0.0  , 0.0  ,   0.0)), dtype='float64')
 
     # Read current magnetic field from MCU
     (H1, H2, H3, H4, H5, H6) = magFields
 
     # Compute L2 vector norms
     HNorm = [ float(norm(H1)), float(norm(H2)),
-              float(norm(H3)), float(norm(H4)),
-              float(norm(H5)), float(norm(H6)) ]
+              float(norm(H3)), float(norm(H4)) ]
     
     # Determine which sensors to use based on magnetic field value (smallValue==noBueno!)
     sort = argsort(HNorm)               # Auxiliary function sorts norms from smallest to largest
@@ -248,88 +225,6 @@ def findIG(magFields):
                        (IMU_pos[IMUS[0]][1]+IMU_pos[IMUS[1]][1]+IMU_pos[IMUS[2]][1])/3.,
                        (IMU_pos[IMUS[0]][2]+IMU_pos[IMUS[1]][2]+IMU_pos[IMUS[2]][2])/3. -0.01), dtype='float64') )
 
-# ****************************************************
-#               Light up LEDS for funzies            *
-# ****************************************************
-def visualizePos(HNorm, ser):
-    
-    # Determine which sensors to use based on magnetic field value (smallValue==noBueno!)
-    sort = argsort(HNorm)               # Auxiliary function sorts norms from smallest to largest
-    sort.reverse()                      # Python built-in function reverses elements of list
-
-    IMUS = bubbleSort(sort, 3)
-    print( "Using sensors: #%d, #%d, #%d\n\n" %(IMUS[0]+1, IMUS[1]+1, IMUS[2]+1) )
-    
-    ### Magnet between sensors (124)
-    if (IMUS[0]==0 and IMUS[1]==1 and IMUS[2]==3):
-        ser.write('0')
-
-    ### Magnet between sensors (123)
-    elif (IMUS[0]==0 and IMUS[1]==1 and IMUS[2]==2):
-        ser.write('1')
-
-    ### Magnet between sensors (236)
-    elif (IMUS[0]==1 and IMUS[1]==2 and IMUS[2]==5):
-        ser.write('2')
-
-    ### Magnet between sensors (356)
-    elif (IMUS[0]==2 and IMUS[1]==4 and IMUS[2]==5):
-        ser.write('3')
-
-    ### Magnet between sensors (456)
-    elif (IMUS[0]==3 and IMUS[1]==4 and IMUS[2]==5):
-        ser.write('4')
-
-    ### Magnet between sensors (145)
-    elif (IMUS[0]==0 and IMUS[1]==3 and IMUS[2]==4):
-        ser.write('5')
-
-    ### Magnet between sensors (245)
-    elif (IMUS[0]==1 and IMUS[1]==3 and IMUS[2]==4):
-        ser.write('6')
-
-    ### Magnet between sensors (256)
-    elif (IMUS[0]==1 and IMUS[1]==4 and IMUS[2]==5):
-        ser.write('7')
-
-    ### Magnet between sensors (125)
-    elif (IMUS[0]==0 and IMUS[1]==1 and IMUS[2]==4):
-        ser.write('8')
-
-    ### Magnet between sensors (235)
-    elif (IMUS[0]==1 and IMUS[1]==2 and IMUS[2]==4):
-        ser.write('9')
-
-    ### Magnet in No Man's Land
-    else:
-        ser.write('\0')
-
-
-# ****************************************************
-#           Plot actual vs measured position         *
-# ****************************************************
-def plotPos():
-    N = 60
-    g1 = (0.6 + 0.6 * np.random.rand(N), np.random.rand(N))
-    g2 = (0.4+0.3 * np.random.rand(N), 0.5*np.random.rand(N))
-    g3 = (0.3*np.random.rand(N),0.3*np.random.rand(N))
-     
-    data = (g1, g2, g3)
-    colors = ("red", "green", "blue")
-    groups = ("coffee", "tea", "water") 
-     
-    # Create plot
-    fig = plt.figure()
-    ax = fig.add_subplot(1, 1, 1, axisbg="1.0")
-     
-    for data, color, group in zip(data, colors, groups):
-        x, y = data
-        ax.scatter(x, y, alpha=0.8, c=color, edgecolors='none', s=30, label=group)
-     
-    plt.title('Matplot scatter plot')
-    plt.legend(loc=2)
-    plt.show()
-
 # ************************************************************************
 # ===========================> SETUP PROGRAM <===========================
 # ************************************************************************
@@ -340,7 +235,8 @@ global CALIBRATING
 CALIBRATING = True                              # Boolean to indicate that device is calibrating
 READY       = False                             # Give time for user to place magnet
 
-K           = 1.09e-6                           # Magnet's constant (K) || Units { G^2.m^6}
+#K           = 1.09e-6                           # Magnet's constant (K) || Units { G^2.m^6}
+K           = 1.63e-6
 dx          = 1e-7                              # Differential step size (Needed for solver)
 
 ##initialGuess= np.array((0.10, 0.01, -0.01), 
@@ -394,8 +290,7 @@ while( True ):
         
     # Compute L2 vector norms
     HNorm = [ float(norm(H1)), float(norm(H2)),
-              float(norm(H3)), float(norm(H4)),
-              float(norm(H5)), float(norm(H6)) ]
+              float(norm(H3)), float(norm(H4)) ]
 
     # Invoke solver (using Levenberg-Marquardt)
     sol = root(LHS, initialGuess, args=(K, HNorm), method='lm',
