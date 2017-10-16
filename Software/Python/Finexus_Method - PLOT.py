@@ -395,10 +395,14 @@ if ( mode == '1' ):
                 dst     = homeDir + '\\output'
                 dataFile= dst + '\\data.txt'
 
-            for i in range( 0, len(calcPos) ):
-                with open(dataFile, "a") as f:
-                    f.write(str(calcPos[i][0]) + "," + str(calcPos[i][1]) + "," + str(calcPos[i][2]) + "," + str(calcPos[i][3]) + "\n")
+            # Check if directory exists
+            if ( os.path.exists(dst)==False ):
+                # Create said directory
+                os.makedirs(dst)
 
+            for i in range( 0, len(calcPos) ):
+                    with open(dataFile, "a") as f:
+                        f.write(str(calcPos[i][0]) + "," + str(calcPos[i][1]) + "," + str(calcPos[i][2]) + "," + str(calcPos[i][3]) + "\n")
             break
 
 # --------------------------------------------------------------------------------------
