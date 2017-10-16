@@ -8,9 +8,12 @@
 *       (1) Continuous sampling
 *       (2) Guided Point-by-Point
 *   - Plot stuff
+*   - Standoffs, raising three of the sensors to .1m
 *
 * KNOWN ISSUES:
-*   - None, it is perfect just like it's creator Moe the Great!
+*   - Z-axis still sucks.
+*   - Refresh Rate is 3 to 4 Hz. [REALLY REALLY REALLY LOW; Target for "Real-Time" is 30Hz]
+*   - 
 *
 * AUTHOR                    :   Edward Nichols
 * LAST CONTRIBUTION DATE    :   Oct. 13th, 2017 Year of Our Lord
@@ -157,12 +160,12 @@ def LHS( root, K, norms ):
     #     : Standing on sensor(n), how many units in
     #       the x/y/z direction should I march to get
     #       back to sensor1 (origin)?
-    r1 = float( ( (x+0.000)**2. + (y-0.125)**2. + (z+0.00)**2. )**(1/2.) )  # Sensor 1
-    r2 = float( ( (x-0.100)**2. + (y-0.175)**2. + (z+0.00)**2. )**(1/2.) )  # Sensor 2
-    r3 = float( ( (x-0.200)**2. + (y-0.125)**2. + (z+0.00)**2. )**(1/2.) )  # Sensor 3
-    r4 = float( ( (x+0.000)**2. + (y+0.000)**2. + (z+0.00)**2. )**(1/2.) )  # Sensor 4 (ORIGIN)
-    r5 = float( ( (x-0.100)**2. + (y+0.050)**2. + (z+0.00)**2. )**(1/2.) )  # Sensor 5
-    r6 = float( ( (x-0.200)**2. + (y-0.000)**2. + (z+0.00)**2. )**(1/2.) )  # Sensor 6
+    r1 = float( ( (x+0.000)**2. + (y-0.125)**2. + (z-0.000)**2. )**(1/2.) )  # Sensor 1
+    r2 = float( ( (x-0.100)**2. + (y-0.175)**2. + (z-0.000)**2. )**(1/2.) )  # Sensor 2
+    r3 = float( ( (x-0.200)**2. + (y-0.125)**2. + (z-0.000)**2. )**(1/2.) )  # Sensor 3
+    r4 = float( ( (x+0.000)**2. + (y+0.000)**2. + (z-0.000)**2. )**(1/2.) )  # Sensor 4 (ORIGIN)
+    r5 = float( ( (x-0.100)**2. + (y+0.050)**2. + (z-0.000)**2. )**(1/2.) )  # Sensor 5
+    r6 = float( ( (x-0.200)**2. + (y-0.000)**2. + (z-0.000)**2. )**(1/2.) )  # Sensor 6
 
     # Construct the equations
     Eqn1 = ( K*( r1 )**(-6.) * ( 3.*( z/r1 )**2. + 1 ) ) - norms[0]**2.     # Sensor 1
@@ -189,6 +192,7 @@ def LHS( root, K, norms ):
 # ****************************************************
 # Determine initial guess based on magnitude of      *
 # magnetic field relative to all the sensors         *
+
 # ****************************************************
 def findIG(magFields):
     # Define IMU positions on the grid
@@ -288,8 +292,8 @@ global CALIBRATING
 CALIBRATING = True                              # Boolean to indicate that device is calibrating
 READY       = False                             # Give time for user to place magnet
 
-#K           = 1.615e-7
-K           = 1.092e-6                         # Magnet's constant (K) || Units { G^2.m^6}
+K           = 1.615e-7
+#K           = 1.092e-6                          # Magnet's constant (K) || Units { G^2.m^6}
 dx          = 1e-7                              # Differential step size (Needed for solver)
 calcPos     = []                                # Empty array to hold calculated positions
 
@@ -329,8 +333,6 @@ print( "1. Continuous." )
 print( "2. Point-by-Point." )
 mode = raw_input(">\ ")
 
-start = clock()
-
 # If continuous mode was selected:
 if ( mode == '1' ):
     print( "\n******************************************" )
@@ -349,6 +351,7 @@ if ( mode == '1' ):
                 print( "Ready in 1" )
                 sleep( 1.0 )
                 print( "GO!" )
+                start = clock()
 
                 # Set the device to ready!!
                 READY = True
@@ -367,9 +370,8 @@ if ( mode == '1' ):
                                 'eps':1e-8, 'factor':0.001})
 
             # Print solution (coordinates) to screen
-            pos = [sol.x[0]*1000, sol.x[1]*1000, float(clock())]
-            print( "(x, y): (%.3f, %.3f) Time: %.3f" %(pos[0], pos[1], pos[2]) )
-
+            pos = [sol.x[0]*1000, sol.x[1]*1000, sol.x[2]*1000, float(clock())]
+            print( "(x, y, z): (%.3f, %.3f, %.3f) Time: %.3f" %(pos[0], pos[1], pos[2], pos[3]) )
             
 
             # Check if solution makes sense
@@ -395,7 +397,7 @@ if ( mode == '1' ):
 
             for i in range( 0, len(calcPos) ):
                 with open(dataFile, "a") as f:
-                    f.write(str(calcPos[i][0]) + "," + str(calcPos[i][1]) + "," + str(calcPos[i][2]) + "\n")
+                    f.write(str(calcPos[i][0]) + "," + str(calcPos[i][1]) + "," + str(calcPos[i][2]) + "," + str(calcPos[i][3]) + "\n")
 
             break
 
