@@ -106,58 +106,70 @@ def getData(ser):
     sleep(0.1)
 
     try:
-        # Read incoming data and seperate
-        line    = ser.readline()[:-1]
-        col     = line.split(",")
-
         # Wait for the sensor to calibrate itself to ambient fields.
-        while( len(col) < 18 ):
-            line    = ser.readline()[:-1]
-            col     = line.split(",")
+        while( True ):
             if(CALIBRATING == True):
                 print( "Calibrating...\n" )
                 CALIBRATING = False
+            if ser.in_waiting > 0:  
+                inData = ser.read()  
+                if inData == '<':
+                    break  
 
+        # Read the actual data value. Stop at End of Data specifier '>'. 
+        line = ''
+        while( True ):
+            if ser.in_waiting > 0:
+                inData = ser.read()
+                if inData == '>':
+                    break
+                line = line + inData
+
+        # Split line into the constituent components
+        col     = line.split(",")
+
+        #
         # Construct magnetic field array
-        else:
-            # Sensor 1
-            Bx = float(col[0])
-            By = float(col[1])
-            Bz = float(col[2])
-            B1 = np.array( ([Bx],[By],[Bz]), dtype='float64') # Units { G }
+        #
 
-            # Sensor 2
-            Bx = float(col[3])
-            By = float(col[4])
-            Bz = float(col[5])
-            B2 = np.array( ([Bx],[By],[Bz]), dtype='float64') # Units { G }
+        # Sensor 1
+        Bx = float(col[0])
+        By = float(col[1])
+        Bz = float(col[2])
+        B1 = np.array( ([Bx],[By],[Bz]), dtype='float64') # Units { G }
 
-            # Sensor 3
-            Bx = float(col[6])
-            By = float(col[7])
-            Bz = float(col[8])
-            B3 = np.array( ([Bx],[By],[Bz]), dtype='float64') # Units { G }
+        # Sensor 2
+        Bx = float(col[3])
+        By = float(col[4])
+        Bz = float(col[5])
+        B2 = np.array( ([Bx],[By],[Bz]), dtype='float64') # Units { G }
 
-            # Sensor 4
-            Bx = float(col[9] )
-            By = float(col[10])
-            Bz = float(col[11])
-            B4 = np.array( ([Bx],[By],[Bz]), dtype='float64') # Units { G }
+        # Sensor 3
+        Bx = float(col[6])
+        By = float(col[7])
+        Bz = float(col[8])
+        B3 = np.array( ([Bx],[By],[Bz]), dtype='float64') # Units { G }
 
-            # Sensor 5
-            Bx = float(col[12])
-            By = float(col[13])
-            Bz = float(col[14])
-            B5 = np.array( ([Bx],[By],[Bz]), dtype='float64') # Units { G }
+        # Sensor 4
+        Bx = float(col[9] )
+        By = float(col[10])
+        Bz = float(col[11])
+        B4 = np.array( ([Bx],[By],[Bz]), dtype='float64') # Units { G }
 
-            # Sensor 6
-            Bx = float(col[15])
-            By = float(col[16])
-            Bz = float(col[17])
-            B6 = np.array( ([Bx],[By],[Bz]), dtype='float64') # Units { G }
-            
-            # Return vectors
-            return (B1, B2, B3, B4, B5, B6)
+        # Sensor 5
+        Bx = float(col[12])
+        By = float(col[13])
+        Bz = float(col[14])
+        B5 = np.array( ([Bx],[By],[Bz]), dtype='float64') # Units { G }
+
+        # Sensor 6
+        Bx = float(col[15])
+        By = float(col[16])
+        Bz = float(col[17])
+        B6 = np.array( ([Bx],[By],[Bz]), dtype='float64') # Units { G }
+        
+        # Return vectors
+        return (B1, B2, B3, B4, B5, B6)
 
     except Exception as e:
         print( "Caught error in getData()"      )
@@ -244,62 +256,6 @@ def findIG(magFields):
                        (IMU_pos[IMUS[0]][1]+IMU_pos[IMUS[1]][1]+IMU_pos[IMUS[2]][1])/3.,
                        (IMU_pos[IMUS[0]][2]+IMU_pos[IMUS[1]][2]+IMU_pos[IMUS[2]][2])/3. -0.01), dtype='float64') )
 
-# ****************************************************
-#               Light up LEDS for funzies            *
-# ****************************************************
-def visualizePos(HNorm, ser):
-    
-    # Determine which sensors to use based on magnetic field value (smallValue==noBueno!)
-    sort = argsort(HNorm)               # Auxiliary function sorts norms from smallest to largest
-    sort.reverse()                      # Python built-in function reverses elements of list
-
-    IMUS = bubbleSort(sort, 3)
-    print( "Using sensors: #%d, #%d, #%d\n\n" %(IMUS[0]+1, IMUS[1]+1, IMUS[2]+1) )
-    
-    ### Magnet between sensors (124)
-    if (IMUS[0]==0 and IMUS[1]==1 and IMUS[2]==3):
-        ser.write('0')
-
-    ### Magnet between sensors (123)
-    elif (IMUS[0]==0 and IMUS[1]==1 and IMUS[2]==2):
-        ser.write('1')
-
-    ### Magnet between sensors (236)
-    elif (IMUS[0]==1 and IMUS[1]==2 and IMUS[2]==5):
-        ser.write('2')
-
-    ### Magnet between sensors (356)
-    elif (IMUS[0]==2 and IMUS[1]==4 and IMUS[2]==5):
-        ser.write('3')
-
-    ### Magnet between sensors (456)
-    elif (IMUS[0]==3 and IMUS[1]==4 and IMUS[2]==5):
-        ser.write('4')
-
-    ### Magnet between sensors (145)
-    elif (IMUS[0]==0 and IMUS[1]==3 and IMUS[2]==4):
-        ser.write('5')
-
-    ### Magnet between sensors (245)
-    elif (IMUS[0]==1 and IMUS[1]==3 and IMUS[2]==4):
-        ser.write('6')
-
-    ### Magnet between sensors (256)
-    elif (IMUS[0]==1 and IMUS[1]==4 and IMUS[2]==5):
-        ser.write('7')
-
-    ### Magnet between sensors (125)
-    elif (IMUS[0]==0 and IMUS[1]==1 and IMUS[2]==4):
-        ser.write('8')
-
-    ### Magnet between sensors (235)
-    elif (IMUS[0]==1 and IMUS[1]==2 and IMUS[2]==4):
-        ser.write('9')
-
-    ### Magnet in No Man's Land
-    else:
-        ser.write('\0')
-
 # ************************************************************************
 # ===========================> SETUP PROGRAM <===========================
 # ************************************************************************
@@ -375,22 +331,6 @@ while( True ):
     # Print solution (coordinates) to screen
     print( "Current position (x , y , z):" )
     print( "(%.5f , %.5f , %.5f)mm" %(sol.x[0]*1000, sol.x[1]*1000, sol.x[2]*1000) )
-
-    # If in -vp mode:
-    if (args["visualize-position"]):
-        visualizePos(HNorm, IMU)
-    print('')
-    
-    # If in debug/verbose mode:
-    # Print complete solution returned by vector
-    if (args["debug"]):
-        print( sol )
-        print( "\n=========================================" )
-        print( "Norms: %f, %f, %f, %f, %f, %f"%(HNorm[0], HNorm[1],
-                                                HNorm[2], HNorm[3],
-                                                HNorm[4], HNorm[5]) )
-        print( "=========================================\n" )
-        print("")
 
     # Sleep for stability
     sleep( 0.1 )

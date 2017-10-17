@@ -16,21 +16,22 @@
 *   - 
 *
 * AUTHOR                    :   Edward Nichols
-* LAST CONTRIBUTION DATE    :   Oct. 13th, 2017 Year of Our Lord
+* LAST CONTRIBUTION DATE    :   Oct. 17th, 2017 Year of Our Lord
 * 
 * AUTHOR                    :   Mohammad Odeh 
-* LAST CONTRIBUTION DATE    :   Oct. 13th, 2017 Year of Our Lord
+* LAST CONTRIBUTION DATE    :   Oct. 17th, 2017 Year of Our Lord
 *
 '''
 
 # Import Modules
 import  numpy               as      np              # Import Numpy
 import  matplotlib.pyplot   as      plt             # Plot data
-from    time                import  sleep           # Sleep for stability
-from    time                import  clock
+from    time                import  sleep, clock    # Sleep for stability, clock for profiling
 from    scipy.optimize      import  root            # Solve System of Eqns for (x, y, z)
 from    scipy.linalg        import  norm            # Calculate vector norms (magnitude)
 from    usbProtocol         import  createUSBPort   # Create USB port (serial comm. w\ Arduino)
+from    threading           import  Thread          # Used to thread processes
+from    Queue               import  Queue           # Used to queue input/output
 import  os, platform                                # Directory/file manipulation
 
 # ************************************************************************
@@ -77,74 +78,81 @@ def bubbleSort(arr, N):
 # ****************************************************
 # Define function to pool & return data from Arduino *
 # ****************************************************
-def getData(ser):
+def getData(ser, Q_getData):
     global CALIBRATING
+    i=0
+    clock()
 
-    # Flush buffer
-    ser.reset_input_buffer()
-    ser.reset_output_buffer()
+    # loop 4EVA!
+    while( True ):
+        # Flush buffer
+        ser.reset_input_buffer()
+        ser.reset_output_buffer()
 
-    # Allow data to fill-in buffer
-    sleep(0.1)
+        # Allow data to fill-in buffer
+        sleep(0.1)
 
-    try:
-        # Read incoming data and seperate
-        line    = ser.readline()[:-1]
-        col     = line.split(",")
-
-        # Wait for the sensor to calibrate itself to ambient fields.
-        while( len(col) < 18 ):
+        try:
+            # Read incoming data and seperate
             line    = ser.readline()[:-1]
             col     = line.split(",")
-            if(CALIBRATING == True):
-                print( "Calibrating...\n" )
-                CALIBRATING = False
 
-        # Construct magnetic field array
-        else:
-            # Sensor 1
-            Bx = float(col[0])
-            By = float(col[1])
-            Bz = float(col[2])
-            B1 = np.array( ([Bx],[By],[Bz]), dtype='float64') # Units { G }
+            # Wait for the sensor to calibrate itself to ambient fields.
+            while( len(col) < 18 ):
+                line    = ser.readline()[:-1]
+                col     = line.split(",")
+                if(CALIBRATING == True):
+                    print( "Calibrating...\n" )
+                    CALIBRATING = False
 
-            # Sensor 2
-            Bx = float(col[3])
-            By = float(col[4])
-            Bz = float(col[5])
-            B2 = np.array( ([Bx],[By],[Bz]), dtype='float64') # Units { G }
+            # Construct magnetic field array
+            else:
+                # Sensor 1
+                Bx = float(col[0])
+                By = float(col[1])
+                Bz = float(col[2])
+                B1 = np.array( ([Bx],[By],[Bz]), dtype='float64') # Units { G }
 
-            # Sensor 3
-            Bx = float(col[6])
-            By = float(col[7])
-            Bz = float(col[8])
-            B3 = np.array( ([Bx],[By],[Bz]), dtype='float64') # Units { G }
+                # Sensor 2
+                Bx = float(col[3])
+                By = float(col[4])
+                Bz = float(col[5])
+                B2 = np.array( ([Bx],[By],[Bz]), dtype='float64') # Units { G }
 
-            # Sensor 4
-            Bx = float(col[9] )
-            By = float(col[10])
-            Bz = float(col[11])
-            B4 = np.array( ([Bx],[By],[Bz]), dtype='float64') # Units { G }
+                # Sensor 3
+                Bx = float(col[6])
+                By = float(col[7])
+                Bz = float(col[8])
+                B3 = np.array( ([Bx],[By],[Bz]), dtype='float64') # Units { G }
 
-            # Sensor 5
-            Bx = float(col[12])
-            By = float(col[13])
-            Bz = float(col[14])
-            B5 = np.array( ([Bx],[By],[Bz]), dtype='float64') # Units { G }
+                # Sensor 4
+                Bx = float(col[9] )
+                By = float(col[10])
+                Bz = float(col[11])
+                B4 = np.array( ([Bx],[By],[Bz]), dtype='float64') # Units { G }
 
-            # Sensor 6
-            Bx = float(col[15])
-            By = float(col[16])
-            Bz = float(col[17])
-            B6 = np.array( ([Bx],[By],[Bz]), dtype='float64') # Units { G }
-            
-            # Return vectors
-            return (B1, B2, B3, B4, B5, B6)
+                # Sensor 5
+                Bx = float(col[12])
+                By = float(col[13])
+                Bz = float(col[14])
+                B5 = np.array( ([Bx],[By],[Bz]), dtype='float64') # Units { G }
 
-    except Exception as e:
-        print( "Caught error in getData()"      )
-        print( "Error type %s" %str(type(e))    )
-        print( "Error Arguments " + str(e.args) )
+                # Sensor 6
+                Bx = float(col[15])
+                By = float(col[16])
+                Bz = float(col[17])
+                B6 = np.array( ([Bx],[By],[Bz]), dtype='float64') # Units { G }
+                
+                # Return vectors
+                if (Q_getData==0):
+                    return (B1, B2, B3, B4, B5, B6)
+                else:
+                    Q_getData.put((B1, B2, B3, B4, B5, B6))
+
+        except Exception as e:
+            print( "Caught error in getData()"      )
+            print( "Error type %s" %str(type(e))    )
+            print( "Error Arguments " + str(e.args) )
 
 # ****************************************************
 # Define function to construct equations to solve for
@@ -305,6 +313,9 @@ DEVC = "Arduino"                                # Device Name (not very importan
 PORT = 29                                       # Port number (VERY important)
 BAUD = 115200                                   # Baudrate    (VERY VERY important)
 
+# Create a queue for retrieving data from thread
+Q_getData = Queue( maxsize=0 )                  # FIFO queue with infinte size
+
 # Error handling in case serial communcation fails (1/2)
 try:
     IMU = createUSBPort( DEVC, PORT, BAUD )     # Create serial connection
@@ -313,7 +324,7 @@ try:
     print( "Serial Port OPEN" )
 
     # Determine initial guess based on magnet's location
-    initialGuess = findIG(getData(IMU))
+    initialGuess = findIG(getData(IMU, 0))
 
 # Error handling in case serial communcation fails (2/2)
 except Exception as e:
@@ -322,6 +333,11 @@ except Exception as e:
     print( "Error Arguments " + str(e.args) )
     sleep( 2.5 )
     quit()                                      # Shutdown entire program
+
+# Start pooling data from serial port
+t_getData = Thread( target=getData, args=(IMU, Q_getData,) )
+t_getData.daemon = True
+t_getData.start()
 
 # ************************************************************************
 # =========================> MAKE IT ALL HAPPEN <=========================
@@ -355,14 +371,19 @@ if ( mode == '1' ):
 
                 # Set the device to ready!!
                 READY = True
-            
-            # Pool data from Arduino
-            (H1, H2, H3, H4, H5, H6) = getData(IMU)
+
+            # Check if queue has something available for retrieval
+            if Q_getData.qsize() > 0:
+                # Pool data from Arduino
+                (H1, H2, H3, H4, H5, H6) = Q_getData.get()
             
             # Compute L2 vector norms
             HNorm = [ float(norm(H1)), float(norm(H2)),
                       float(norm(H3)), float(norm(H4)),
                       float(norm(H5)), float(norm(H6)) ]
+
+            ### QUESTION FOR MOE:
+            #Why do you sort HNorm everywhere but here when you pass it to LMA?
             
             # Invoke solver (using Levenberg-Marquardt)
             sol = root(LHS, initialGuess, args=(K, HNorm), method='lm',
@@ -371,14 +392,16 @@ if ( mode == '1' ):
 
             # Print solution (coordinates) to screen
             pos = [sol.x[0]*1000, sol.x[1]*1000, sol.x[2]*1000, float(clock())]
-            print( "(x, y, z): (%.3f, %.3f, %.3f) Time: %.3f" %(pos[0], pos[1], pos[2], pos[3]) )
+            #print( "(x, y, z): (%.3f, %.3f, %.3f) Time: %.3f" %(pos[0], pos[1], pos[2], pos[3]) )
             
 
             # Check if solution makes sense
             if (abs(sol.x[0]*1000) > 500) or (abs(sol.x[1]*1000) > 500) or (abs(sol.x[2]*1000) > 500):
                 # Determine initial guess based on magnet's location
                 #print("NOT STORED\n\n")
-                initialGuess = findIG(getData(IMU))
+                if ( t_getData.isAlive() ):
+                    t_getData.join(0.1)         # Terminate serial port pooling thread
+                initialGuess = findIG(getData(IMU, 0))
                 
             # Update initial guess with current position and feed back to solver
             else:

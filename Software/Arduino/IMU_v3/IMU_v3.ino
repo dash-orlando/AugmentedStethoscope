@@ -80,6 +80,9 @@ void loop() {
   // IMU readings (RAW)
   static double imu_RAW = 0;
 
+  // Start string specifier
+  Serial.print("<");
+  
   // Obtain readings from ALL sensors
   for (byte i = 0; i < NSENS; i++) {      // Loop over ROWS     (Sensors)
     for (byte j = 0; j < NAXES; j++) {    // Loop over COLUMNS  (Axes)
@@ -106,13 +109,13 @@ void loop() {
       // Make output look pretty
       Serial.print(B[i][j], 5);           // Print readings to Serial
       if ( (i == NSENS - 1) && (j == NAXES - 1) ) {
-        Serial.print("\n");               // Print new line after last sensor and last axis
+        continue;                         // Do nothing
       } else {
         Serial.print(", ");               // Print a comma between sensor axes
       }
     }
   }
-  if (Serial.available()) toggleLED();  //Toggle LEDs to visualize which sensors come into play. Not very useful tbh
+  Serial.print(">\n");                    // End of data specifier
 }
 
 // =========================    Setup IMU       ========================
