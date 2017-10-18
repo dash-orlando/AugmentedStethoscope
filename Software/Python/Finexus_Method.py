@@ -5,6 +5,7 @@
 *
 * VERSION: 0.1
 *   - MODIFIED: Initial Release
+*   - MODIFIED: Code is less horrible but still ugly af
 *
 * KNOWN ISSUES:
 *   - Code is very sloppy and disorganized and disgusting and horrible and oh God wth!
@@ -31,7 +32,7 @@ NPINS = 3
 NSENS = 6
 
 # Setup IMU settings
-path = "../lib/liblsm9ds1cwrapper.so"
+path = "/home/pi/LSM9DS1_RaspberryPi_Library/lib/liblsm9ds1cwrapper.so"
 lib = cdll.LoadLibrary(path)
 
 lib.lsm9ds1_create.argtypes = []
@@ -111,50 +112,35 @@ def bubbleSort(arr, N):
 # ****************************************************
 # Define function to pool & return data from Arduino *
 # ****************************************************
-def getData( B ):
+def calcMag( imu, IMU_Base ):
 
-    #
-    # Construct magnetic field array
-    #
-
-    # Sensor 1
-    Bx = float(B[0][0])
-    By = float(B[0][1])
-    Bz = float(B[0][2])
-    B1 = np.array( ([Bx],[By],[Bz]), dtype='float64') # Units { G }
-
-    # Sensor 2
-    Bx = float(B[1][0])
-    By = float(B[1][1])
-    Bz = float(B[1][2])
-    B2 = np.array( ([Bx],[By],[Bz]), dtype='float64') # Units { G }
-
-    # Sensor 3
-    Bx = float(B[2][0])
-    By = float(B[2][1])
-    Bz = float(B[2][2])
-    B3 = np.array( ([Bx],[By],[Bz]), dtype='float64') # Units { G }
-
-    # Sensor 4
-    Bx = float(B[3][0])
-    By = float(B[3][1])
-    Bz = float(B[3][2])
-    B4 = np.array( ([Bx],[By],[Bz]), dtype='float64') # Units { G }
-
-    # Sensor 5
-    Bx = float(B[4][0])
-    By = float(B[4][1])
-    Bz = float(B[4][2])
-    B5 = np.array( ([Bx],[By],[Bz]), dtype='float64') # Units { G }
-
-    # Sensor 6
-    Bx = float(B[5][0])
-    By = float(B[5][1])
-    Bz = float(B[5][2])
-    B6 = np.array( ([Bx],[By],[Bz]), dtype='float64') # Units { G }
+    B = np.array(((0.0, 0.0, 0.0) ,
+                  (0.0, 0.0, 0.0) ,
+                  (0.0, 0.0, 0.0) ,
+                  (0.0, 0.0, 0.0) ,
+                  (0.0, 0.0, 0.0) ,
+                  (0.0, 0.0, 0.0)), dtype='float64')
     
-    # Return vectors
-    return (B1, B2, B3, B4, B5, B6)
+    # Loop over sensors and construct magnetic field
+    for i in range(0, NSENS):
+        setSensor( i )
+        while lib.lsm9ds1_magAvailable(imu) == 0:
+            pass
+        lib.lsm9ds1_readMag(imu)
+
+        cmx = lib.lsm9ds1_calcMag(imu, lib.lsm9ds1_getMagX(imu))
+        cmy = lib.lsm9ds1_calcMag(imu, lib.lsm9ds1_getMagY(imu))
+        cmz = lib.lsm9ds1_calcMag(imu, lib.lsm9ds1_getMagZ(imu))
+
+        #
+        # Construct magnetic field array
+        #
+        B[i][0] = float(cmx - IMU_Base[i][0])   #
+        B[i][1] = float(cmy - IMU_Base[i][1])   # Units { G }
+        B[i][2] = float(cmz - IMU_Base[i][2])   #
+    
+    # Return matrix
+    return ( B ) 
 
 # ****************************************************
 # Define function to construct equations to solve for
@@ -218,12 +204,12 @@ def findIG(magFields):
                         (0.200, 0.0  ,   0.0)), dtype='float64')
 
     # Read current magnetic field from MCU
-    (H1, H2, H3, H4, H5, H6) = magFields
+    H = magFields
 
     # Compute L2 vector norms
-    HNorm = [ float(norm(H1)), float(norm(H2)),
-              float(norm(H3)), float(norm(H4)),
-              float(norm(H5)), float(norm(H6)) ]
+    HNorm = [ float(norm(H[0])), float(norm(H[1])),
+              float(norm(H[2])), float(norm(H[3])),
+              float(norm(H[4])), float(norm(H[5])) ]
     
     # Determine which sensors to use based on magnetic field value (smallValue==noBueno!)
     sort = argsort(HNorm)               # Auxiliary function sorts norms from smallest to largest
@@ -284,17 +270,13 @@ def setSensor( sensorIndex ):
 # ************************************************************************
 
 # Useful variables
-global CALIBRATING
-
-CALIBRATING = True                              # Boolean to indicate that device is calibrating
-READY       = False                             # Give time for user to place magnet
-
 K           = 1.09e-6                           # Magnet's constant (K) || Units { G^2.m^6}
 dx          = 1e-7                              # Differential step size (Needed for solver)
 
 initialGuess= np.array((0.10, 0.01, -0.01), 
                         dtype='float64' )       # Initial position/guess
 
+# Averaged base readings (to be subtracted from subsequent RAW readings)
 IMU_Base = np.array(((0.0, 0.0, 0.0) ,
                      (0.0, 0.0, 0.0) ,
                      (0.0, 0.0, 0.0) ,
@@ -302,6 +284,7 @@ IMU_Base = np.array(((0.0, 0.0, 0.0) ,
                      (0.0, 0.0, 0.0) ,
                      (0.0, 0.0, 0.0)), dtype='float64')
 
+# Initialize all sensors
 for i in range(0, 6):
     setSensor( i )                          # Select the IMU
     imu = lib.lsm9ds1_create()              # Create an instance
@@ -337,20 +320,10 @@ for i in range(0, 6):
 # =========================> MAKE IT ALL HAPPEN <=========================
 # ************************************************************************
 
-B = np.array(((0.0, 0.0, 0.0) ,
-              (0.0, 0.0, 0.0) ,
-              (0.0, 0.0, 0.0) ,
-              (0.0, 0.0, 0.0) ,
-              (0.0, 0.0, 0.0) ,
-              (0.0, 0.0, 0.0)), dtype='float64')
-
-C = np.array(((0.0, 0.0, 0.0) ,
-              (0.0, 0.0, 0.0) ,
-              (0.0, 0.0, 0.0) ,
-              (0.0, 0.0, 0.0) ,
-              (0.0, 0.0, 0.0) ,
-              (0.0, 0.0, 0.0)), dtype='float64')
-
+print( "Ready in 5" )
+sleep( 1.0 )
+print( "Ready in 4" )
+sleep( 1.0 )
 print( "Ready in 3" )
 sleep( 1.0 )
 print( "Ready in 2" )
@@ -361,33 +334,15 @@ print( "GO!" )
 
 # Start iteration
 while( True ):
-    for i in range(0, NSENS):
-        setSensor( i )
-        while lib.lsm9ds1_magAvailable(imu) == 0:
-            pass
-        lib.lsm9ds1_readMag(imu)
-
-        mx = lib.lsm9ds1_getMagX(imu)
-        my = lib.lsm9ds1_getMagY(imu)
-        mz = lib.lsm9ds1_getMagZ(imu)
-
-        cmx = lib.lsm9ds1_calcMag(imu, mx)
-        cmy = lib.lsm9ds1_calcMag(imu, my)
-        cmz = lib.lsm9ds1_calcMag(imu, mz)
-
-        B[i][0] = cmx - IMU_Base[i][0]
-        B[i][1] = cmy - IMU_Base[i][1]
-        B[i][2] = cmz - IMU_Base[i][2]
-
-
-    # Pool data from Arduino
-    (H1, H2, H3, H4, H5, H6) = getData(B)
+    
+    # Get magnetic field readings
+    H = calcMag( imu, IMU_Base )    # Returns data as a matrix
 
         
     # Compute L2 vector norms
-    HNorm = [ float(norm(H1)), float(norm(H2)),
-              float(norm(H3)), float(norm(H4)),
-              float(norm(H5)), float(norm(H6)) ]
+    HNorm = [ float(norm(H[0])), float(norm(H[1])),
+              float(norm(H[2])), float(norm(H[3])),
+              float(norm(H[4])), float(norm(H[5])) ]
 
     # Invoke solver (using Levenberg-Marquardt)
     sol = root(LHS, initialGuess, args=(K, HNorm), method='lm',
@@ -402,7 +357,7 @@ while( True ):
     if (abs(sol.x[0]*1000) > 500) or (abs(sol.x[1]*1000) > 500) or (abs(sol.x[2]*1000) > 500):
         print( "Invalid solution. Resetting Calculations" )
         # Determine initial guess based on magnet's location
-        initialGuess = findIG(getData(B))
+        initialGuess = findIG( calcMag(imu, IMU_Base) )
         
     # Update initial guess with current position and feed back to solver
     else:    
