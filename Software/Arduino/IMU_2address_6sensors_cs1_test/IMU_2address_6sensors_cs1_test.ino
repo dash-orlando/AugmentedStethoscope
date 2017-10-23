@@ -42,7 +42,7 @@ void setup() {
   pinMode(S0, OUTPUT);
   pinMode(S1, OUTPUT);
 
-  for (int whichPair = 1; whichPair < 3; whichPair++) {
+  for (int whichPair = 1; whichPair <= 3; whichPair++) {
     //Selecting between sensor pair 1, 2, or 3.
     pairSelect(whichPair);
     setupIMU();
@@ -57,7 +57,7 @@ void setup() {
 };
 
 void loop() {
-  for (int whichPair = 1; whichPair < 3; whichPair++) {
+  for (int whichPair = 1; whichPair <= 3; whichPair++) {
     //Choose the pair of sensors through the MUX
     pairSelect(whichPair);
 

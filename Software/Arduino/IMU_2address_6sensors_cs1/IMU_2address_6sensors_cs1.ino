@@ -169,12 +169,12 @@ void orientRead(int pair) {
       //Sensor 1: mz -> X, -mx -> Y, my -> Z
       sens[0][0] = double( high.calcMag(high.mz) );
       sens[0][1] = -1 * double( high.calcMag(high.mx) );
-      sens[0][2] = double( high.calcMag(high.my) );
+      sens[0][2] = 1 * double( high.calcMag(high.my) );
 
       //Sensor 2: mz -> X, -mx -> Y, my -> Z
       sens[1][0] = double( low.calcMag(low.mz) );
       sens[1][1] = -1 * double( low.calcMag(low.mx) );
-      sens[1][2] = double( low.calcMag(low.my) );
+      sens[1][2] = 1 * double( low.calcMag(low.my) );
       break;
 
     case 2:
