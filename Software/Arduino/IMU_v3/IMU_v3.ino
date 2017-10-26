@@ -4,11 +4,11 @@
  *  and the immediate surrounding area and SUBTRACTS them from the readings
  *  to give a calibrated reading independent of the surrounding magnetic field.
  *
- *  AUTHOR       : Edward Daniel Nichols
- *  DATE         : Sep. 29th, 2017, Year of Our Lord
+ *  AUTHOR                  : Edward Daniel Nichols
+ *  LAST CONTRIBUTION DATE  : Sep. 29th, 2017, Year of Our Lord
  *
- *  AUTHOR       : Mohammad Odeh
- *  LAST MODIFIED: Oct. 23rd, 2017, Year of Our Lord
+ *  AUTHOR                  : Mohammad Odeh 
+ *  LAST CONTRIBUTION DATE  : Oct. 26th, 2017 Year of Our Lord
  *
  *  CHANGELOG:-
  *   1- Use 2 I2C addresses for communicating with sensors
@@ -115,7 +115,7 @@ void loop() {
       Serial.print(( imu_RAW_Z - imu_BASE[2*i+1][2] ), 5);          // Print Z readings to Serial
     }
 
-    if(i != NPAIR) Serial.print(", ");                              // Comma delimit output
+    if(i != NPAIR - 1) Serial.print(", ");                              // Comma delimit output
   }
   Serial.print(">\n");                                              // End of data specifier
 }
@@ -247,53 +247,6 @@ void calibrateIMU ( bool state, byte i ) {
   }
 }
 
-// ===================    ReOrient Readings       ===================
-void orientRead(int pair) {
-  // The sensors need to output data along a consistent Coordinate System.
-  // Their orientations have been predefined; when they change this has to as well.
-  switch (pair) {
-    case 1:
-      //Sensor 1: mz -> X, -mx -> Y, my -> Z
-      sens[0][0] = double( high.calcMag(high.mz) );
-      sens[0][1] = -1 * double( high.calcMag(high.mx) );
-      sens[0][2] = 1 * double( high.calcMag(high.my) );
-
-      //Sensor 2: mz -> X, -mx -> Y, my -> Z
-      sens[1][0] = double( low.calcMag(low.mz) );
-      sens[1][1] = -1 * double( low.calcMag(low.mx) );
-      sens[1][2] = 1 * double( low.calcMag(low.my) );
-      break;
-
-    case 2:
-      //Sensor 3: mz -> X, my -> Y, mx -> Z
-      sens[2][0] = double( high.calcMag(high.mz) );
-      sens[2][1] = double( high.calcMag(high.my) );
-      sens[2][2] = double( high.calcMag(high.mx) );
-
-      //Sensor 4: mz -> X, -my -> Y, -mx -> Z
-      sens[3][0] = double( low.calcMag(low.mz) );
-      sens[3][1] = -1 * double( low.calcMag(low.my) );
-      sens[3][2] = -1 * double( low.calcMag(low.mx) );
-      break;
-
-    case 3:
-      //Sensor 5: mz -> X, mx -> Y, -my -> Z
-      sens[4][0] = double( high.calcMag(high.mz) );
-      sens[4][1] = double( high.calcMag(high.mx) );
-      sens[4][2] = -1 * double( high.calcMag(high.my) );
-
-      //Sensor 6: mz -> X, mx -> Y, -my -> Z
-      sens[5][0] = double( high.calcMag(high.mz) );
-      sens[5][1] = double( high.calcMag(high.mx) );
-      sens[5][2] = -1 * double( high.calcMag(high.my) );
-      break;
-
-    default:
-      Serial.print( F("Error. This sensor pair doesn't exist!") );
-      while (1);
-      break;
-  };
-}
 
 // =========================    Set Sensor      ========================
 void sensorPairSelect( byte sensorIndex ) {
