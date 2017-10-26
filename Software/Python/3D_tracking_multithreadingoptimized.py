@@ -17,15 +17,17 @@
 '''
 
 # Import Modules
-import  numpy               as      np              # Import Numpy
-import  matplotlib.pyplot   as      plt             # Plot data
-from    time                import  sleep, time           # Sleep for stability
-from    scipy.optimize      import  root            # Solve System of Eqns for (x, y, z)
-from    scipy.linalg        import  norm            # Calculate vector norms (magnitude)
-from    usbProtocol         import  createUSBPort   # Create USB port (serial comm. w\ Arduino)
-import  argparse                                    # Feed in arguments to the program
-from    threading           import  Thread
-import    Queue               as      qu
+import  numpy               as      np                      # Import Numpy
+import  matplotlib.pyplot   as      plt                     # Plot data
+import  Queue               as      qu                      # Queue for multithreading sync
+import  argparse                                            # Feed in arguments to the program
+import  os, platform                                        # To open and write to a file
+from    threading           import  Thread                  # Multithreading
+from    time                import  sleep, time, clock      # Sleep for stability
+from    scipy.optimize      import  root                    # Solve System of Eqns for (x, y, z)
+from    scipy.linalg        import  norm                    # Calculate vector norms (magnitude)
+from    usbProtocol         import  createUSBPort           # Create USB port (serial comm. w\ Arduino)
+
 
 # ************************************************************************
 # =====================> CONSTRUCT ARGUMENT PARSER <=====================*
@@ -98,16 +100,16 @@ def getData(ser, Q_getData):
     
     while (True):
         try:
-            # Flush buffer [??]
+            # Flush buffer
             ser.reset_input_buffer()
             ser.reset_output_buffer()
             
             # Read incoming data and seperate
             line    = ser.readline()[:-1]
-            col     = line.split(",")
+            col     = line.split(", ")
 
             # Wait for the sensor to calibrate itself to ambient fields.
-            while( not( len(col) == 12 ) ):
+            while( not( len(col) == 18 ) ):
                 line    = ser.readline()[:-1]
                 col     = line.split(", ")
 
@@ -117,32 +119,45 @@ def getData(ser, Q_getData):
 
             # Construct magnetic field array
             else:
-            # Sensor 1
+                # Sensor 1
                 Bx = float(col[0])
                 By = float(col[1])
                 Bz = float(col[2])
                 B1 = np.array( ([Bx],[By],[Bz]), dtype='float64') # Units { G }
 
-            # Sensor 2
+                # Sensor 2
                 Bx = float(col[3])
                 By = float(col[4])
                 Bz = float(col[5])
                 B2 = np.array( ([Bx],[By],[Bz]), dtype='float64') # Units { G }
 
-            # Sensor 3
+                # Sensor 3
                 Bx = float(col[6])
                 By = float(col[7])
                 Bz = float(col[8])
                 B3 = np.array( ([Bx],[By],[Bz]), dtype='float64') # Units { G }
 
-            # Sensor 4
+                # Sensor 4
                 Bx = float(col[9] )
                 By = float(col[10])
                 Bz = float(col[11])
                 B4 = np.array( ([Bx],[By],[Bz]), dtype='float64') # Units { G }
 
+                # Sensor 5
+                Bx = float(col[12])
+                By = float(col[13])
+                Bz = float(col[14])
+                B5 = np.array( ([Bx],[By],[Bz]), dtype='float64') # Units { G }
+
+                # Sensor 6
+                Bx = float(col[15])
+                By = float(col[16])
+                Bz = float(col[17])
+                B6 = np.array( ([Bx],[By],[Bz]), dtype='float64') # Units { G }
+
+
             # Put the data in the Queue, no matter what. "Pipelining".
-                Q_getData.put( (B1, B2, B3, B4) )
+                Q_getData.put( (B1, B2, B3, B4, B5, B6) )
 
         except Exception as e:
             print( "Caught error in getData()"      )
@@ -163,20 +178,23 @@ def LHS( root, K, norms ):
     #     : Standing on sensor(n), how many units in
     #       the x/y/z direction should I march to get
     #       back to sensor1 (origin)?
-    r1 = float( ( (x+0.000)**2. + (y+0.000)**2. + (z+0.000)**2. )**(1/2.) )  # Sensor 1 (Origin)
-    r2 = float( ( (x-0.100)**2. + (y+0.000)**2. + (z+0.000)**2. )**(1/2.) )  # Sensor 2
-    r3 = float( ( (x+0.000)**2. + (y+0.000)**2. + (z+0.075)**2. )**(1/2.) )  # Sensor 3 
-    r4 = float( ( (x-0.100)**2. + (y+0.000)**2. + (z+0.075)**2. )**(1/2.) )  # Sensor 4 
+    r1 = float( ( (x+0.000)**2. + (y+0.050)**2. + (z-0.100)**2. )**(1/2.) )  # Sensor 1
+    r2 = float( ( (x+0.000)**2. + (y-0.075)**2. + (z-0.100)**2. )**(1/2.) )  # Sensor 2
+    r3 = float( ( (x+0.000)**2. + (y+0.050)**2. + (z+0.100)**2. )**(1/2.) )  # Sensor 3 
+    r4 = float( ( (x+0.000)**2. + (y-0.075)**2. + (z+0.100)**2. )**(1/2.) )  # Sensor 4
+    r5 = float( ( (x+0.000)**2. + (y+0.000)**2. + (z+0.000)**2. )**(1/2.) )  # Sensor 5 (Origin)
+    r6 = float( ( (x+0.062)**2. + (y+0.000)**2. + (z+0.000)**2. )**(1/2.) )  # Sensor 6 (Had to measure it with a caliper! The Standoff is meant to be on the ground, not on another sensor!)
 
     # Construct the equations
     Eqn1 = ( K*( r1 )**(-6.) * ( 3.*( z/r1 )**2. + 1 ) ) - norms[0]**2.     # Sensor 1
     Eqn2 = ( K*( r2 )**(-6.) * ( 3.*( z/r2 )**2. + 1 ) ) - norms[1]**2.     # Sensor 2
     Eqn3 = ( K*( r3 )**(-6.) * ( 3.*( z/r3 )**2. + 1 ) ) - norms[2]**2.     # Sensor 3
     Eqn4 = ( K*( r4 )**(-6.) * ( 3.*( z/r4 )**2. + 1 ) ) - norms[3]**2.     # Sensor 4
-
+    Eqn5 = ( K*( r5 )**(-6.) * ( 3.*( z/r5 )**2. + 1 ) ) - norms[4]**2.     # Sensor 5
+    Eqn6 = ( K*( r6 )**(-6.) * ( 3.*( z/r6 )**2. + 1 ) ) - norms[5]**2.     # Sensor 6
 
     # Construct a vector of the equations
-    Eqns = [Eqn1, Eqn2, Eqn3, Eqn4]
+    Eqns = [Eqn1, Eqn2, Eqn3, Eqn4, Eqn5, Eqn6]
 
     # Determine which sensors to use based on magnetic field value (smallValue==noBueno!)
     sort = argsort(norms)               # Auxiliary function sorts norms from smallest to largest, by index.
@@ -199,18 +217,21 @@ def findIG(magFields):
     #     /  sensor 2: (x, y, z)
     # Mat=      :          :
     #     \     :          :
-    #      \ sensor 4: (x, y, z)
-    IMU_pos = np.array((( 0.000, 0.000,  0.000) ,
-                        ( 0.100, 0.000,  0.000) ,
-                        ( 0.000, 0.000, -0.075) ,
-                        ( 0.100, 0.000, -0.075)), dtype='float64')
+    #      \ sensor 6: (x, y, z)
+    IMU_pos = np.array(((0.000  ,  -0.050  ,  0.100) ,
+                        (0.000  ,   0.075  ,  0.100) ,
+                        (0.000  ,  -0.050  ,  0.100) ,
+                        (0.000  ,   0.075  ,  0.100) ,
+                        (0.000  ,   0.000  ,  0.000) ,
+                        (0.062  ,   0.000  ,  0.000)), dtype='float64')
 
     # Read current magnetic field from MCU
-    (H1, H2, H3, H4) = magFields
+    (H1, H2, H3, H4, H5, H6) = magFields
 
     # Compute L2 vector norms
     HNorm = [ float(norm(H1)), float(norm(H2)),
-              float(norm(H3)), float(norm(H4))]
+              float(norm(H3)), float(norm(H4)),
+              float(norm(H5)), float(norm(H6)) ]
     
     # Determine which sensors to use based on magnetic field value (smallValue==noBueno!)
     sort = argsort(HNorm)               # Auxiliary function sorts norms from smallest to largest
@@ -235,7 +256,9 @@ READY       = False                             # Give time for user to place ma
 
 ##This measurement was redone to reflect the changes on the imposed C.S. for LMA
 K           = 4.24e-7             # Magnet's constant (K) || Units { G^2.m^6}
+#K           = 1.09e-6 
 dx          = 1e-7                # Differential step size (Needed for solver)
+calcPos     = []                  # Empty array to hold calculated positions
 
 # Create a queue for retrieving data from the thread.
 Q_getData = qu.Queue( maxsize=0 )
@@ -253,7 +276,7 @@ try:
     print( "Serial Port OPEN" )
 
     # Determine initial guess based on magnet's location.
-    initialGuess = np.array( (0.001, 0.075, 0.025), dtype='float64')
+    initialGuess = np.array( (0.005, 0.050, -0.050), dtype='float64')
 
 # Error handling in case serial communcation fails (2/2).
 except Exception as e:
@@ -275,65 +298,76 @@ t_getData.start()
 
 # Start iteration
 while( True ):
-    
-    # Pull data from queue.
-    if ( Q_getData.qsize() > 0 ):
-        # Inform user that system is almost ready
-        if(READY == False):
-            print( "Place the magnet in the range!");
-            print( "Ready in 3" )
-            sleep( 1.0 )
-            print( "Ready in 2" )
-            sleep( 1.0 )
-            print( "Ready in 1" )
-            sleep( 1.0 )
-            print( "GO!" )
-            # Set the device to ready!!
-            READY = True
+    try:
+        # Pull data from queue.
+        if ( Q_getData.qsize() > 0 ):
+            # Inform user that system is almost ready
+            if(READY == False):
+                print( "Place the magnet in the range!");
+                print( "Ready in 3" )
+                sleep( 1.0 )
+                print( "Ready in 2" )
+                sleep( 1.0 )
+                print( "Ready in 1" )
+                sleep( 1.0 )
+                print( "GO!" )
+                # Set the device to ready!!
+                READY = True
 
-        startTime=time()
-        #Wait until there's something in the queue.
-        (H1, H2, H3, H4) = Q_getData.get( True )
+            startTime=clock()
+            #Wait until there's something in the queue.
+            (H1, H2, H3, H4, H5, H6) = Q_getData.get( True )
 
-        # Compute L2 vector norms
-        HNorm = [ float(norm(H1)), float(norm(H2)), float(norm(H3)), float(norm(H4))]
+            # Compute L2 vector norms
+            HNorm = [ float(norm(H1)), float(norm(H2)),
+                      float(norm(H3)), float(norm(H4)),
+                      float(norm(H5)), float(norm(H6)) ]
 
-    ##QUESTION FOR MOE:
-    ##If everything is being sorted, and reduced to the data of 3 sensors,
-    ##why don't you do that here when passing LMA arg=HNorm?
+        ##QUESTION FOR MOE:
+        ##If everything is being sorted, and reduced to the data of 3 sensors,
+        ##why don't you do that here when passing LMA arg=HNorm?
 
-        # Invoke solver (using Levenberg-Marquardt)
-        sol = root(LHS, initialGuess, args=(K, HNorm), method='lm',
-                   options={'ftol':1e-10, 'xtol':1e-10, 'maxiter':1000,
-                            'eps':1e-8, 'factor':0.001})
+            # Invoke solver (using Levenberg-Marquardt)
+            sol = root(LHS, initialGuess, args=(K, HNorm), method='lm',
+                       options={'ftol':1e-10, 'xtol':1e-10, 'maxiter':1000,
+                                'eps':1e-8, 'factor':0.001})
 
-        # Print solution (coordinates) to screen
-        print( "Current position (x , y , z):" )
-        ## The Coordinate System for within the LMA algorithm is aligned with the magnet's North pole, s.t. X -> North
-        ## We want the displayed output to reflect a more convenient C.S., so we impose a further mapping on print:
-        ## X is given by LMA's -Z or -1 * sol.x[2]
-        ## Y is given by LMA's  Y or sol.x[1]
-        ## Z is given by LMA's  X or sol.x[0]
-        print( "(%.5f , %.5f , %.5f)mm" %(-1*sol.x[2]*1000, sol.x[1]*1000, sol.x[0]*1000) )
-        
-        # If in debug/verbose mode:
-        # Print complete solution returned by vector
-        if (args["debug"]):
-            print( sol )
-            print( "\n=========================================" )
-            print( "Norms: %f, %f, %f, %f, %f, %f"%(HNorm[0], HNorm[1],
-                                                    HNorm[2], HNorm[3]) )
-            print( "=========================================\n" )
-            print("")
+            # Print solution (coordinates) to screen
+            print( "Current position (x , y , z):" )
+            ## The Coordinate System for within the LMA algorithm is aligned with the magnet's North pole, s.t. X -> North
+            ## We want the displayed output to reflect a more convenient C.S., so we impose a further mapping on print:
+            ## X is given by LMA's -Z or -1 * sol.x[2]
+            ## Y is given by LMA's  Y or sol.x[1]
+            ## Z is given by LMA's  X or sol.x[0]
+            pos = [-1*sol.x[2]*1000, sol.x[1]*1000, sol.x[0]*1000]
+            print( "(%.5f , %.5f , %.5f)mm" %(pos[0], pos[1], pos[2]) )
+            print( "t= %.5f" %(clock()-startTime) )
 
-        # Check if solution makes sense
-        if (abs(sol.x[0]*1000) > 500) or (abs(sol.x[1]*1000) > 500) or (abs(sol.x[2]*1000) > 500):
-            print( "Invalid solution. Resetting Calculations" )
-            # Determine initial guess based on magnet's location.
-            initialGuess = findIG( Q_getData.get() )
+            # Check if solution makes sense
+            if (abs(sol.x[0]*1000) > 250) or (abs(sol.x[1]*1000) > 250) or (abs(sol.x[2]*1000) > 250):
+                #print( "Invalid solution. Resetting Calculations" )
+                # Determine initial guess based on magnet's location.
+                initialGuess = findIG( Q_getData.get() )  
+            # Update initial guess with current position and feed back to solver
+            else:    
+                initialGuess = np.array( (sol.x[0]+dx, sol.x[1]+dx, sol.x[2]+dx), dtype='float64' )
+                calcPos.append(pos)
             
-        # Update initial guess with current position and feed back to solver
-        else:    
-            initialGuess = np.array( (sol.x[0]+dx, sol.x[1]+dx, sol.x[2]+dx), dtype='float64' )
+        # Save data on EXIT (Ctrl-C)
+    except KeyboardInterrupt: 
+        if platform.system()=='Windows':
 
-        print( "t= %.5f" %(time()-startTime) )
+            # Define useful paths
+            homeDir = os.getcwd()
+            dst     = homeDir + '\\output'
+            dataFile= dst + '\\data.txt'
+
+        # Check if directory exists
+        if ( os.path.exists(dst)==False ):
+            # Create said directory
+            os.makedirs(dst)
+
+        for i in range( 0, len(calcPos) ):
+                with open(dataFile, "a") as f:
+                    f.write(str(calcPos[i][0]) + "," + str(calcPos[i][1]) + "," + str(calcPos[i][2]) + "\n")
+        break

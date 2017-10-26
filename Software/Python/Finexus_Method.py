@@ -20,11 +20,11 @@
 *     while x & y are correct.
 *     (Look into what triggers this behaviour)
 *
-* AUTHOR  :   Edward Nichols
-* DATE    :   Sep. 29th, 2017 Year of Our Lord
+* AUTHOR                    :   Edward Nichols
+* LAST CONTRIBUTION DATE    :   Sep. 29th, 2017 Year of Our Lord
 * 
-* Modified:   Mohammad Odeh 
-* DATE    :   Oct. 06th, 2017 Year of Our Lord
+* AUTHOR                    :   Mohammad Odeh 
+* LAST CONTRIBUTION DATE    :   Oct. 26th, 2017 Year of Our Lord
 *
 '''
 
@@ -266,6 +266,7 @@ global CALIBRATING
 CALIBRATING = True                              # Boolean to indicate that device is calibrating
 READY       = False                             # Give time for user to place magnet
 
+#K           = 1.615e-7                          # Small magnet
 K           = 1.09e-6                           # Magnet's constant (K) || Units { G^2.m^6}
 dx          = 1e-7                              # Differential step size (Needed for solver)
 
@@ -274,7 +275,7 @@ dx          = 1e-7                              # Differential step size (Needed
 
 # Establish connection with Arduino
 DEVC = "Arduino"                                # Device Name (not very important)
-PORT = 29                                       # Port number (VERY important)
+PORT = 04                                       # Port number (VERY important)
 BAUD = 115200                                   # Baudrate    (VERY VERY important)
 
 # Error handling in case serial communcation fails (1/2)
@@ -330,7 +331,7 @@ while( True ):
 
     # Print solution (coordinates) to screen
     print( "Current position (x , y , z):" )
-    print( "(%.5f , %.5f , %.5f)mm" %(sol.x[0]*1000, sol.x[1]*1000, sol.x[2]*1000) )
+    print( "(%.5f , %.5f , %.5f)mm" %(sol.x[0]*1000, sol.x[1]*1000, -1*sol.x[2]*1000) )
 
     # Sleep for stability
     sleep( 0.1 )

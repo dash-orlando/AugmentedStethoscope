@@ -19,7 +19,7 @@
 * LAST CONTRIBUTION DATE    :   Oct. 17th, 2017 Year of Our Lord
 * 
 * AUTHOR                    :   Mohammad Odeh 
-* LAST CONTRIBUTION DATE    :   Oct. 17th, 2017 Year of Our Lord
+* LAST CONTRIBUTION DATE    :   Oct. 26th, 2017 Year of Our Lord
 *
 '''
 
@@ -78,81 +78,86 @@ def bubbleSort(arr, N):
 # ****************************************************
 # Define function to pool & return data from Arduino *
 # ****************************************************
-def getData(ser, Q_getData):
+def getData(ser):
     global CALIBRATING
-    i=0
-    clock()
 
-    # loop 4EVA!
-    while( True ):
-        # Flush buffer
-        ser.reset_input_buffer()
-        ser.reset_output_buffer()
+    # Flush buffer
+    ser.reset_input_buffer()
+    ser.reset_output_buffer()
 
-        # Allow data to fill-in buffer
-        sleep(0.1)
+    # Allow data to fill-in buffer
+    sleep(0.1)
 
-        try:
-            # Read incoming data and seperate
-            line    = ser.readline()[:-1]
-            col     = line.split(",")
+    try:
+        # Wait for the sensor to calibrate itself to ambient fields.
+        while( True ):
+            if(CALIBRATING == True):
+                print( "Calibrating...\n" )
+                CALIBRATING = False
+            if ser.in_waiting > 0:  
+                inData = ser.read()  
+                if inData == '<':
+                    break  
 
-            # Wait for the sensor to calibrate itself to ambient fields.
-            while( len(col) < 18 ):
-                line    = ser.readline()[:-1]
-                col     = line.split(",")
-                if(CALIBRATING == True):
-                    print( "Calibrating...\n" )
-                    CALIBRATING = False
+        # Read the actual data value. Stop at End of Data specifier '>'. 
+        line = ''
+        while( True ):
+            if ser.in_waiting > 0:
+                inData = ser.read()
+                if inData == '>':
+                    break
+                line = line + inData
 
-            # Construct magnetic field array
-            else:
-                # Sensor 1
-                Bx = float(col[0])
-                By = float(col[1])
-                Bz = float(col[2])
-                B1 = np.array( ([Bx],[By],[Bz]), dtype='float64') # Units { G }
+        # Split line into the constituent components
+        col     = line.split(",")
 
-                # Sensor 2
-                Bx = float(col[3])
-                By = float(col[4])
-                Bz = float(col[5])
-                B2 = np.array( ([Bx],[By],[Bz]), dtype='float64') # Units { G }
+        #
+        # Construct magnetic field array
+        #
 
-                # Sensor 3
-                Bx = float(col[6])
-                By = float(col[7])
-                Bz = float(col[8])
-                B3 = np.array( ([Bx],[By],[Bz]), dtype='float64') # Units { G }
+        # Sensor 1
+        Bx = float(col[0])
+        By = float(col[1])
+        Bz = float(col[2])
+        B1 = np.array( ([Bx],[By],[Bz]), dtype='float64') # Units { G }
 
-                # Sensor 4
-                Bx = float(col[9] )
-                By = float(col[10])
-                Bz = float(col[11])
-                B4 = np.array( ([Bx],[By],[Bz]), dtype='float64') # Units { G }
+        # Sensor 2
+        Bx = float(col[3])
+        By = float(col[4])
+        Bz = float(col[5])
+        B2 = np.array( ([Bx],[By],[Bz]), dtype='float64') # Units { G }
 
-                # Sensor 5
-                Bx = float(col[12])
-                By = float(col[13])
-                Bz = float(col[14])
-                B5 = np.array( ([Bx],[By],[Bz]), dtype='float64') # Units { G }
+        # Sensor 3
+        Bx = float(col[6])
+        By = float(col[7])
+        Bz = float(col[8])
+        B3 = np.array( ([Bx],[By],[Bz]), dtype='float64') # Units { G }
 
-                # Sensor 6
-                Bx = float(col[15])
-                By = float(col[16])
-                Bz = float(col[17])
-                B6 = np.array( ([Bx],[By],[Bz]), dtype='float64') # Units { G }
-                
-                # Return vectors
-                if (Q_getData==0):
-                    return (B1, B2, B3, B4, B5, B6)
-                else:
-                    Q_getData.put((B1, B2, B3, B4, B5, B6))
+        # Sensor 4
+        Bx = float(col[9] )
+        By = float(col[10])
+        Bz = float(col[11])
+        B4 = np.array( ([Bx],[By],[Bz]), dtype='float64') # Units { G }
 
-        except Exception as e:
-            print( "Caught error in getData()"      )
-            print( "Error type %s" %str(type(e))    )
-            print( "Error Arguments " + str(e.args) )
+        # Sensor 5
+        Bx = float(col[12])
+        By = float(col[13])
+        Bz = float(col[14])
+        B5 = np.array( ([Bx],[By],[Bz]), dtype='float64') # Units { G }
+
+        # Sensor 6
+        Bx = float(col[15])
+        By = float(col[16])
+        Bz = float(col[17])
+        B6 = np.array( ([Bx],[By],[Bz]), dtype='float64') # Units { G }
+        
+        # Return vectors
+        return (B1, B2, B3, B4, B5, B6)
+
+    except Exception as e:
+        print( "Caught error in getData()"      )
+        print( "Error type %s" %str(type(e))    )
+        print( "Error Arguments " + str(e.args) )
 
 # ****************************************************
 # Define function to construct equations to solve for
@@ -300,7 +305,7 @@ global CALIBRATING
 CALIBRATING = True                              # Boolean to indicate that device is calibrating
 READY       = False                             # Give time for user to place magnet
 
-K           = 1.615e-7
+K           = 1.615e-7                          # Small magnet
 #K           = 1.092e-6                          # Magnet's constant (K) || Units { G^2.m^6}
 dx          = 1e-7                              # Differential step size (Needed for solver)
 calcPos     = []                                # Empty array to hold calculated positions
@@ -310,11 +315,11 @@ calcPos     = []                                # Empty array to hold calculated
 
 # Establish connection with Arduino
 DEVC = "Arduino"                                # Device Name (not very important)
-PORT = 29                                       # Port number (VERY important)
+PORT = 04                                       # Port number (VERY important)
 BAUD = 115200                                   # Baudrate    (VERY VERY important)
 
 # Create a queue for retrieving data from thread
-Q_getData = Queue( maxsize=0 )                  # FIFO queue with infinte size
+#Q_getData = Queue( maxsize=0 )                  # FIFO queue with infinte size
 
 # Error handling in case serial communcation fails (1/2)
 try:
@@ -324,7 +329,7 @@ try:
     print( "Serial Port OPEN" )
 
     # Determine initial guess based on magnet's location
-    initialGuess = findIG(getData(IMU, 0))
+    initialGuess = findIG(getData(IMU))
 
 # Error handling in case serial communcation fails (2/2)
 except Exception as e:
@@ -335,9 +340,9 @@ except Exception as e:
     quit()                                      # Shutdown entire program
 
 # Start pooling data from serial port
-t_getData = Thread( target=getData, args=(IMU, Q_getData,) )
-t_getData.daemon = True
-t_getData.start()
+#t_getData = Thread( target=getData, args=(IMU, Q_getData,) )
+#t_getData.daemon = True
+#t_getData.start()
 
 # ************************************************************************
 # =========================> MAKE IT ALL HAPPEN <=========================
@@ -372,10 +377,12 @@ if ( mode == '1' ):
                 # Set the device to ready!!
                 READY = True
 
-            # Check if queue has something available for retrieval
-            if Q_getData.qsize() > 0:
-                # Pool data from Arduino
-                (H1, H2, H3, H4, H5, H6) = Q_getData.get()
+            (H1, H2, H3, H4, H5, H6) = getData(IMU)
+            
+##            # Check if queue has something available for retrieval
+##            if Q_getData.qsize() > 0:
+##                # Pool data from Arduino
+##                (H1, H2, H3, H4, H5, H6) = Q_getData.get()
             
             # Compute L2 vector norms
             HNorm = [ float(norm(H1)), float(norm(H2)),
@@ -399,9 +406,7 @@ if ( mode == '1' ):
             if (abs(sol.x[0]*1000) > 500) or (abs(sol.x[1]*1000) > 500) or (abs(sol.x[2]*1000) > 500):
                 # Determine initial guess based on magnet's location
                 #print("NOT STORED\n\n")
-                if ( t_getData.isAlive() ):
-                    t_getData.join(0.1)         # Terminate serial port pooling thread
-                initialGuess = findIG(getData(IMU, 0))
+                initialGuess = findIG(getData(IMU))
                 
             # Update initial guess with current position and feed back to solver
             else:
@@ -411,6 +416,9 @@ if ( mode == '1' ):
 
         # Save data on EXIT
         except KeyboardInterrupt:
+
+            print( "Storing data log under data.txt" )
+            
             if platform.system()=='Windows':
 
                 # Define useful paths
@@ -426,6 +434,9 @@ if ( mode == '1' ):
             for i in range( 0, len(calcPos) ):
                     with open(dataFile, "a") as f:
                         f.write(str(calcPos[i][0]) + "," + str(calcPos[i][1]) + "," + str(calcPos[i][2]) + "," + str(calcPos[i][3]) + "\n")
+
+            print( "DONE!" )
+            
             break
 
 # --------------------------------------------------------------------------------------
