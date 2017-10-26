@@ -3,20 +3,21 @@
 * Position tracking of magnet based on Finexus
 * https://ubicomplab.cs.washington.edu/pdfs/finexus.pdf
 *
-* VERSION: 0.2.2
+* VERSION: 0.2.5
 *   - MODIFIED: Removed limitation of needing to place magnet at a
 *               predefined position at program start up.
 *   - ADDED   : 6 sensors placed around an ellipse
-*   - ADDED   : Visualize what sensors are being used for calculations
 *   - ADDED   : Finding the initial guess on program startup is now
 *               dynamic; it is calculated on the spot rather than
 *               choosing from a hardcoded list of all the possible
 *               initial guesses.
+*   - MODIFIED: Modified code to go along with the 2 I2C addresses
+*               fix provided by Danny
 *
 * KNOWN ISSUES:
 *   - Calculations are accurate to around +/-2mm
 *     (this is very beuno, if not perfect)
-*   - At certain times, the z position goes cray-cray
+*   - At certain positions, the z position goes cray-cray
 *     while x & y are correct.
 *     (Look into what triggers this behaviour)
 *
@@ -190,12 +191,12 @@ def LHS( root, K, norms ):
     #     : Standing on sensor(n), how many units in
     #       the x/y/z direction should I march to get
     #       back to sensor1 (origin)?
-    r1 = float( ( (x+0.000)**2. + (y-0.125)**2. + (z+0.00)**2. )**(1/2.) )  # Sensor 1
-    r2 = float( ( (x-0.100)**2. + (y-0.175)**2. + (z+0.00)**2. )**(1/2.) )  # Sensor 2
-    r3 = float( ( (x-0.200)**2. + (y-0.125)**2. + (z+0.00)**2. )**(1/2.) )  # Sensor 3
-    r4 = float( ( (x+0.000)**2. + (y+0.000)**2. + (z+0.00)**2. )**(1/2.) )  # Sensor 4 (ORIGIN)
-    r5 = float( ( (x-0.100)**2. + (y+0.050)**2. + (z+0.00)**2. )**(1/2.) )  # Sensor 5
-    r6 = float( ( (x-0.200)**2. + (y-0.000)**2. + (z+0.00)**2. )**(1/2.) )  # Sensor 6
+    r1 = float( ( (x+0.000)**2. + (y+0.000)**2. + (z+0.00)**2. )**(1/2.) )  # Sensor 1 (ORIGIN)
+    r2 = float( ( (x+0.000)**2. + (y-0.125)**2. + (z+0.00)**2. )**(1/2.) )  # Sensor 2
+    r3 = float( ( (x-0.100)**2. + (y+0.050)**2. + (z+0.00)**2. )**(1/2.) )  # Sensor 3
+    r4 = float( ( (x-0.100)**2. + (y-0.175)**2. + (z+0.00)**2. )**(1/2.) )  # Sensor 4
+    r5 = float( ( (x-0.200)**2. + (y+0.000)**2. + (z+0.00)**2. )**(1/2.) )  # Sensor 5
+    r6 = float( ( (x-0.200)**2. + (y-0.125)**2. + (z+0.00)**2. )**(1/2.) )  # Sensor 6
 
     # Construct the equations
     Eqn1 = ( K*( r1 )**(-6.) * ( 3.*( z/r1 )**2. + 1 ) ) - norms[0]**2.     # Sensor 1
@@ -230,12 +231,12 @@ def findIG(magFields):
     # Mat=      :          :
     #     \     :          :
     #      \ sensor 6: (x, y, z)
-    IMU_pos = np.array(((0.0  , 0.125,   0.0) ,
-                        (0.100, 0.175,   0.0) ,
-                        (0.200, 0.125,   0.0) ,
-                        (0.0  , 0.0  ,   0.0) ,
+    IMU_pos = np.array(((0.0  , 0.0  ,   0.0) ,
+                        (0.0  , 0.125,   0.0) ,
                         (0.100,-0.050,   0.0) ,
-                        (0.200, 0.0  ,   0.0)), dtype='float64')
+                        (0.100, 0.175,   0.0) ,
+                        (0.200, 0.0  ,   0.0) ,
+                        (0.200, 0.125,   0.0)), dtype='float64')
 
     # Read current magnetic field from MCU
     (H1, H2, H3, H4, H5, H6) = magFields

@@ -3,12 +3,13 @@
 * Position tracking of magnet based on Finexus
 * https://ubicomplab.cs.washington.edu/pdfs/finexus.pdf
 *
-* VERSION: 0.2
+* VERSION: 0.2.1
 *   - 2 Modes of operations
 *       (1) Continuous sampling
 *       (2) Guided Point-by-Point
 *   - Plot stuff
 *   - Standoffs, raising three of the sensors to .1m
+*   - Modify necessary parts to go along with the 2 addresses fix
 *
 * KNOWN ISSUES:
 *   - Z-axis still sucks.
@@ -173,12 +174,12 @@ def LHS( root, K, norms ):
     #     : Standing on sensor(n), how many units in
     #       the x/y/z direction should I march to get
     #       back to sensor1 (origin)?
-    r1 = float( ( (x+0.000)**2. + (y-0.125)**2. + (z-0.000)**2. )**(1/2.) )  # Sensor 1
-    r2 = float( ( (x-0.100)**2. + (y-0.175)**2. + (z-0.000)**2. )**(1/2.) )  # Sensor 2
-    r3 = float( ( (x-0.200)**2. + (y-0.125)**2. + (z-0.000)**2. )**(1/2.) )  # Sensor 3
-    r4 = float( ( (x+0.000)**2. + (y+0.000)**2. + (z-0.000)**2. )**(1/2.) )  # Sensor 4 (ORIGIN)
-    r5 = float( ( (x-0.100)**2. + (y+0.050)**2. + (z-0.000)**2. )**(1/2.) )  # Sensor 5
-    r6 = float( ( (x-0.200)**2. + (y-0.000)**2. + (z-0.000)**2. )**(1/2.) )  # Sensor 6
+    r1 = float( ( (x+0.000)**2. + (y+0.000)**2. + (z+0.00)**2. )**(1/2.) )  # Sensor 1 (ORIGIN)
+    r2 = float( ( (x+0.000)**2. + (y-0.125)**2. + (z+0.00)**2. )**(1/2.) )  # Sensor 2
+    r3 = float( ( (x-0.100)**2. + (y+0.050)**2. + (z+0.00)**2. )**(1/2.) )  # Sensor 3
+    r4 = float( ( (x-0.100)**2. + (y-0.175)**2. + (z+0.00)**2. )**(1/2.) )  # Sensor 4
+    r5 = float( ( (x-0.200)**2. + (y+0.000)**2. + (z+0.00)**2. )**(1/2.) )  # Sensor 5
+    r6 = float( ( (x-0.200)**2. + (y-0.125)**2. + (z+0.00)**2. )**(1/2.) )  # Sensor 6
 
     # Construct the equations
     Eqn1 = ( K*( r1 )**(-6.) * ( 3.*( z/r1 )**2. + 1 ) ) - norms[0]**2.     # Sensor 1
@@ -214,12 +215,12 @@ def findIG(magFields):
     # Mat=      :          :
     #     \     :          :
     #      \ sensor 6: (x, y, z)
-    IMU_pos = np.array(((0.0  , 0.125,   0.0) ,
-                        (0.100, 0.175,   0.0) ,
-                        (0.200, 0.125,   0.0) ,
-                        (0.0  , 0.0  ,   0.0) ,
+    IMU_pos = np.array(((0.0  , 0.0  ,   0.0) ,
+                        (0.0  , 0.125,   0.0) ,
                         (0.100,-0.050,   0.0) ,
-                        (0.200, 0.0  ,   0.0)), dtype='float64')
+                        (0.100, 0.175,   0.0) ,
+                        (0.200, 0.0  ,   0.0) ,
+                        (0.200, 0.125,   0.0)), dtype='float64')
 
     # Read current magnetic field from MCU
     (H1, H2, H3, H4, H5, H6) = magFields
