@@ -87,7 +87,7 @@ def getData(ser):
     ser.reset_output_buffer()
 
     # Allow data to fill-in buffer
-    sleep(0.1)
+    # sleep(0.1)
 
     try:
         # Wait for the sensor to calibrate itself to ambient fields.
@@ -110,7 +110,7 @@ def getData(ser):
                 line = line + inData
 
         # Split line into the constituent components
-        col     = line.split(",")
+        col     = line.split(", ")
 
         #
         # Construct magnetic field array
@@ -241,6 +241,27 @@ def findIG(magFields):
                        (IMU_pos[IMUS[0]][1]+IMU_pos[IMUS[1]][1]+IMU_pos[IMUS[2]][1])/3.,
                        (IMU_pos[IMUS[0]][2]+IMU_pos[IMUS[1]][2]+IMU_pos[IMUS[2]][2])/3. -0.01), dtype='float64') )
 
+def storeData( data ):
+    print( "Storing data log under data.txt" )
+            
+    if platform.system()=='Windows':
+
+        # Define useful paths
+        homeDir = os.getcwd()
+        dst     = homeDir + '\\output'
+        dataFile= dst + '\\data.txt'
+
+    # Check if directory exists
+    if ( os.path.exists(dst)==False ):
+        # Create said directory
+        os.makedirs(dst)
+
+    for i in range( 0, len(data) ):
+            with open(dataFile, "a") as f:
+                f.write(str(data[i][0]) + "," + str(data[i][1]) + "," + str(data[i][2]) + "," + str(data[i][3]) + "\n")
+
+    print( "DONE!" )
+
 # ****************************************************
 #           Plot actual vs measured position         *
 # ****************************************************
@@ -298,7 +319,7 @@ def plotPos(actual, calculated):
 
 # ************************************************************************
 # ===========================> SETUP PROGRAM <===========================
-# ************************************************************************
+# ************** **********************************************************
 
 # Useful variables
 global CALIBRATING
@@ -306,21 +327,16 @@ global CALIBRATING
 CALIBRATING = True                              # Boolean to indicate that device is calibrating
 READY       = False                             # Give time for user to place magnet
 
-K           = 1.615e-7                          # Small magnet
-#K           = 1.092e-6                          # Magnet's constant (K) || Units { G^2.m^6}
+K           = 7.27e-8                           # Small magnet's constant   (K) || Units { G^2.m^6}
+#K           = 1.09e-6                          # Big magnet's constant     (K) || Units { G^2.m^6}
 dx          = 1e-7                              # Differential step size (Needed for solver)
 calcPos     = []                                # Empty array to hold calculated positions
 
-##initialGuess= np.array((0.10, 0.01, -0.01), 
-##                        dtype='float64' )       # Initial position/guess
 
 # Establish connection with Arduino
 DEVC = "Arduino"                                # Device Name (not very important)
-PORT = 04                                       # Port number (VERY important)
+PORT = 6                                        # Port number (VERY important)
 BAUD = 115200                                   # Baudrate    (VERY VERY important)
-
-# Create a queue for retrieving data from thread
-#Q_getData = Queue( maxsize=0 )                  # FIFO queue with infinte size
 
 # Error handling in case serial communcation fails (1/2)
 try:
@@ -339,11 +355,6 @@ except Exception as e:
     print( "Error Arguments " + str(e.args) )
     sleep( 2.5 )
     quit()                                      # Shutdown entire program
-
-# Start pooling data from serial port
-#t_getData = Thread( target=getData, args=(IMU, Q_getData,) )
-#t_getData.daemon = True
-#t_getData.start()
 
 # ************************************************************************
 # =========================> MAKE IT ALL HAPPEN <=========================
@@ -399,8 +410,8 @@ if ( mode == '1' ):
                                 'eps':1e-8, 'factor':0.001})
 
             # Print solution (coordinates) to screen
-            pos = [sol.x[0]*1000, sol.x[1]*1000, sol.x[2]*1000, float(clock())]
-            #print( "(x, y, z): (%.3f, %.3f, %.3f) Time: %.3f" %(pos[0], pos[1], pos[2], pos[3]) )
+            pos = [sol.x[0]*1000, sol.x[1]*1000, -1*sol.x[2]*1000, float(clock())]
+            print( "(x, y, z): (%.3f, %.3f, %.3f) Time: %.3f" %(pos[0], pos[1], pos[2], pos[3]) )
             
 
             # Check if solution makes sense
@@ -418,26 +429,10 @@ if ( mode == '1' ):
         # Save data on EXIT
         except KeyboardInterrupt:
 
-            print( "Storing data log under data.txt" )
-            
-            if platform.system()=='Windows':
+            # Store data in a log file
+            storeData( calcPos )
 
-                # Define useful paths
-                homeDir = os.getcwd()
-                dst     = homeDir + '\\output'
-                dataFile= dst + '\\data.txt'
-
-            # Check if directory exists
-            if ( os.path.exists(dst)==False ):
-                # Create said directory
-                os.makedirs(dst)
-
-            for i in range( 0, len(calcPos) ):
-                    with open(dataFile, "a") as f:
-                        f.write(str(calcPos[i][0]) + "," + str(calcPos[i][1]) + "," + str(calcPos[i][2]) + "," + str(calcPos[i][3]) + "\n")
-
-            print( "DONE!" )
-            
+            # Exit loop 43va!
             break
 
 # --------------------------------------------------------------------------------------
@@ -455,7 +450,11 @@ elif ( mode == '2' ):
                   [100,  25],
                   [100,  50],
                   [100,  75],
-                  [100, 100] ]
+                  [100, 100],
+                  [125,  25],
+                  [125,  50],
+                  [125,  75],
+                  [125, 100] ]
     i=0
     while (i is not(len(actualPos))):
         
@@ -468,7 +467,6 @@ elif ( mode == '2' ):
             print( "Collecting data!" )
 
             # Pool data from Arduino
-            (H1, H2, H3, H4, H5, H6) = getData(IMU)
             (H1, H2, H3, H4, H5, H6) = getData(IMU)
             initialGuess = findIG(getData(IMU))
             
@@ -483,8 +481,8 @@ elif ( mode == '2' ):
                                 'eps':1e-8, 'factor':0.001})
 
             # Print solution (coordinates) to screen
-            pos = [sol.x[0]*1000, sol.x[1]*1000]
-            #print( "Calc: %.3f, %.3f" %(pos[0], pos[1]) )
+            pos = [sol.x[0]*1000, sol.x[1]*1000, -1*sol.x[2]*1000]
+            print( "(x, y, z): (%.3f, %.3f, %.3f)" %(pos[0], pos[1], pos[2]) )
             
             # Sleep for stability
             sleep( 0.1 )
@@ -501,7 +499,8 @@ elif ( mode == '2' ):
                 i=i+1
                 print("STORED\n\n")
             
-
+    # Plot data
+    storData(calcPos)
     plotPos(actualPos, calcPos)
 
 # --------------------------------------------------------------------------------------
