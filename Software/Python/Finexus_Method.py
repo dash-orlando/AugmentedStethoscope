@@ -104,7 +104,7 @@ def getData(ser):
     ser.reset_output_buffer()
 
     # Allow data to fill-in buffer
-    sleep(0.1)
+    #sleep(0.1)
 
     try:
         # Wait for the sensor to calibrate itself to ambient fields.
@@ -168,14 +168,15 @@ def getData(ser):
         By = float(col[16])
         Bz = float(col[17])
         B6 = np.array( ([Bx],[By],[Bz]), dtype='float64') # Units { G }
-        
+
         # Return vectors
         return (B1, B2, B3, B4, B5, B6)
-
+    
     except Exception as e:
         print( "Caught error in getData()"      )
         print( "Error type %s" %str(type(e))    )
         print( "Error Arguments " + str(e.args) )
+        getData(ser)
 
 # ****************************************************
 # Define function to construct equations to solve for

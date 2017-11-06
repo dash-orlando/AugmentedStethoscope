@@ -40,6 +40,7 @@
 // MUX lines are on these pins.
 #define S0                            8
 #define S1                            9
+#define S2                            10
 // S2 is grounded.
 // MUX lines are selected in binary.
 // For example, Y0 -> S0=LOW, S1=LOW, S2=LOW -> 000.
@@ -62,6 +63,8 @@ void setup() {
   // Initialize the necessary MUX selection pins.
   pinMode(S0, OUTPUT);
   pinMode(S1, OUTPUT);
+  pinMode(S2, OUTPUT);
+  digitalWrite(S2, LOW);
 
   for (int whichPair = 1; whichPair <= 3; whichPair++) {
     //Selecting between sensor pair 1, 2, or 3.
