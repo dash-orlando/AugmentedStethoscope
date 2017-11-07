@@ -230,7 +230,7 @@ def findIG(magFields):
     #      / sensor 1: (x, y, z)
     #     /  sensor 2: (x, y, z)
     # Mat=      :          :
-    #     \     :          :
+    #     \     :          : Determine initial guess based on magnet's location
     #      \ sensor 6: (x, y, z)
     IMU_pos = np.array(((0.0  , 0.0  ,   0.0) ,
                         (0.0  , 0.125,   0.0) ,
@@ -269,11 +269,9 @@ CALIBRATING = True                              # Boolean to indicate that devic
 READY       = False                             # Give time for user to place magnet
 
 #K           = 1.615e-7                          # Small magnet
-K           = 1.09e-6                           # Magnet's constant (K) || Units { G^2.m^6}
+K           = 1.075e-6                          # Magnet's constant (K) || Units { G^2.m^6}
+#K           = 1.09e-6                           # Magnet's constant (K) || Units { G^2.m^6}
 dx          = 1e-7                              # Differential step size (Needed for solver)
-
-##initialGuess= np.array((0.10, 0.01, -0.01), 
-##                        dtype='float64' )       # Initial position/guess
 
 # Establish connection with Arduino
 DEVC = "Arduino"                                # Device Name (not very important)
