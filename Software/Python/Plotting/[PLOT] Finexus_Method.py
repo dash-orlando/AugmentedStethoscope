@@ -8,12 +8,13 @@
 *       (2) Continuous 3D live plot (BETA)
 *       (2) Guided Point-by-Point
 *
-* VERSION: 0.3.0
+* VERSION: 0.3.1
 *   - FIXED   : Program now does a check on the received data
 *               to avoid the error we get so often regarding
 *               the array containing invalid data
 *   - MODIFIED: Streamlined code to make it more human friendly
 *   - ADDED   : 3D plotting mode of operation
+*   - ADDED   : Storring data now works under UNIX systems
 *
 * KNOWN ISSUES:
 *   - Loss in accuracy in 3D space  (not even surprised)
@@ -301,6 +302,13 @@ def findIG( magFields ):
 # --------------------------
 
 def storeData( data ):
+    '''
+    Store computed position co-ordinates into a .txt file
+    
+    INPUTS:
+        - data: A list containing all the computed co-ordinate points
+    '''
+    
     print( "Storing data log under data.txt" )
             
     if platform.system()=='Windows':
@@ -310,6 +318,13 @@ def storeData( data ):
         dst     = homeDir + '\\output'
         dataFile= dst + '\\data.txt'
 
+    elif platform.system()=='Linux':
+
+        # Define useful paths
+        homeDir = os.getcwd()
+        dst = homeDir + '/output'
+        dataFile= dst + '/data.txt'
+    
     # Check if directory exists
     if ( os.path.exists(dst)==False ):
         # Create said directory
@@ -434,8 +449,7 @@ try:
         IMU.open()
     print( "Serial Port OPEN" )
 
-    # Determine initial guess based on magnet's location
-    initialGuess = findIG( getData(IMU) )
+    initialGuess = findIG( getData(IMU) )       # Determine initial guess based on magnet's location
 
 # Error handling in case serial communcation fails (2/2)
 except Exception as e:
