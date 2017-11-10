@@ -135,7 +135,7 @@ void continueAugmentingBP()
     if ( mixerLvL < 1 )
     {
     mixerLvL = mixerLvL + 0.00005;
-    mixer_allToSpk.gain( 0, mixerLvL );
+    mixer_allToSpk.gain( 0, mixerLvL );                 // ...note that perhaps this channel was not needed at all...
     mixer_allToSpk.gain( 1, mixerLvL );
     mixer_allToSpk.gain( 2, (0.25 - mixerLvL) );
     Serial.println( mixerLvL );
