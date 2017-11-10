@@ -320,7 +320,7 @@ uint8_t rmsModulation()
 {
   
   uint8_t returnValue = 0;
-  uint8_t threshRMS   = 0;
+  //uint8_t threshRMS   = 0;
 
   if( fps > 24 )
   {
@@ -611,24 +611,52 @@ boolean startBlending( String fileName )
 }
 
 
+// ==============================================================================================================
+// Continue Blending
+// Blending or mixing the input microphone line with an 
+// audio file from the SD card
+// 
+// This function continuosly blends the playback signal
+// onto the microphone signal
 //
-// *** Continue Blending
-//
+// Fluvio L. Lobo Fenoglietto 11/10/2017
+// ==============================================================================================================
+uint8_t cont_blend_state    = 0;                                                                                // continue blend state - variable switch
+float   mixer_lvl_ON        = 1;
+float   mixer_lvl_OFF       = 0;
+float   mixer_step          = 0.001;
+float   playback_gain       = 0.25;
 void continueBlending() 
 {
-  if ( !playRaw_sdHeartSound.isPlaying() )
+  if ( !playRaw_sdHeartSound.isPlaying() )                                                                      // check if playback sound is playing/running                                                                 
   {
-    playRaw_sdHeartSound.stop();
+    playRaw_sdHeartSound.stop();                                                                                // ...stop if not playing?
   }
-  uint8_t blendState = rmsAmplitudePeaksDuo();
-  if ( blendState == 1 )
+
+  /*
+   * here we need to use the cont_blend_state variable to do an initial blend/tapering ...maybe not needed?
+   */
+  //uint8_t blendState = rmsAmplitudePeaksDuo();
+  uint8_t blendState = rmsModulation();                                                                         // function returns 0(=), 1(+), or 2(-)
+  if ( blendState == 0 )                                                                                        // if blend state == 0, the RMS values are equal and nothing has to be done
   {
-    mixer_mic_Sd.gain( 0, 0.10 );
+    playback_gain = playback_gain;
+    mixer_mic_Sd.gain( 0, 0.10 );                                                                               
+    mixer_mic_Sd.gain( 1, 0.5  ); 
+  }
+  else if ( blendState == 1)                                                                                    // if blend state == 1, the micRMS > playRawRMS and, thus... 
+  {
+    playback_gain = playback_gain + mixer_step;                                                                 // ...the playRawRMS gain must be increased                                           
+    rms_playRaw_mixer.gain(0, playback_gain);                                                                   // ...apply changes to the mixer channel 
+    mixer_mic_Sd.gain( 0, 0.10 );                                                                               
     mixer_mic_Sd.gain( 1, 0.5  );
   }
   else if ( blendState == 2 )
   {
-    mixer_mic_Sd.gain( 1, 0 );
+    playback_gain = playback_gain - mixer_step;                                                                 // ...the playRawRMS gain must be decreased                                           
+    rms_playRaw_mixer.gain(0, playback_gain);                                                                   // ...apply changes to the mixer channel 
+    mixer_mic_Sd.gain( 0, 0.10 );                                                                               
+    mixer_mic_Sd.gain( 1, 0.5  );
   }
   
 } // End of continueBlending();
