@@ -302,6 +302,77 @@ uint8_t rmsAmplitudePeaksDuo()
   return returnValue;
 } // End of rmsAmplitudePeaksDuo()
 
+// ==============================================================================================================
+// RMS Modulation
+// Playback RMS modulation based on the input signal RMS
+//
+// Instead of using RMS as a threshold/switch mechanism,
+// this function actively modulates the playback input
+// signal, using channel gains, to obtain the same RMS
+// of the microphone signal
+// 
+// Fluvio L. Lobo Fenoglietto 11/10/2017
+// ==============================================================================================================
+
+uint32_t count;
+uint32_t min_count = 12;
+uint8_t rmsModulation()
+{
+  
+  uint8_t returnValue = 0;
+  uint8_t threshRMS   = 0;
+
+  if( fps > 24 )
+  {
+    // both microphone and the play_raw module
+    if (   mic_peaks.available() 
+        && mic_rms.available() 
+        && playRaw_peaks.available() 
+        && playRaw_rms.available() )
+    {
+      fps = 0;
+      uint8_t micPeak     = mic_peaks.read()    * 30.0;
+      uint8_t micRMS      = mic_rms.read()      * 30.0;
+      uint8_t playRawPeak = playRaw_peaks.read()* 30.0;
+      uint8_t playRawRMS  = playRaw_rms.read()  * 30.0;
+
+    // Print the moving waveform Serial display
+      for ( cnt = 0; cnt < 30 - micPeak; cnt++ ) Serial.print( " "  );
+      while ( cnt++ < 29 && cnt < 30 - micRMS )  Serial.print( "<"  );
+      while ( cnt++ < 30 )                       Serial.print( "="  );
+      if ( micPeak == 1 )                        Serial.print( " "  );
+                                                 Serial.print( "||" );
+      for( cnt = 0; cnt < playRawRMS; cnt++ )    Serial.print( "="  );
+      while( cnt++ < playRawPeak )               Serial.print( ">"  );
+      while( cnt++ < 30 )                        Serial.print( " "  );
+      Serial.printf( "       | Mic. Peak = %d | Mic. RMS = %d |"
+                          " playRaw Peak = %d | playRaw RMS = %d |\n",
+                      micPeak,
+                      micRMS,
+                      playRawPeak,
+                      playRawRMS
+                   );  //*/
+
+      // RMS comparison
+      if (micRMS == playRawRMS)                                             // if the micRMS is greater then the playRawRMS
+      {
+        returnValue = 0;                                                    // do NOT change the value of the playback input gain
+        count = 0;                                                          // reset count
+      }
+      else if (micRMS > playRawRMS)                                         // if the micRMS is greater than the playRawRMS
+      {
+        if (++count == min_count) returnValue = 1;                          // after minimum count is reached, increase the value of the playback input gain (g++)
+      }
+      else if (micRMS < playRawRMS)                                         // if the micRMS is smaller than the playRawRMS
+      {
+        if (++count == min_count) returnValue = 2;                          // after minimum count is reached, decrease the value of the playback input gain (g--)
+      } // End of RMS comparison...
+     
+    } // End of availability check
+  } // End of fps check
+  return returnValue;
+} // End of rmsAmplitudePeaksDuo()
+// ==============================================================================================================
 
 void switchMode( int m )
 {
