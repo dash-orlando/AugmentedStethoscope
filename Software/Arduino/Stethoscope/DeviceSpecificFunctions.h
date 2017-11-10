@@ -235,16 +235,16 @@ void rmsAmplitudePeaksSingle()
     {
       fps = 0;
       uint8_t micPeak = mic_peaks.read()  * 30.0;
-      uint8_t micRMS  = mic_rms.read()    * 30.0;
+      uint8_t micRMS  = 0; //mic_rms.read()    * 30.0;
+      float micRMSval = mic_rms.read();                               //... it is possible to make these values into floats
 
       for ( cnt = 0; cnt < 30 - micPeak; cnt++ ) Serial.print( " "  );
       while ( cnt++ < 29 && cnt < 30-micRMS )    Serial.print( "<"  );
       while ( cnt++ < 30 )                       Serial.print( "="  );
                                                  Serial.print( "||" );
-      Serial.printf( "       | Mic. Peak = %d | Mic. RMS = %d |\n",
-                      micPeak,
-                      micRMS
-                   );  //*/
+      Serial.printf( "       | Mic. Peak = %d", micPeak);
+      Serial.print(" | Mic. RMS = ");
+      Serial.println(micRMSval);
     }
   }
 } // End of rmsAmplitudePeaksSingle()
@@ -314,7 +314,7 @@ uint8_t rmsAmplitudePeaksDuo()
 // Fluvio L. Lobo Fenoglietto 11/10/2017
 // ==============================================================================================================
 
-uint32_t count;
+//uint32_t count;
 uint32_t min_count = 12;
 uint8_t rmsModulation()
 {
