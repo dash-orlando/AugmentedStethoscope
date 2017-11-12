@@ -576,17 +576,26 @@ boolean stopPlaying()
 }
 
 
+
+// ==============================================================================================================
+// Start Blending
+// Blending or mixing the input microphone line with an 
+// audio file from the SD card
+// 
+// This function triggers/begins the blending of the playback signal
+// onto the microphone signal
 //
-// *** Start Blending
-// Start Blending is a variant of the Start Playing/Playback function.  Instead of muting one channel,
-//  the function progressively attenuates one channel while amplifying an overlaying signal.
+// Fluvio L. Lobo Fenoglietto 11/12/2017
+// ==============================================================================================================
 boolean startBlending( String fileName )
 {
   Serial.println( "EXECUTING startBlending()" );                                                                // Identification of function executed
 
-  mixer_mic_Sd.gain( 0, mixerInputON  );        // Turn mic on                                                  // Keep the microphone channel 0 at its normal gain value
-  mixer_mic_Sd.gain( 1, mixerInputOFF  );       // Turn recorded HB off                                         // Keep the microphone channel 1 at its normal gain value
-  //mixer_mic_Sd.gain( 2, mixerInputOFF );                                                                      // Set the gain of the playback audio signal to mute for starter
+  // Control Mixer Channels and Gains
+  mixer_mic_Sd.gain( 0, mixerInputON  );                                                                        // Turn ON the input mic channel (0, gain = 1)
+  mixer_mic_Sd.gain( 1, mixerInputOFF  );                                                                       // Turn OFF the playback channel (1, gain = 0)
+  mixer_allToSpk.gain( 1, mixerInputOFF );                                                                      // Turn OFF the high-pass-filtered channel (1, gain = 0)
+  mixer_allToSpk.gain( 2, mixerInputOFF );                                                                      // Turn OFF the play-from memmory channel (2, gain = 0)
 
   char  filePly[fileName.length()+1];                                                                           // Conversion from string to character array
   fileName.toCharArray( filePly, sizeof( filePly ) );
@@ -608,7 +617,7 @@ boolean startBlending( String fileName )
     BTooth.write( NAK );                                                                                        // Negative AcKnowledgement sent back through bluetooth serial
     return false;
   }
-}
+} // End of startBlending()
 
 
 // ==============================================================================================================
@@ -621,11 +630,14 @@ boolean startBlending( String fileName )
 //
 // Fluvio L. Lobo Fenoglietto 11/10/2017
 // ==============================================================================================================
-uint8_t cont_blend_state    = 0;                                                                                // continue blend state - variable switch
-float   mixer_lvl_ON        = 1;
-float   mixer_lvl_OFF       = 0;
-float   mixer_step          = 0.001;
-float   playback_gain       = 0.25;
+uint8_t cont_blend_state          = 0;                                                                                // continue blend state - variable switch
+float   mixer_lvl_ON              = 1.0;
+float   mixer_lvl_OFF             = 0.0;
+float   blend_mixer_up_lvl        = 1.0;
+float   blend_mixer_down_lvl      = 0.0;
+float   blend_mixer_step          = 0.00005;
+float   mixer_step                = 0.001;
+float   playback_gain             = 0.25;
 void continueBlending() 
 {
   if ( !playRaw_sdHeartSound.isPlaying() )                                                                      // check if playback sound is playing/running                                                                 
@@ -633,9 +645,25 @@ void continueBlending()
     playRaw_sdHeartSound.stop();                                                                                // ...stop if not playing?
   }
 
+  // 
+  // Transition Blending
+  //
+  if ( blend_mixer_up_lvl > 0.10 )
+  {
+    blend_mixer_up_lvl = blend_mixer_up_lvl - blend_mixer_step;
+    blend_mixer_down_lvl = blend_mixer_down_lvl + blend_mixer_step;    
+    mixer_mic_Sd.gain(0, blend_mixer_up_lvl);
+    mixer_mic_Sd.gain(1, blend_mixer_down_lvl);
+    
+  }
+  else if ( blend_mixer_up_lvl < 1.0 )
+  {
+    
+  }
+  
   /*
    * here we need to use the cont_blend_state variable to do an initial blend/tapering ...maybe not needed?
-   */
+  
   //uint8_t blendState = rmsAmplitudePeaksDuo();
   uint8_t blendState = rmsModulation();                                                                         // function returns 0(=), 1(+), or 2(-)
   if ( blendState == 0 )                                                                                        // if blend state == 0, the RMS values are equal and nothing has to be done
@@ -658,6 +686,7 @@ void continueBlending()
     mixer_mic_Sd.gain( 0, 0.10 );                                                                               
     mixer_mic_Sd.gain( 1, 0.5  );
   }
+  */
   
 } // End of continueBlending();
 
