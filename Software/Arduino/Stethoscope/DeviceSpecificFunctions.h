@@ -341,26 +341,10 @@ uint8_t rmsModulation()
         && playRaw_rms.available() )
     {
       fps = 0;
-      uint8_t micPeak     = mic_peaks.read()    * 30.0;
-      uint8_t micRMS      = mic_rms.read()      * 30.0;
-      uint8_t playRawPeak = playRaw_peaks.read()* 30.0;
-      uint8_t playRawRMS  = playRaw_rms.read()  * 30.0;
-
-    // Print the moving waveform Serial display
-      //for ( cnt = 0; cnt < 30 - micPeak; cnt++ ) Serial.print( " "  );
-      //while ( cnt++ < 29 && cnt < 30 - micRMS )  Serial.print( "<"  );
-      //while ( cnt++ < 30 )                       Serial.print( "="  );
-      //if ( micPeak == 1 )                        Serial.print( " "  );
-      //                                           Serial.print( "||" );
-      //for( cnt = 0; cnt < playRawRMS; cnt++ )    Serial.print( "="  );
-      //while( cnt++ < playRawPeak )               Serial.print( ">"  );
-      //while( cnt++ < 30 )                        Serial.print( " "  );
-      //Serial.printf( "Mic. Peak = %d | Mic. RMS = %d | playRaw Peak = %d | playRaw RMS = %d |\n",
-      //                micPeak,
-      //                micRMS,
-      //                playRawPeak,
-      //                playRawRMS
-      //             );  //*/
+      float micPeak     = mic_peaks.read();
+      float micRMS      = mic_rms.read();
+      float playRawPeak = playRaw_peaks.read();
+      float playRawRMS  = playRaw_rms.read();
 
       // RMS comparison
       if (micRMS == playRawRMS)                                             // if the micRMS is greater then the playRawRMS
@@ -376,6 +360,14 @@ uint8_t rmsModulation()
       {
         if (++count == min_count) returnValue = 2;                          // after minimum count is reached, decrease the value of the playback input gain (g--)
       } // End of RMS comparison...
+
+      // Print values for comparison
+      Serial.print("micRMS = ");
+      Serial.print(micRMS);
+      Serial.print(" | playRawRMS = ");
+      Serial.print(playRawRMS);
+      Serial.print(" | returnValue = ");
+      Serial.println(returnValue);
      
     } // End of availability check
   } // End of fps check
