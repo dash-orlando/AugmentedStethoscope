@@ -637,8 +637,6 @@ float   mixer_lvl_OFF             = 0.0;
 float   mic_mixer_lvl             = 1.0;                                                                        // microphone mixer gain level (standard and initial)
 float   playback_mixer_lvl        = 0.0;                                                                        // playback mixer gain level (standard and initial)
 float   mixer_lvl_step            = 0.00005;
-float   mixer_step                = 0.001;
-float   playback_gain             = 0.25;
 void continueBlending() 
 {
   if ( !playRaw_sdHeartSound.isPlaying() )                                                                      // check if playback sound is playing/running                                                                 
