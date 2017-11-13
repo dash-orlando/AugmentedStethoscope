@@ -15,7 +15,7 @@
  
  enum State
 {
-  CONNECTED, DISCONNECTED, RECORDING, PLAYING, PASSTHRU, DETECTING, AUGMENTING, STANDBY, READY, NOTREADY
+  CONNECTED, DISCONNECTED, RECORDING, PLAYING, PASSTHRU, DETECTING, AUGMENTING, STARTING, CONTINUING, STOPPING, STANDBY, READY, NOTREADY
 };
 
 State     connectState    = DISCONNECTED;
@@ -23,6 +23,7 @@ State     recordState     = STANDBY;
 State     passthruState   = PASSTHRU;
 State     HBDetectState   = STANDBY;
 State     BPAugmentState  = STANDBY;
+State     blendState      = STANDBY;
 State     readyState;
 
 String stateToText( int state )             // for Serial monitor diagnostics
@@ -50,6 +51,15 @@ String stateToText( int state )             // for Serial monitor diagnostics
       break;
     case AUGMENTING :
       value = "AUGMENTING";
+      break;
+    case STARTING   :
+      value = "STARTING";
+      break;
+    case CONTINUING :
+      value = "CONTINUING";
+      break;
+    case STOPPING   :
+      value = "STOPPING";
       break;
     case STANDBY :
       value = "STANDBY";
@@ -81,5 +91,6 @@ String stateToText( int state )             // for Serial monitor diagnostics
  *
  */
 
-int			mode	= 4;
+int			mode	= 0;
+
 

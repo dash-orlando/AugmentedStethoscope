@@ -110,7 +110,7 @@ boolean stopAugmentingBP()
   EndHB();
   BPAugmentState  = STANDBY;
   recordState     = PASSTHRU;
-  switchMode( 4 );
+  //switchMode( 6 );
   Serial.println( "Augmentation for BP reading STOPPED." );
   BTooth.write( ACK );
   return true;
@@ -119,5 +119,33 @@ boolean stopAugmentingBP()
 
 void continueAugmentingBP()
 {
+  if ( BPAugmentState  == AUGMENTING )
+  {
+    if ( mixerLvL > 0.10 )
+    {
+    mixerLvL = mixerLvL - 0.00005;
+    mixer_allToSpk.gain( 0, mixerLvL );
+    mixer_allToSpk.gain( 1, mixerLvL );
+    mixer_allToSpk.gain( 2, (0.25 - mixerLvL) );
+    //Serial.println( mixerLvL );
+    }
+  }
+  else if ( BPAugmentState == STANDBY )
+  {
+    if ( mixerLvL < 1 )
+    {
+    mixerLvL = mixerLvL + 0.00005;
+    mixer_allToSpk.gain( 0, mixerLvL );                 // ...note that perhaps this channel was not needed at all...
+    mixer_allToSpk.gain( 1, mixerLvL );
+    mixer_allToSpk.gain( 2, (0.25 - mixerLvL) );
+    Serial.println( mixerLvL );
+    }
+    else if ( mixerLvL == 1)
+    {
+      switchMode( 4 );
+    }
+  }
+
 }
+
 
