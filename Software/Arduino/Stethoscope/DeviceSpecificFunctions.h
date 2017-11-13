@@ -658,7 +658,7 @@ void continueBlending()
   }
 
   // 
-  // Transition Blending
+  // Using blending states, the function fades sound in/continously/out
   //
   if ( blendState == STARTING )                                                                                 // if blendState == STARTING, begin the blending of the signals
   {
@@ -723,34 +723,7 @@ void continueBlending()
       playRaw_sdHeartSound.stop();                                                                              // stop playback file
       switchMode( 0 );                                                                                          // switch to pre-defined mode (preferably idle/standby)
     } // End of blend mixer level check
-  } // End of blendState check
-
-  /*
-  
-  //uint8_t blendState = rmsAmplitudePeaksDuo();
-  uint8_t blendState = rmsModulation();                                                                         // function returns 0(=), 1(+), or 2(-)
-  if ( blendState == 0 )                                                                                        // if blend state == 0, the RMS values are equal and nothing has to be done
-  {
-    playback_gain = playback_gain;
-    mixer_mic_Sd.gain( 0, 0.10 );                                                                               
-    mixer_mic_Sd.gain( 1, 0.5  ); 
-  }
-  else if ( blendState == 1)                                                                                    // if blend state == 1, the micRMS > playRawRMS and, thus... 
-  {
-    playback_gain = playback_gain + mixer_step;                                                                 // ...the playRawRMS gain must be increased                                           
-    rms_playRaw_mixer.gain(0, playback_gain);                                                                   // ...apply changes to the mixer channel 
-    mixer_mic_Sd.gain( 0, 0.10 );                                                                               
-    mixer_mic_Sd.gain( 1, 0.5  );
-  }
-  else if ( blendState == 2 )
-  {
-    playback_gain = playback_gain - mixer_step;                                                                 // ...the playRawRMS gain must be decreased                                           
-    rms_playRaw_mixer.gain(0, playback_gain);                                                                   // ...apply changes to the mixer channel 
-    mixer_mic_Sd.gain( 0, 0.10 );                                                                               
-    mixer_mic_Sd.gain( 1, 0.5  );
-  }
-  */
-  
+  } // End of blendState check 
 } // End of continueBlending();
 // ==============================================================================================================
 
