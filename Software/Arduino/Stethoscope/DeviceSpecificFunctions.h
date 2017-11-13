@@ -11,7 +11,7 @@
  */
 
  
-#include <SerialFrame.h>
+#include "SerialFrame.h"
 
 //
 // *** Variables
@@ -604,12 +604,13 @@ boolean startBlending( String fileName )
   
   if ( SD.exists( filePly ) )
   {
-    playRaw_sdHeartSound.play( filePly );       // Start playing recorded HB
-    recordState = PLAYING;
+    blendState = STARTING;
+    recordState = PLAYING; //...do we need this?
+    Serial.println( "Stethoscope will begin BLENDING" );
+    playRaw_sdHeartSound.play( filePly );                                                                       // Start playing recorded HB
+    BTooth.write( ACK );
     switchMode( 5 );
-    Serial.println( "Stethoscope began BLENDING" );                                                             // Function execution confirmation over USB serial
-    BTooth.write( ACK );                                                                                        // ACKnowledgement sent back through bluetooth serial
-    return true;
+    return true;    
   }
   else
   {
@@ -648,6 +649,49 @@ void continueBlending()
   // 
   // Transition Blending
   //
+  if ( blendState == STARTING )                                                                                 // if blendState == STARTING, begin the blending of the signals
+  {
+    if ( blend_mixer_up_lvl > 0.10 )                                                                            // check the value of the gain levels to trigger a gradual blending
+    {
+      blend_mixer_up_lvl = blend_mixer_up_lvl - blend_mixer_step;
+      blend_mixer_down_lvl = blend_mixer_down_lvl + blend_mixer_step;    
+      mixer_mic_Sd.gain(0, blend_mixer_up_lvl);
+      mixer_mic_Sd.gain(1, blend_mixer_down_lvl);
+      Serial.print(" mic. gain = ");
+      Serial.print(blend_mixer_up_lvl);
+      Serial.print(" || playback gain = ");
+      Serial.println(blend_mixer_down_lvl);
+    }
+    else
+    {
+      blendState = CONTINUING;                                                                                  // Switch state to CONTINUING for dynamic blending, other...
+    } // End of blend mixer level check
+  }
+  else if ( blendState == CONTINUING )
+  {
+    //Serial.println( "Still Blending!" );
+  }
+  else if ( blendState == STOPPING )
+  {
+    if ( blend_mixer_up_lvl < 0.90 )
+    {
+      blend_mixer_up_lvl = blend_mixer_up_lvl + blend_mixer_step;
+      blend_mixer_down_lvl = blend_mixer_down_lvl - blend_mixer_step;    
+      mixer_mic_Sd.gain(0, blend_mixer_up_lvl);
+      mixer_mic_Sd.gain(1, blend_mixer_down_lvl);
+      Serial.print(" mic. gain = ");
+      Serial.print(blend_mixer_up_lvl);
+      Serial.print(" || playback gain = ");
+      Serial.println(blend_mixer_down_lvl);
+    }
+    else
+    {
+      playRaw_sdHeartSound.stop();                                                                              // stop playback file
+      switchMode( 0 );                                                                                          // switch to pre-defined mode (preferably idle/standby)
+    } // End of blend mixer level check
+  } // End of blendState check
+
+  /*
   if ( blend_mixer_up_lvl > 0.10 )
   {
     blend_mixer_up_lvl = blend_mixer_up_lvl - blend_mixer_step;
@@ -661,7 +705,7 @@ void continueBlending()
     
   }
   
-  /*
+  
    * here we need to use the cont_blend_state variable to do an initial blend/tapering ...maybe not needed?
   
   //uint8_t blendState = rmsAmplitudePeaksDuo();
@@ -696,12 +740,14 @@ void continueBlending()
 //
 boolean stopBlending()
 {
-  Serial.println( "stopBlending" );
-  if ( recordState == PLAYING ) playRaw_sdHeartSound.stop();
-  mixerLvL    = 1;
-  recordState = STANDBY;
-  switchMode( 4 );
-  Serial.println( "Stethoscope stopped BLENDING" );                                                             // Function execution confirmation over USB serial
+  Serial.println( "EXECUTING stopBlending()" );
+  blendState = STOPPING;                                                                                        // This will trigger the bleding down and stopping
+  
+  //if ( recordState == PLAYING ) playRaw_sdHeartSound.stop();
+  //mixerLvL    = 1;
+  //recordState = STANDBY;
+  //switchMode( 4 );
+  Serial.println( "Stethoscope will BLENDING" );                                                                // Function execution confirmation over USB serial
   Serial.println( "sending: ACK..." );
   BTooth.write( ACK );                                                                                          // ACKnowledgement sent back through bluetooth serial
   return true;
