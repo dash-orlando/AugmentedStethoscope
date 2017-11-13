@@ -231,6 +231,73 @@ bool waveAmplitudePeaks()
   return beatHeard;
 } // End of waveAmplitudePeaks()
 
+// ==============================================================================================================
+// Wave Amplitude Peaks - Heart Beat Monitoring
+// Amplitude Peak Detection and Heart Rate Approximation
+//
+// The following function uses an amplitude peak detection
+// tool to approximate heart-rate
+// 
+// Fluvio L. Lobo Fenoglietto 11/13/2017
+// ==============================================================================================================
+uint8_t       first_peak;
+uint8_t       second_peak;
+uint8_t       peak_tolerance = 3;
+int           i              = 0;
+uint8_t       peaks[2]       = {0,0};
+uint8_t       t[2]           = {0,0};
+uint8_t       hr             = 0;
+elapsedMillis elapsed_time;
+void waveAmplitudePeaks2()
+{
+  if( fps > 24 )
+  {
+    if (   peak_QrsMeter.available() )
+    {
+      fps = 0;
+      uint8_t micPeak = mic_peaks.read()  * 30.0;
+
+      if ( peaks[0] == 0 )
+      {
+        peaks[0] = micPeak;
+      }
+      else if ( micPeak > (peaks[0]+4) )
+      {
+        peaks[0] = micPeak;
+        //elapsedMillis elapsed_time;
+      }
+      else if ( micPeak < (peaks[0]+4) )
+      {
+        //elapsedMillis elapsed_time;
+      }
+      else if ( micPeak == peaks[0] )
+      {
+        Serial.println("hello");
+        peaks[1]  = micPeak;
+        t[1]      = elapsed_time;
+      }
+
+      hr = 60000*(1/(t[1])); 
+
+      for ( cnt = 0; cnt < 30 - micPeak; cnt++ ) Serial.print( " "  );
+      while ( cnt++ < 30 )                       Serial.print( "="  );
+                                                 Serial.print( "||" );
+      Serial.print("Mic. Peak = ");
+      Serial.print(micPeak);
+      Serial.print(" | Peak[0] = ");
+      Serial.print(peaks[0]);
+      Serial.print(" | Peak[1] = ");
+      Serial.print(peaks[1]);
+      Serial.print(" | Time[0] = ");
+      Serial.print(t[0]);
+      Serial.print(" | Time[1] = ");
+      Serial.print(t[1]);
+      Serial.print(" | HR = ");
+      Serial.println(hr);
+
+    }
+  }
+} // End of waveAmplitudePeaks2()
 
 // ==============================================================================================================
 // RMS, Amplituide Peaks - Single
@@ -894,7 +961,8 @@ boolean startHeartBeatMonitoring()
 // ==============================================================================================================
 boolean continueHeartBeatMonitoring()
 {
-    bool beatCaptured = waveAmplitudePeaks();                                                                   // write HR and time to file at each heart beat
+    //bool beatCaptured = waveAmplitudePeaks();                                                                   // write HR and time to file at each heart beat
+    waveAmplitudePeaks2();
     //if ( beatCaptured )
     //{
     //  txFr = sf1.Get();                                                                                         // get values from existing TX data frame
@@ -904,7 +972,6 @@ boolean continueHeartBeatMonitoring()
   return true;
 } // End of continueMonitoring()
 // ==============================================================================================================
-
 
 // ==============================================================================================================
 // Stop Heart Beat Monitoring
@@ -921,8 +988,8 @@ boolean stopHeartBeatMonitoring()
   if ( recordState == DETECTING )
   {
     recordState = PASSTHRU;
-    switchMode( 4 );
-    sf1.StopSend( STRING );                                                                                     // Terminate transmitting heartrate data as a String
+    switchMode( 0 );
+    //sf1.StopSend( STRING );                                                                                     // Terminate transmitting heartrate data as a String
     Serial.println( "Stethoscope will STOP DETECTING heartbeat from MIC audio." );                              // Function execution confirmation over USB serial
     Serial.println( "sending: ACK..." );
     BTooth.write( ACK );                                                                                        // ACKnowledgement sent back through bluetooth serial
@@ -936,3 +1003,4 @@ boolean stopHeartBeatMonitoring()
     return false;
   }
 } // End of stopHeartBeatMonitoring()
+// ==============================================================================================================
