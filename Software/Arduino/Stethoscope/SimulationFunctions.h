@@ -56,11 +56,12 @@
  //
  // *** Blend Recorded, Korotkoff sound
  //
- String KOROTBlend()
+ String KOROTBlend(String fileName)
  {
 
-  String fileName = ses.filePly5;
+  fileName = ses.filePly5;
   startBlending( fileName );                                                      // Blending of a Recorded, Exercised Heart Beat
+  Serial.println( fileName );
   return fileName;
   
  } // End of KOROTBlend() function

@@ -654,6 +654,8 @@ void continueBlending(String fileName)
 {
   if ( !playRaw_sdHeartSound.isPlaying() )                                                                      // check if playback sound is playing/running                                                                 
   {
+    Serial.print(" Re-playing = ");
+    Serial.println(fileName);
     char  filePly[fileName.length()+1];                                                                           // Conversion from string to character array
     fileName.toCharArray( filePly, sizeof( filePly ) );
     Serial.println( filePly );
