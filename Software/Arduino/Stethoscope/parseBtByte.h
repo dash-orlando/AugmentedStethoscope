@@ -174,7 +174,7 @@ void parseBtByte( String fn )
       break;
       case KOROT :
         // KOROT : Start Augmenting KorotKoff Sound
-        KOROTBlend(fileName);
+        fileName = KOROTBlend(fileName);
       break;
 
       default :
