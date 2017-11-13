@@ -676,7 +676,7 @@ void continueBlending()
       blendState = CONTINUING;                                                                                  // Switch state to CONTINUING for dynamic blending, other...
     } // End of blend mixer level check
   }
-  else if ( blendState == CONTINUING )
+  else if ( blendState == CONTINUING )                                                                          // if blendState == CONTINUING, maintain or vary mixer levels using functions
   {
     uint8_t rms_switch = rmsAmplitudePeaksDuo();
     if ( rms_switch == 1 )
