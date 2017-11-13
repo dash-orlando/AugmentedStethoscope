@@ -325,7 +325,7 @@ uint8_t rmsAmplitudePeaksDuo()
 // Fluvio L. Lobo Fenoglietto 11/10/2017
 // ==============================================================================================================
 //uint32_t count;
-uint32_t min_count = 12;
+uint32_t min_count = 1;
 uint8_t rmsModulation()
 {
   
@@ -341,31 +341,40 @@ uint8_t rmsModulation()
         && playRaw_rms.available() )
     {
       fps = 0;
-      float micPeak     = mic_peaks.read();
-      float micRMS      = mic_rms.read();
-      float playRawPeak = playRaw_peaks.read();
-      float playRawRMS  = playRaw_rms.read();
+      uint8_t micPeak     = mic_peaks.read()      * 30.0;
+      uint8_t micRMS      = mic_rms.read()        * 30.0;
+      uint8_t playRawPeak = playRaw_peaks.read()  * 30.0;
+      uint8_t playRawRMS  = playRaw_rms.read()    * 30.0;
+      //float micPeak     = mic_peaks.read();
+      //float micRMS      = mic_rms.read();
+      //float playRawPeak = playRaw_peaks.read();
+      //float playRawRMS  = playRaw_rms.read();
 
       // RMS comparison
-      if (micRMS == playRawRMS)                                             // if the micRMS is greater then the playRawRMS
+      if (micRMS == playRawRMS && micRMS > 3)                                                           // if the micRMS is greater then the playRawRMS
       {
-        returnValue = 0;                                                    // do NOT change the value of the playback input gain
-        count = 0;                                                          // reset count
+        returnValue = 0;                                                                                // do NOT change the value of the playback input gain
       }
-      else if (micRMS > playRawRMS)                                         // if the micRMS is greater than the playRawRMS
+      else if (micRMS > playRawRMS)                                                                     // if the micRMS is greater than the playRawRMS
       {
-        if (++count == min_count) returnValue = 1;                          // after minimum count is reached, increase the value of the playback input gain (g++)
+        returnValue = 1;                                                                                // after minimum count is reached, increase the value of the playback input gain (g++)
       }
-      else if (micRMS < playRawRMS)                                         // if the micRMS is smaller than the playRawRMS
+      else if (micRMS < playRawRMS)                                                                     // if the micRMS is smaller than the playRawRMS
       {
-        if (++count == min_count) returnValue = 2;                          // after minimum count is reached, decrease the value of the playback input gain (g--)
-      } // End of RMS comparison...
+        returnValue = 2;                                                                                // after minimum count is reached, decrease the value of the playback input gain (g--)
+      }
+      else if (micRMS < 3)
+      {
+        returnValue = 2;                                                                                // after minimum count is reached, decrese the value of the playback input gain (g--)
+      }// End of RMS comparison...
 
       // Print values for comparison
       Serial.print("micRMS = ");
       Serial.print(micRMS);
       Serial.print(" | playRawRMS = ");
       Serial.print(playRawRMS);
+      Serial.print(" | Count =");
+      Serial.print(count);
       Serial.print(" | returnValue = ");
       Serial.println(returnValue);
      
@@ -639,8 +648,8 @@ float   playback_mixer_lvl            = 0.0;                                    
 float   mic_mixer_lvl_step            = 0.00005;
 float   playback_mixer_lvl_step       = mic_mixer_lvl_step/4;
 
-float   playback_rms_mixer_lvl        = 1.0;
-float   playback_rms_mixer_lvl_step   = 0.005;                                                                  // mixer level step for rms-based amplitude manipulation
+float   playback_rms_mixer_lvl        = 0.25;
+float   playback_rms_mixer_lvl_step   = 0.10;                                                                   // mixer level step for rms-based amplitude manipulation
 void continueBlending() 
 {
   if ( !playRaw_sdHeartSound.isPlaying() )                                                                      // check if playback sound is playing/running                                                                 
@@ -676,19 +685,19 @@ void continueBlending()
     if ( rms_switch == 0 )                                                                                      // RMS value of mic. and playback signal are similar
     {
       // nothing
-      mixer_mic_Sd.gain(0, mic_mixer_lvl);
-      mixer_mic_Sd.gain(1, playback_mixer_lvl);
+      //mixer_mic_Sd.gain(0, mic_mixer_lvl);
+      //mixer_mic_Sd.gain(1, playback_mixer_lvl);
     }
     else if ( rms_switch == 1 )                                                                                 // RMS value of mic. > playback signal
     {
       playback_rms_mixer_lvl = playback_rms_mixer_lvl + playback_rms_mixer_lvl_step;                            // ...increase gain value
+      if ( playback_rms_mixer_lvl > 0.50 ) playback_rms_mixer_lvl = 0.50;
       rms_playRaw_mixer.gain(0, playback_rms_mixer_lvl);                                                        // ...apply gain value
-      //mixer_mic_Sd.gain(0, mic_mixer_lvl);
-      //mixer_mic_Sd.gain(1, playback_mixer_lvl);
     }
     else if ( rms_switch == 2 )                                                                                 // RMS value of mic. < playback signal
     {
       playback_rms_mixer_lvl = playback_rms_mixer_lvl - playback_rms_mixer_lvl_step;                            // ...increase gain value
+      if ( playback_rms_mixer_lvl < 0 ) playback_rms_mixer_lvl = 0;                                             // ...sign check, gain values are taken as the absolute so anything below zero will also generate sounds
       rms_playRaw_mixer.gain(0, playback_rms_mixer_lvl);                                                        // ...apply gain value
     }
     //Serial.print(" RMS Switch = ");
