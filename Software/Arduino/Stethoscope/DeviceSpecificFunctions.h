@@ -64,9 +64,16 @@ void adjustMicLevel()
 }
 
 
+// ==============================================================================================================
+// Wave Amplitude Peaks
+// Amplitude Peak Detection and Heart Rate Approximation
 //
-// *** Wave Amplitude Peaks
-//
+// The following function uses an amplitude peak detection
+// tool to approximate heart-rate
+// 
+// Michael Xynidis
+// Fluvio L. Lobo Fenoglietto 11/12/2017
+// ==============================================================================================================
 bool waveAmplitudePeaks()
 {
   if ( msecs > 40 )                                     // sample at 25MHz
@@ -225,6 +232,15 @@ bool waveAmplitudePeaks()
 } // End of waveAmplitudePeaks()
 
 
+// ==============================================================================================================
+// RMS, Amplituide Peaks - Single
+// RMS and Amplitude Peak detection based on the input
+// microphone
+//
+// ...
+// 
+// Fluvio L. Lobo Fenoglietto 11/12/2017
+// ==============================================================================================================
 void rmsAmplitudePeaksSingle()
 {
   if( fps > 24 )
@@ -248,6 +264,7 @@ void rmsAmplitudePeaksSingle()
     }
   }
 } // End of rmsAmplitudePeaksSingle()
+// ==============================================================================================================
 
 // ==============================================================================================================
 // RMS, Amplituide Peaks
@@ -258,7 +275,6 @@ void rmsAmplitudePeaksSingle()
 // 
 // Fluvio L. Lobo Fenoglietto 11/12/2017
 // ==============================================================================================================
-
 uint32_t count;
 uint8_t rmsAmplitudePeaksDuo()
 {
@@ -819,12 +835,19 @@ boolean continueAudioPassThrough()
 } // End of continueAudioPassThrough()
 
 
-//
-// *** Start Detecting Heartbeat Peaks from Microphone Audio.
-//     This function uses the wave peak detection tool to find and measure heartbeat/rate from the microphone audio.
-//     The function does not record data to a file, rather is needed to send information for remote display via serial port communication.
-//     Note that the function acts as an alternative to startMicStream().
-//
+
+// ==============================================================================================================
+// Start Heart Beat Monitoring
+// 
+// This function uses the wave peak detection tool to find 
+// and measure heartbeat/rate from the microphone audio.
+// The function does not record data to a file, rather is 
+// needed to send information for remote display via serial
+// port communication.
+// 
+// Michael Xynidis
+// Fluvio L. Lobo Fenoglietto 11/12/2017
+// ==============================================================================================================
 boolean startHeartBeatMonitoring()
 {
   Serial.println( "EXECUTING startTrackingMicStream()" );
@@ -832,14 +855,20 @@ boolean startHeartBeatMonitoring()
   if ( recordState == PLAYING ) stopPlaying();                                                                  // Stop playback if playing
   if ( selectedInput == AUDIO_INPUT_MIC )
   {
-    mixer_mic_Sd.gain( 0, mixerInputON  );                                                                      // Set gain of mixer_mic_Sd, channel0 to 0.5 - Microphone on
-    mixer_mic_Sd.gain( 1, mixerInputON  );                                                                      // Set gain of mixer_mic_Sd, channel0 to 0.5 - Microphone on
-    mixer_mic_Sd.gain( 2, mixerInputOFF );                                                                      // Set gain of mixer_mic_Sd, channel2 to 0
+    // Set-up the initial channel gains
+    rms_mic_mixer.gain(   0, mixerInputON   );                                                                  // turn rms mic mixer channel "0" ON (=1)
+    rms_mic_mixer.gain(   1, mixerInputON   );                                                                  // turn rms mic mixer channel "1" ON (=1)
+    mixer_mic_Sd.gain(    0, mixerInputON   );                                                                  // turn sd mic mixer channel "0" ON (=1)
+    mixer_mic_Sd.gain(    1, mixerInputOFF  );                                                                  // turn sd playback mixer channel "1" OFF (=0)
+    mixer_allToSpk.gain(  0, mixerInputON   );                                                                  // turn spk mic mixer channel "0" ON (=1)
+    mixer_allToSpk.gain(  1, mixerInputOFF  );                                                                  // turn spk mic (fileterd) mixer channel "0" OFF (=0)
+    mixer_allToSpk.gain(  2, mixerInputOFF  );                                                                  // turn spk playmem mixer channel "0" OFF (=0)
+    
     queue_recMic.begin();
     recordState = DETECTING;
     switchMode( 3 );
-    sf1.StartSend( STRING, 1000 );                                                                              // Begin transmitting heartrate data as a String
-    Serial.println( "Stethoscope STARTed DETECTING heartbeat from MIC audio." );                                // Function execution confirmation over USB serial
+    //sf1.StartSend( STRING, 1000 );                                                                              // Begin transmitting heartrate data as a String
+    Serial.println( "Stethoscope STARTED DETECTING heartbeat from MIC audio." );                                // Function execution confirmation over USB serial
     Serial.println( "sending: ACK..." );
     BTooth.write( ACK );                                                                                        // ACKnowledgement sent back through bluetooth serial
     return true;
@@ -852,31 +881,40 @@ boolean startHeartBeatMonitoring()
     return false;
   }
 } // End of startMonitoring()
+// ==============================================================================================================
 
-
-//
-// *** Continue Tracking Microphone Stream
-//     This is the companion function to trackingMicStream()
-//     The function continues the tracking of audio peaks
-//
+// ==============================================================================================================
+// Continue Heart Beat Monitoring
+// 
+// Continues heart rate monitoring/tracking using the
+// waveAmplitudePeaks() function
+// 
+// Michael Xynidis
+// Fluvio L. Lobo Fenoglietto 11/12/2017
+// ==============================================================================================================
 boolean continueHeartBeatMonitoring()
 {
     bool beatCaptured = waveAmplitudePeaks();                                                                   // write HR and time to file at each heart beat
-    if ( beatCaptured )
-    {
-      txFr = sf1.Get();                                                                                         // get values from existing TX data frame
-      txFr.DataString = String( heartRateI );                                                                   // update data-string value with heartrate
-      sf1.Set( txFr );                                                                                          // set TX data frame with new heartate value
-    }
+    //if ( beatCaptured )
+    //{
+    //  txFr = sf1.Get();                                                                                         // get values from existing TX data frame
+    //  txFr.DataString = String( heartRateI );                                                                   // update data-string value with heartrate
+    //  sf1.Set( txFr );                                                                                          // set TX data frame with new heartate value
+    //}
   return true;
 } // End of continueMonitoring()
+// ==============================================================================================================
 
 
-
-//
-// *** Stop Tracking Microphone Stream
-//     This function terminates startTrackingMicStream().
-//
+// ==============================================================================================================
+// Stop Heart Beat Monitoring
+// 
+// Terminates heart rate monitoring/tracking using the
+// waveAmplitudePeaks() function
+// 
+// Michael Xynidis
+// Fluvio L. Lobo Fenoglietto 11/12/2017
+// ==============================================================================================================
 boolean stopHeartBeatMonitoring()
 {
   Serial.println( "EXECUTING stopTrackingMicStream()" );
