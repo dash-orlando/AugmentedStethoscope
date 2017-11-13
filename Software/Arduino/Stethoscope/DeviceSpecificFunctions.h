@@ -646,7 +646,7 @@ float   mixer_lvl_OFF                 = 0.0;
 float   mic_mixer_lvl                 = 1.0;                                                                    // microphone mixer gain level (standard and initial)
 float   playback_mixer_lvl            = 0.0;                                                                    // playback mixer gain level (standard and initial)
 float   mic_mixer_lvl_step            = 0.00005;
-float   playback_mixer_lvl_step       = mic_mixer_lvl_step/4;
+float   playback_mixer_lvl_step       = mic_mixer_lvl_step;
 
 float   playback_rms_mixer_lvl        = 0.25;
 float   playback_rms_mixer_lvl_step   = 0.10;                                                                   // mixer level step for rms-based amplitude manipulation
@@ -654,8 +654,8 @@ void continueBlending(String fileName)
 {
   if ( !playRaw_sdHeartSound.isPlaying() )                                                                      // check if playback sound is playing/running                                                                 
   {
-    Serial.print(" Re-playing = ");
-    Serial.println(fileName);
+    //Serial.print(" Re-playing = ");
+    //Serial.println(fileName);
     char  filePly[fileName.length()+1];                                                                           // Conversion from string to character array
     fileName.toCharArray( filePly, sizeof( filePly ) );
     Serial.println( filePly );
@@ -697,7 +697,7 @@ void continueBlending(String fileName)
     else if ( rms_switch == 1 )                                                                                 // RMS value of mic. > playback signal
     {
       playback_rms_mixer_lvl = playback_rms_mixer_lvl + playback_rms_mixer_lvl_step;                            // ...increase gain value
-      if ( playback_rms_mixer_lvl > 0.50 ) playback_rms_mixer_lvl = 0.50;
+      if ( playback_rms_mixer_lvl > 1.25 ) playback_rms_mixer_lvl = 1.25;
       rms_playRaw_mixer.gain(0, playback_rms_mixer_lvl);                                                        // ...apply gain value
     }
     else if ( rms_switch == 2 )                                                                                 // RMS value of mic. < playback signal
