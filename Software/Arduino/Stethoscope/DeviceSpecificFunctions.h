@@ -249,6 +249,16 @@ void rmsAmplitudePeaksSingle()
   }
 } // End of rmsAmplitudePeaksSingle()
 
+// ==============================================================================================================
+// RMS, Amplituide Peaks
+// RMS and Amplitude Peak detection based on the input
+// microphone and playback data
+//
+// ...
+// 
+// Fluvio L. Lobo Fenoglietto 11/12/2017
+// ==============================================================================================================
+
 uint32_t count;
 uint8_t rmsAmplitudePeaksDuo()
 {
@@ -301,6 +311,7 @@ uint8_t rmsAmplitudePeaksDuo()
   }
   return returnValue;
 } // End of rmsAmplitudePeaksDuo()
+// ==============================================================================================================
 
 // ==============================================================================================================
 // RMS Modulation
@@ -371,7 +382,7 @@ uint8_t rmsModulation()
     } // End of availability check
   } // End of fps check
   return returnValue;
-} // End of rmsAmplitudePeaksDuo()
+} // End of rmsModulation()
 // ==============================================================================================================
 
 void switchMode( int m )
@@ -649,13 +660,13 @@ void continueBlending()
   //
   if ( blendState == STARTING )                                                                                 // if blendState == STARTING, begin the blending of the signals
   {
-    if ( mic_mixer_lvl > 0.10 )                                                                            // check the value of the gain levels to trigger a gradual blending
+    if ( mic_mixer_lvl > 0.10 )                                                                                 // check the value of the gain levels to trigger a gradual blending
     {
-      mic_mixer_lvl       = mic_mixer_lvl - mixer_lvl_step;
-      playback_mixer_lvl  = playback_mixer_lvl + mixer_lvl_step;    
-      mixer_mic_Sd.gain(0, mic_mixer_lvl);
-      mixer_mic_Sd.gain(1, playback_mixer_lvl);
-      Serial.print(" mic. gain = ");
+      mic_mixer_lvl       = mic_mixer_lvl - mixer_lvl_step;                                                     // gradually decrease mic. gain level
+      playback_mixer_lvl  = playback_mixer_lvl + mixer_lvl_step;                                                // gradually increase playback gain level
+      mixer_mic_Sd.gain(0, mic_mixer_lvl);                                                                      // apply mic. gain
+      mixer_mic_Sd.gain(1, playback_mixer_lvl);                                                                 // apply playback gain
+      Serial.print(" mic. gain = ");                                                                            // print gain values for debugging...
       Serial.print(mic_mixer_lvl);
       Serial.print(" || playback gain = ");
       Serial.println(playback_mixer_lvl);
@@ -667,7 +678,17 @@ void continueBlending()
   }
   else if ( blendState == CONTINUING )
   {
-    //Serial.println( "Still Blending!" );
+    uint8_t rms_switch = rmsAmplitudePeaksDuo();
+    if ( rms_switch == 1 )
+    {
+      mixer_mic_Sd.gain(0, mic_mixer_lvl);
+      mixer_mic_Sd.gain(1, playback_mixer_lvl);
+    }
+    else if ( rms_switch == 2 )
+    {
+      mixer_mic_Sd.gain(0, mic_mixer_lvl);
+      mixer_mic_Sd.gain(1, mixer_lvl_OFF); 
+    }
   }
   else if ( blendState == STOPPING )
   {
@@ -690,21 +711,6 @@ void continueBlending()
   } // End of blendState check
 
   /*
-  if ( blend_mixer_up_lvl > 0.10 )
-  {
-    blend_mixer_up_lvl = blend_mixer_up_lvl - blend_mixer_step;
-    blend_mixer_down_lvl = blend_mixer_down_lvl + blend_mixer_step;    
-    mixer_mic_Sd.gain(0, blend_mixer_up_lvl);
-    mixer_mic_Sd.gain(1, blend_mixer_down_lvl);
-    
-  }
-  else if ( blend_mixer_up_lvl < 1.0 )
-  {
-    
-  }
-  
-  
-   * here we need to use the cont_blend_state variable to do an initial blend/tapering ...maybe not needed?
   
   //uint8_t blendState = rmsAmplitudePeaksDuo();
   uint8_t blendState = rmsModulation();                                                                         // function returns 0(=), 1(+), or 2(-)
