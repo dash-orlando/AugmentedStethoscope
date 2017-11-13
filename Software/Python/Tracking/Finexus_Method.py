@@ -3,7 +3,7 @@
 * Position tracking of magnet based on Finexus
 * https://ubicomplab.cs.washington.edu/pdfs/finexus.pdf
 *
-* VERSION: 0.3.0
+* VERSION: 0.3.1
 *   - FIXED   : Program now does a check on the received data
 *               to avoid the error we get so often regarding
 *               the array containing invalid data
@@ -14,6 +14,8 @@
 *               dynamic; it is calculated on the spot rather than
 *               choosing from a hardcoded list of all the possible
 *               initial guesses.
+*   - FIXED   : Fixed the error ecountered during building the array
+*               of magnetic field elements (for real this time)
 *
 * KNOWN ISSUES:
 *   - Loss in accuracy in 3D space  (not even surprised)
@@ -25,7 +27,7 @@
 * LAST CONTRIBUTION DATE    :   Sep. 29th, 2017 Year of Our Lord
 * 
 * AUTHOR                    :   Mohammad Odeh 
-* LAST CONTRIBUTION DATE    :   Nov. 08th, 2017 Year of Our Lord
+* LAST CONTRIBUTION DATE    :   Nov. 11th, 2017 Year of Our Lord
 *
 '''
 
@@ -148,6 +150,8 @@ def getData( ser ):
                 line = line + inData
 
         # Split line into the constituent components
+
+        # Check if array is corrupted
         col     = (line.rstrip()).split(",")
         if (len(col) == 18):
             #
@@ -192,6 +196,10 @@ def getData( ser ):
             
             # Return vectors
             return ( B1, B2, B3, B4, B5, B6 )
+
+        # In case array is corrupted, call the function again
+        else:
+            return( getData(ser) )
 
     except Exception as e:
         print( "Caught error in getData()"      )

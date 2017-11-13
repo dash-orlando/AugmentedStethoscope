@@ -8,13 +8,14 @@
 *       (2) Continuous 3D live plot (BETA)
 *       (2) Guided Point-by-Point
 *
-* VERSION: 0.3.1
+* VERSION: 0.3.2
 *   - FIXED   : Program now does a check on the received data
 *               to avoid the error we get so often regarding
 *               the array containing invalid data
 *   - MODIFIED: Streamlined code to make it more human friendly
 *   - ADDED   : 3D plotting mode of operation
 *   - ADDED   : Storring data now works under UNIX systems
+*   - MODIFIED: Plotting now takes ~0.15s (previously ~0.30s)
 *
 * KNOWN ISSUES:
 *   - Loss in accuracy in 3D space  (not even surprised)
@@ -25,13 +26,14 @@
 * LAST CONTRIBUTION DATE    :   Oct. 17th, 2017 Year of Our Lord
 * 
 * AUTHOR                    :   Mohammad Odeh 
-* LAST CONTRIBUTION DATE    :   Nov. 08th, 2017 Year of Our Lord
+* LAST CONTRIBUTION DATE    :   Nov. 13th, 2017 Year of Our Lord
 *
 '''
 
 # Import Modules
+import matplotlib                                       # Import matplotlib first as to be able to ...
+matplotlib.use('GTKAgg')                                # ... change the backend for the subsequent imports
 import  numpy                   as      np              # Import Numpy
-#import  matplotlib.animation    as      animation       # Animated plot
 import  matplotlib.pyplot       as      plt             # 2D plotting
 from    mpl_toolkits.mplot3d    import  Axes3D          # 3D plotting
 from    time                    import  sleep, clock    # Sleep for stability, clock for profiling
@@ -140,6 +142,8 @@ def getData( ser ):
 
         # Split line into the constituent components
         col     = (line.rstrip()).split(",")
+
+        # Check if array is corrupted
         if (len(col) == 18):
             #
             # Construct magnetic field array
@@ -183,6 +187,10 @@ def getData( ser ):
             
             # Return vectors
             return ( B1, B2, B3, B4, B5, B6 )
+
+        # In case array is corrupted, call the function again
+        else:
+            return( getData(ser) )
 
     except Exception as e:
         print( "Caught error in getData()"      )
@@ -408,10 +416,9 @@ def plot_3D( pos, ax ):
         - xyz: an array/list containing the x-, y-, and z- co-ordinates
         - ax : matplotlib Axes3D() object
     '''
-    
-    ax.set_xlim3d( 0, 150 )
-    ax.set_ylim3d( 0, 150 )
-    ax.set_zlim3d( 0, 200 )
+    ax.set_xlim3d(   0, 175 )
+    ax.set_ylim3d( -25, 150 )
+    ax.set_zlim3d(   0, 200 )
     ax.set_xlabel( 'X Position (mm)' )
     ax.set_ylabel( 'Y Position (mm)' )
     ax.set_zlabel( 'Z Position (mm)' )
@@ -465,147 +472,16 @@ except Exception as e:
 
 # Choose mode of operation
 print( "Choose plotting mode:" )                # ...
-print( "1. 2D Continuous." )                    # Inform user of all the possible
-print( "2. 3D Continuous." )                    # plotting modes
-print( "3. Point-by-Point." )                   # ...
+print( "1. Point-by-Point." )                   # Inform user of all the possible
+print( "2. 2D Continuous." )                    # plotting modes
+print( "3. 3D Continuous." )                    # ...
 
 mode = raw_input(">\ ")                         # Wait for user input
 
-# If 2D continuous mode was selected:
+# --------------------------------------------------------------------------------------
+
+# If point-by-point mode was selected:
 if ( mode == '1' ):
-    
-    print( "\n******************************************" )
-    print( "*NOTE: Press Ctrl-C to save data and exit." )
-    print( "******************************************\n" )
-
-    while ( True ):
-        try:
-            # Inform user that system is almost ready
-            if(READY == False):
-                print( "Place magnet on track" )
-                sleep( 2.5 )
-                print( "Ready in 3" )
-                sleep( 1.0 )
-                print( "Ready in 2" )
-                sleep( 1.0 )
-                print( "Ready in 1" )
-                sleep( 1.0 )
-                print( "GO!" )
-                start = clock()
-
-                # Set the device to ready!!
-                READY = True
-
-            # Data acquisition
-            (H1, H2, H3, H4, H5, H6) = getData(IMU)                         # Get data from MCU
-            
-##            # Check if queue has something available for retrieval
-##            if Q_getData.qsize() > 0:
-##                # Pool data from Arduino
-##                (H1, H2, H3, H4, H5, H6) = Q_getData.get()
-            
-            # Compute norms
-            HNorm = [ float(norm(H1)), float(norm(H2)),                     #
-                      float(norm(H3)), float(norm(H4)),                     # Compute L2 vector norms
-                      float(norm(H5)), float(norm(H6)) ]                    #
-            
-            # Solve system of equations
-            sol = root(LHS, initialGuess, args=(K, HNorm), method='lm',     # Invoke solver using the
-                       options={'ftol':1e-10, 'xtol':1e-10, 'maxiter':1000, # Levenberg-Marquardt 
-                                'eps':1e-8, 'factor':0.001})                # Algorithm (aka LMA)
-
-            # Print solution (coordinates) to screen
-            pos = [sol.x[0]*1000, sol.x[1]*1000, -1*sol.x[2]*1000, float(clock())]
-            print( "(x, y, z): (%.3f, %.3f, %.3f) Time: %.3f" %(pos[0], pos[1], pos[2], pos[3]) )
-            
-            # Check if solution makes sense
-            if (abs(sol.x[0]*1000) > 500) or (abs(sol.x[1]*1000) > 500) or (abs(sol.x[2]*1000) > 500):
-                initialGuess = findIG( getData(IMU) )                       # Determine initial guess based on magnet's location
-                
-            # Update initial guess with current position and feed back to solver
-            else:
-                calcPos.append( pos )                                       # Append calculated position to list
-                
-                initialGuess = np.array( (sol.x[0]+dx, sol.x[1]+dx,         # Update the initial guess as the
-                                          sol.x[2]+dx), dtype='float64' )   # current position and feed back to LMA
-
-        # Save data on EXIT
-        except KeyboardInterrupt:
-            storeData( calcPos )                                            # Store data in a log file
-            break                                                           # Exit loop 43va!
-
-# --------------------------------------------------------------------------------------
-
-# Else if 3D continuous mode was selected:
-if ( mode == '2' ):
-
-    # Setup 3D box for plotting
-    plt.ion()                                   # Interactive mode (aka animated, aka live)
-    fig = plt.figure( figsize =                 # figaspect(0.5) makes the figure twice as wide as it is tall
-                      plt.figaspect(0.5)*1.5 )  # *1.5 increases the size of the figure.
-    ax = Axes3D( fig )                          # Create figure
-    
-    print( "\n******************************************" )
-    print( "*NOTE: Press Ctrl-C to save data and exit." )
-    print( "******************************************\n" )
-
-    while ( True ):
-        try:
-            # Inform user that system is almost ready
-            if(READY == False):
-                print( "Place magnet on track" )
-                sleep( 2.5 )
-                print( "Ready in 3" )
-                sleep( 1.0 )
-                print( "Ready in 2" )
-                sleep( 1.0 )
-                print( "Ready in 1" )
-                sleep( 1.0 )
-                print( "GO!" )
-                start = clock()
-
-                # Set the device to ready!!
-                READY = True
-
-            # Data acquisition
-            (H1, H2, H3, H4, H5, H6) = getData(IMU)                         # Get data from MCU
-
-            # Compute norms
-            HNorm = [ float(norm(H1)), float(norm(H2)),                     #
-                      float(norm(H3)), float(norm(H4)),                     # Compute L2 vector norms
-                      float(norm(H5)), float(norm(H6)) ]                    #
-            
-            # Solve system of equations
-            sol = root(LHS, initialGuess, args=(K, HNorm), method='lm',     # Invoke solver using the
-                       options={'ftol':1e-10, 'xtol':1e-10, 'maxiter':1000, # Levenberg-Marquardt 
-                                'eps':1e-8, 'factor':0.001})                # Algorithm (aka LMA)
-
-            # Print solution (coordinates) to screen
-            pos = [sol.x[0]*1000, sol.x[1]*1000, -1*sol.x[2]*1000, float(clock())]
-            print( "(x, y, z): (%.3f, %.3f, %.3f) Time: %.3f" %(pos[0], pos[1], pos[2], pos[3]) )
-
-            plot_3D( pos, ax )                                              # Plot the computed position
-
-            # Check if solution makes sense
-            if (abs(sol.x[0]*1000) > 500) or (abs(sol.x[1]*1000) > 500) or (abs(sol.x[2]*1000) > 500):
-                initialGuess = findIG( getData(IMU) )                       # Determine initial guess based on magnet's location
-                
-            # Update initial guess with current position and feed back to solver
-            else:
-                calcPos.append( pos )                                       # Append calculated position to list
-                
-                initialGuess = np.array( (sol.x[0]+dx, sol.x[1]+dx,         # Update the initial guess as the
-                                          sol.x[2]+dx), dtype='float64' )   # current position and feed back to LMA
-
-        # Save data on EXIT
-        except KeyboardInterrupt:
-            storeData( calcPos )                                            # Store data in a log file
-            break                                                           # Exit loop 43va!
-
-# --------------------------------------------------------------------------------------
-
-# Else if point-by-point mode was selected:
-elif ( mode == '3' ):
 
     # Array of points on grid to plot against
     actualPos = [ [50 ,  25],
@@ -670,6 +546,139 @@ elif ( mode == '3' ):
     # Post processing        
     storData( calcPos )                                                     # Write data points to a .txt file
     plotPos( actualPos, calcPos )                                           # Juxtapose actual vs computed data on 2D plot
+
+# --------------------------------------------------------------------------------------
+    
+# If 2D continuous mode was selected:
+elif ( mode == '2' ):
+    
+    print( "\n******************************************" )
+    print( "*NOTE: Press Ctrl-C to save data and exit." )
+    print( "******************************************\n" )
+
+    while ( True ):
+        try:
+            # Inform user that system is almost ready
+            if(READY == False):
+                print( "Place magnet on track" )
+                sleep( 2.5 )
+                print( "Ready in 3" )
+                sleep( 1.0 )
+                print( "Ready in 2" )
+                sleep( 1.0 )
+                print( "Ready in 1" )
+                sleep( 1.0 )
+                print( "GO!" )
+                start = clock()
+
+                # Set the device to ready!!
+                READY = True
+
+            # Data acquisition
+            (H1, H2, H3, H4, H5, H6) = getData(IMU)                         # Get data from MCU
+            
+##            # Check if queue has something available for retrieval
+##            if Q_getData.qsize() > 0:
+##                # Pool data from Arduino
+##                (H1, H2, H3, H4, H5, H6) = Q_getData.get()
+            
+            # Compute norms
+            HNorm = [ float(norm(H1)), float(norm(H2)),                     #
+                      float(norm(H3)), float(norm(H4)),                     # Compute L2 vector norms
+                      float(norm(H5)), float(norm(H6)) ]                    #
+            
+            # Solve system of equations
+            sol = root(LHS, initialGuess, args=(K, HNorm), method='lm',     # Invoke solver using the
+                       options={'ftol':1e-10, 'xtol':1e-10, 'maxiter':1000, # Levenberg-Marquardt 
+                                'eps':1e-8, 'factor':0.001})                # Algorithm (aka LMA)
+
+            # Print solution (coordinates) to screen
+            pos = [sol.x[0]*1000, sol.x[1]*1000, -1*sol.x[2]*1000, float(clock())]
+            print( "(x, y, z): (%.3f, %.3f, %.3f) Time: %.3f" %(pos[0], pos[1], pos[2], pos[3]) )
+            
+            # Check if solution makes sense
+            if (abs(sol.x[0]*1000) > 500) or (abs(sol.x[1]*1000) > 500) or (abs(sol.x[2]*1000) > 500):
+                initialGuess = findIG( getData(IMU) )                       # Determine initial guess based on magnet's location
+                
+            # Update initial guess with current position and feed back to solver
+            else:
+                calcPos.append( pos )                                       # Append calculated position to list
+                
+                initialGuess = np.array( (sol.x[0]+dx, sol.x[1]+dx,         # Update the initial guess as the
+                                          sol.x[2]+dx), dtype='float64' )   # current position and feed back to LMA
+
+        # Save data on EXIT
+        except KeyboardInterrupt:
+            storeData( calcPos )                                            # Store data in a log file
+            break                                                           # Exit loop 43va!
+
+# --------------------------------------------------------------------------------------
+
+# Else if 3D continuous mode was selected:
+if ( mode == '3' ):
+
+    # Setup 3D box for plotting
+    plt.ion()                                   # Interactive mode (aka animated, aka live)
+    fig = plt.figure( figsize =                 # figaspect(0.5) makes the figure twice as wide as it is tall
+                      plt.figaspect(0.5)*1.5 )  # *1.5 increases the size of the figure.
+    ax = Axes3D( fig )                          # Create figure
+    
+    print( "\n******************************************" )
+    print( "*NOTE: Press Ctrl-C to save data and exit." )
+    print( "******************************************\n" )
+
+    while ( True ):
+        try:
+            # Inform user that system is almost ready
+            if(READY == False):
+                print( "Place magnet on track" )
+                sleep( 2.5 )
+                print( "Ready in 3" )
+                sleep( 1.0 )
+                print( "Ready in 2" )
+                sleep( 1.0 )
+                print( "Ready in 1" )
+                sleep( 1.0 )
+                print( "GO!" )
+                start = clock()
+
+                # Set the device to ready!!
+                READY = True
+
+            # Data acquisition
+            (H1, H2, H3, H4, H5, H6) = getData(IMU)                         # Get data from MCU
+
+            # Compute norms
+            HNorm = [ float(norm(H1)), float(norm(H2)),                     #
+                      float(norm(H3)), float(norm(H4)),                     # Compute L2 vector norms
+                      float(norm(H5)), float(norm(H6)) ]                    #
+            
+            # Solve system of equations
+            sol = root(LHS, initialGuess, args=(K, HNorm), method='lm',     # Invoke solver using the
+                       options={'ftol':1e-10, 'xtol':1e-10, 'maxiter':1000, # Levenberg-Marquardt 
+                                'eps':1e-8, 'factor':0.001})                # Algorithm (aka LMA)
+
+            # Print solution (coordinates) to screen
+            pos = [sol.x[0]*1000, sol.x[1]*1000, -1*sol.x[2]*1000, float(clock())]
+            print( "(x, y, z): (%.3f, %.3f, %.3f) Time: %.3f" %(pos[0], pos[1], pos[2], pos[3]) )
+
+            plot_3D( pos, ax )                                              # Plot the computed position
+
+            # Check if solution makes sense
+            if (abs(sol.x[0]*1000) > 500) or (abs(sol.x[1]*1000) > 500) or (abs(sol.x[2]*1000) > 500):
+                initialGuess = findIG( getData(IMU) )                       # Determine initial guess based on magnet's location
+                
+            # Update initial guess with current position and feed back to solver
+            else:
+                calcPos.append( pos )                                       # Append calculated position to list
+                
+                initialGuess = np.array( (sol.x[0]+dx, sol.x[1]+dx,         # Update the initial guess as the
+                                          sol.x[2]+dx), dtype='float64' )   # current position and feed back to LMA
+
+        # Save data on EXIT
+        except KeyboardInterrupt:
+            storeData( calcPos )                                            # Store data in a log file
+            break                                                           # Exit loop 43va!
 
 # --------------------------------------------------------------------------------------
 
