@@ -647,7 +647,8 @@ float   mixer_lvl_ON              = 1.0;
 float   mixer_lvl_OFF             = 0.0;
 float   mic_mixer_lvl             = 1.0;                                                                        // microphone mixer gain level (standard and initial)
 float   playback_mixer_lvl        = 0.0;                                                                        // playback mixer gain level (standard and initial)
-float   mixer_lvl_step            = 0.00005;
+float   mic_mixer_lvl_step        = 0.00005;
+float   playback_mixer_lvl_step   = mic_mixer_lvl_step/4;
 void continueBlending() 
 {
   if ( !playRaw_sdHeartSound.isPlaying() )                                                                      // check if playback sound is playing/running                                                                 
@@ -662,8 +663,8 @@ void continueBlending()
   {
     if ( mic_mixer_lvl > 0.10 )                                                                                 // check the value of the gain levels to trigger a gradual blending
     {
-      mic_mixer_lvl       = mic_mixer_lvl - mixer_lvl_step;                                                     // gradually decrease mic. gain level
-      playback_mixer_lvl  = playback_mixer_lvl + mixer_lvl_step;                                                // gradually increase playback gain level
+      mic_mixer_lvl       = mic_mixer_lvl - mic_mixer_lvl_step;                                                 // gradually decrease mic. gain level
+      playback_mixer_lvl  = playback_mixer_lvl + playback_mixer_lvl_step;                                       // gradually increase playback gain level
       mixer_mic_Sd.gain(0, mic_mixer_lvl);                                                                      // apply mic. gain
       mixer_mic_Sd.gain(1, playback_mixer_lvl);                                                                 // apply playback gain
       Serial.print(" mic. gain = ");                                                                            // print gain values for debugging...
@@ -694,8 +695,8 @@ void continueBlending()
   {
     if ( mic_mixer_lvl < 0.90 )
     {
-      mic_mixer_lvl       = mic_mixer_lvl + mixer_lvl_step;
-      playback_mixer_lvl  = playback_mixer_lvl - mixer_lvl_step;    
+      mic_mixer_lvl       = mic_mixer_lvl + mic_mixer_lvl_step;
+      playback_mixer_lvl  = playback_mixer_lvl - playback_mixer_lvl_step;    
       mixer_mic_Sd.gain(0, mic_mixer_lvl);
       mixer_mic_Sd.gain(1, playback_mixer_lvl);
       Serial.print(" mic. gain = ");
