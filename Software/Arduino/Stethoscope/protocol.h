@@ -49,7 +49,7 @@ byte STE[] = { 0x53, 0x54, 0x45, 0x00 };        // Stethoscope Device IDs
 #define         STARTBPBRADY      0x27          // Start BP Cuff augmentation -- Bradycardia                          [resp: ACK | NAK]
 #define         STARTBPTACHY      0x28          // Start BP Cuff augmentation -- Tachycardia                          [resp: ACK | NAK]
 #define         STOPBPALL         0x29          // Stop BP Cuff augmentation                                          [resp: ACK | NAK]
-
+#define         KOROT             0x30          // Playback of Korotkoff Sound                                        [resp: ACK | NAK]                                     
 
 
 

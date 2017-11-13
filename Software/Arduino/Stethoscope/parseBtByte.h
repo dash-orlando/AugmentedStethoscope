@@ -172,6 +172,10 @@ void parseBtByte( String fn )
         // STOPBPALL : Stop Augmenting BP Heart Sounds (return to passthrough)
         stopAugmentingBP();
       break;
+      case KOROT :
+        // KOROT : Start Augmenting KorotKoff Sound
+        KOROTBlend();
+      break;
 
       default :
         Serial.print( (char)inByte );

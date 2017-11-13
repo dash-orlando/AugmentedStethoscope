@@ -54,6 +54,16 @@
  } // End of EHBRBlend() function
 
  //
+ // *** Blend Recorded, Korotkoff sound
+ //
+ void KOROTBlend()
+ {
+  
+  startBlending( ses.filePly5 );                                                      // Blending of a Recorded, Exercised Heart Beat
+  
+ } // End of KOROTBlend() function
+
+ //
  // *** Augment BP Reading
  //
 boolean startAugmentingBP()
