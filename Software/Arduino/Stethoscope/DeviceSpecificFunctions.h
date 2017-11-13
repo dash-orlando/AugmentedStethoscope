@@ -11,7 +11,7 @@
  */
 
  
-#include <SerialFrame.h>
+#include "SerialFrame.h"
 
 //
 // *** Variables
@@ -649,19 +649,46 @@ void continueBlending()
   // 
   // Transition Blending
   //
-  if ( blendState == STARTING )
+  if ( blendState == STARTING )                                                                                 // if blendState == STARTING, begin the blending of the signals
   {
-    Serial.println( "BLENDING UP!" );
+    if ( blend_mixer_up_lvl > 0.10 )                                                                            // check the value of the gain levels to trigger a gradual blending
+    {
+      blend_mixer_up_lvl = blend_mixer_up_lvl - blend_mixer_step;
+      blend_mixer_down_lvl = blend_mixer_down_lvl + blend_mixer_step;    
+      mixer_mic_Sd.gain(0, blend_mixer_up_lvl);
+      mixer_mic_Sd.gain(1, blend_mixer_down_lvl);
+      Serial.print(" mic. gain = ");
+      Serial.print(blend_mixer_up_lvl);
+      Serial.print(" || playback gain = ");
+      Serial.println(blend_mixer_down_lvl);
+    }
+    else
+    {
+      blendState = CONTINUING;                                                                                  // Switch state to CONTINUING for dynamic blending, other...
+    } // End of blend mixer level check
   }
   else if ( blendState == CONTINUING )
   {
-    Serial.println( "Still Blending!" );
+    //Serial.println( "Still Blending!" );
   }
   else if ( blendState == STOPPING )
   {
-    Serial.println( "BLENDING DOWN!" );
-    playRaw_sdHeartSound.stop();
-    switchMode( 0 );
+    if ( blend_mixer_up_lvl < 0.90 )
+    {
+      blend_mixer_up_lvl = blend_mixer_up_lvl + blend_mixer_step;
+      blend_mixer_down_lvl = blend_mixer_down_lvl - blend_mixer_step;    
+      mixer_mic_Sd.gain(0, blend_mixer_up_lvl);
+      mixer_mic_Sd.gain(1, blend_mixer_down_lvl);
+      Serial.print(" mic. gain = ");
+      Serial.print(blend_mixer_up_lvl);
+      Serial.print(" || playback gain = ");
+      Serial.println(blend_mixer_down_lvl);
+    }
+    else
+    {
+      playRaw_sdHeartSound.stop();                                                                              // stop playback file
+      switchMode( 0 );                                                                                          // switch to pre-defined mode (preferably idle/standby)
+    } // End of blend mixer level check
   } // End of blendState check
 
   /*
