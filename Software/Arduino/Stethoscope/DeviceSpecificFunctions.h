@@ -650,11 +650,15 @@ float   playback_mixer_lvl_step       = mic_mixer_lvl_step/4;
 
 float   playback_rms_mixer_lvl        = 0.25;
 float   playback_rms_mixer_lvl_step   = 0.10;                                                                   // mixer level step for rms-based amplitude manipulation
-void continueBlending() 
+void continueBlending(String fileName) 
 {
   if ( !playRaw_sdHeartSound.isPlaying() )                                                                      // check if playback sound is playing/running                                                                 
   {
-    playRaw_sdHeartSound.stop();                                                                                // ...stop if not playing?
+    char  filePly[fileName.length()+1];                                                                           // Conversion from string to character array
+    fileName.toCharArray( filePly, sizeof( filePly ) );
+    Serial.println( filePly );
+    Serial.println( SD.exists( filePly ) );
+    playRaw_sdHeartSound.play( filePly );
   }
 
   // 
