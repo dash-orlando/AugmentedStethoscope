@@ -634,9 +634,9 @@ boolean startBlending( String fileName )
 uint8_t cont_blend_state          = 0;                                                                                // continue blend state - variable switch
 float   mixer_lvl_ON              = 1.0;
 float   mixer_lvl_OFF             = 0.0;
-float   blend_mixer_up_lvl        = 1.0;
-float   blend_mixer_down_lvl      = 0.0;
-float   blend_mixer_step          = 0.00005;
+float   mic_mixer_lvl             = 1.0;                                                                        // microphone mixer gain level (standard and initial)
+float   playback_mixer_lvl        = 0.0;                                                                        // playback mixer gain level (standard and initial)
+float   mixer_lvl_step            = 0.00005;
 float   mixer_step                = 0.001;
 float   playback_gain             = 0.25;
 void continueBlending() 
@@ -651,16 +651,16 @@ void continueBlending()
   //
   if ( blendState == STARTING )                                                                                 // if blendState == STARTING, begin the blending of the signals
   {
-    if ( blend_mixer_up_lvl > 0.10 )                                                                            // check the value of the gain levels to trigger a gradual blending
+    if ( mic_mixer_lvl > 0.10 )                                                                            // check the value of the gain levels to trigger a gradual blending
     {
-      blend_mixer_up_lvl = blend_mixer_up_lvl - blend_mixer_step;
-      blend_mixer_down_lvl = blend_mixer_down_lvl + blend_mixer_step;    
-      mixer_mic_Sd.gain(0, blend_mixer_up_lvl);
-      mixer_mic_Sd.gain(1, blend_mixer_down_lvl);
+      mic_mixer_lvl       = mic_mixer_lvl - mixer_lvl_step;
+      playback_mixer_lvl  = playback_mixer_lvl + mixer_lvl_step;    
+      mixer_mic_Sd.gain(0, mic_mixer_lvl);
+      mixer_mic_Sd.gain(1, playback_mixer_lvl);
       Serial.print(" mic. gain = ");
-      Serial.print(blend_mixer_up_lvl);
+      Serial.print(mic_mixer_lvl);
       Serial.print(" || playback gain = ");
-      Serial.println(blend_mixer_down_lvl);
+      Serial.println(playback_mixer_lvl);
     }
     else
     {
@@ -673,16 +673,16 @@ void continueBlending()
   }
   else if ( blendState == STOPPING )
   {
-    if ( blend_mixer_up_lvl < 0.90 )
+    if ( mic_mixer_lvl < 0.90 )
     {
-      blend_mixer_up_lvl = blend_mixer_up_lvl + blend_mixer_step;
-      blend_mixer_down_lvl = blend_mixer_down_lvl - blend_mixer_step;    
-      mixer_mic_Sd.gain(0, blend_mixer_up_lvl);
-      mixer_mic_Sd.gain(1, blend_mixer_down_lvl);
+      mic_mixer_lvl       = mic_mixer_lvl + mixer_lvl_step;
+      playback_mixer_lvl  = playback_mixer_lvl - mixer_lvl_step;    
+      mixer_mic_Sd.gain(0, mic_mixer_lvl);
+      mixer_mic_Sd.gain(1, playback_mixer_lvl);
       Serial.print(" mic. gain = ");
-      Serial.print(blend_mixer_up_lvl);
+      Serial.print(mic_mixer_lvl);
       Serial.print(" || playback gain = ");
-      Serial.println(blend_mixer_down_lvl);
+      Serial.println(playback_mixer_lvl);
     }
     else
     {
