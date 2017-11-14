@@ -250,8 +250,8 @@ int             i              = 0;
 unsigned long   current_time   = 0;
 unsigned long   peak_zero_time = 0;
 unsigned long   peak_one_time  = 1000;
-int   early_bound    = 500;                                                                           // msec.
-int   late_bound     = 1250;                                                                          // msec.
+unsigned long   early_bound    = 500;                                                                           // msec.
+unsigned long   late_bound     = 1250;                                                                          // msec.
 
 float           hr             = 0;                                                                             // Heart Rate, bpm - beats per minute
 
@@ -280,7 +280,7 @@ void waveAmplitudePeaks2()
           Serial.println(timer);
           //elapsedMillis timer;
         }
-        else if ( timer > 1250 )
+        else if ( timer > late_bound )
         {
           timer = 0;
         } // End of time-based segmentation
