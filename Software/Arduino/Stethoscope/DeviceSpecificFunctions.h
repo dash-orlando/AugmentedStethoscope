@@ -242,6 +242,7 @@ bool waveAmplitudePeaks()
 // ==============================================================================================================
 uint8_t         peak_zero      = 0;
 uint8_t         peak_one       = 0;
+uint8_t         peaks[2]       = {0,0};
 uint8_t         peak_tolerance = 3;
 uint8_t         peak_threshold = 5;
 
@@ -250,6 +251,7 @@ int             i              = 0;
 unsigned long   current_time   = 0;
 unsigned long   peak_zero_time = 0;
 unsigned long   peak_one_time  = 1000;
+unsigned long   peak_times[2]  = {0,0};
 unsigned long   early_bound    = 500;                                                                           // msec.
 unsigned long   late_bound     = 1250;                                                                          // msec.
 
@@ -269,69 +271,62 @@ void waveAmplitudePeaks2()
       if ( micPeak > peak_threshold )
       {
                                                                                // time sample
-        if ( timer < early_bound )
+        if ( timer < early_bound )                                                                              // if time is below the low bound limit (normal = 500 msec.)
         {
-          Serial.print(" S0 = ");
-          Serial.println(timer);
+          if ( peak_zero == 0 )                                                                                 // ...if peak_zero = 0 or no values have been stored
+          {
+            peak_zero       = micPeak;                                                                          // ...store or keep the first value
+            timer           = 0;
+            peak_zero_time  = timer;
+            peaks[0]        = peak_zero;
+            peak_times[0]   = peak_zero_time;
+          }
+          else if ( peak_zero > 0 )                                                                             // ...if peak_zero > 0 or values have been stored
+          {
+            if ( micPeak > ( peak_zero + peak_tolerance ) )                                                     // ...if micPeak is greater than the stored peak_zero (with added tolerance) 
+            {
+              peak_zero       = micPeak;                                                                        // ...store the new micPeak as peak_zero
+              timer           = 0;                                                                              // ...reset the timer
+              peak_zero_time  = timer;                                                                          // ...store timer
+              peaks[0]        = peak_zero;
+              peak_times[0]   = peak_zero_time;
+            }
+          }
+          //Serial.print(" S0 = ");
+          //Serial.println(timer);
         } 
         else if ( timer > early_bound && timer <= late_bound )
         {
-          Serial.print(" S1 = ");
-          Serial.println(timer);
-          //elapsedMillis timer;
+          if ( micPeak > ( peak_zero - peak_tolerance ) )
+          {
+            peak_one      = micPeak;                                                                            // ...store new micPeak as peak_one
+            peak_one_time = timer;                                                                              // ...
+            peaks[1]        = peak_one;
+            peak_times[1]   = peak_one_time;
+
+            // calculate heart rate
+            hr            = 60000/( peak_one_time - peak_zero_time );
+
+            // reset params
+            peak_zero = 0;
+            peak_one  = 0;
+          }
+          //Serial.print(" S1 = ");
+          //Serial.println(timer);
         }
         else if ( timer > late_bound )
         {
-          timer = 0;
+          peak_zero      = 0;
+          peak_one       = 0;
+          timer          = 0;
+          peaks[0]       = 0;
+          peaks[1]       = 0;
+          peak_times[0]  = 0;
+          peak_times[1]  = 1;
         } // End of time-based segmentation
-
-        /*
-        if ( i == 0 )
-        {
-          peak_zero       = micPeak;
-          peak_zero_time  = millis();
-          i               = i + 1;
-        }
-        else if ( i > 0 )
-        {
-          if ( micPeak > (peak_zero + peak_tolerance) )
-          {
-            peak_zero       = micPeak;
-            peak_zero_time  = millis();
-          }
-          else if ( micPeak < (peak_zero - peak_tolerance) )
-          {
-            // pass
-          }
-          else
-          {
-            current_time = millis();
-            if ( current_time > (peak_zero_time + early_bound) && current_time < (peak_zero_time + late_bound) )
-            {
-              peak_one       = micPeak;
-              peak_one_time  = millis();
-  
-              // calculate HR
-              hr             = 60000/(peak_one_time - peak_zero_time);
-  
-              // reset
-              i              = 0;          
-            }
-            else if ( current_time < (peak_zero_time + early_bound) )
-            {
-              // do nothing...
-            }
-            else if ( current_time > (peak_zero_time + late_bound) )
-            {
-              // reset
-              i              = 0;
-            }
-          }
-        }
-        */
       } // End of peak threshold check
       
-     /*
+     
       // plotting amplitude data
       for ( cnt = 0; cnt < 30 - micPeak; cnt++ ) Serial.print( " "  );
       while ( cnt++ < 30 )                       Serial.print( "="  );
@@ -340,17 +335,15 @@ void waveAmplitudePeaks2()
       Serial.print("Mic. Peak = ");
       Serial.print(micPeak);
       Serial.print(" | Peak[0] = ");
-      Serial.print(peak_zero);
+      Serial.print(peaks[0]);
       Serial.print(" | Peak[1] = ");
-      Serial.print(peak_one);
+      Serial.print(peaks[1]);
       Serial.print(" | Time[0] = ");
-      Serial.print(peak_zero_time);
+      Serial.print(peak_times[0]);
       Serial.print(" | Time[1] = ");
-      Serial.print(peak_one_time);
+      Serial.print(peak_times[1]);
       Serial.print(" | HR = ");
-      Serial.println(hr);
-
-      */
+      Serial.println(hr); 
 
     } // End of peak availability()
   }
