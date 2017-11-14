@@ -351,21 +351,21 @@ uint8_t rmsModulation()
       //float playRawRMS  = playRaw_rms.read();
 
       // RMS comparison
-      if (micRMS == playRawRMS && micRMS > 3)                                                           // if the micRMS is greater then the playRawRMS
+      if (micRMS == playRawRMS && micRMS > 3)                                                                   // if the micRMS is greater then the playRawRMS
       {
-        returnValue = 0;                                                                                // do NOT change the value of the playback input gain
+        returnValue = 0;                                                                                        // do NOT change the value of the playback input gain
       }
-      else if (micRMS > playRawRMS)                                                                     // if the micRMS is greater than the playRawRMS
+      else if (micRMS > playRawRMS)                                                                             // if the micRMS is greater than the playRawRMS
       {
-        returnValue = 1;                                                                                // after minimum count is reached, increase the value of the playback input gain (g++)
+        returnValue = 1;                                                                                        // after minimum count is reached, increase the value of the playback input gain (g++)
       }
-      else if (micRMS < playRawRMS)                                                                     // if the micRMS is smaller than the playRawRMS
+      else if (micRMS < playRawRMS)                                                                             // if the micRMS is smaller than the playRawRMS
       {
-        returnValue = 2;                                                                                // after minimum count is reached, decrease the value of the playback input gain (g--)
+        returnValue = 2;                                                                                        // after minimum count is reached, decrease the value of the playback input gain (g--)
       }
       else if (micRMS < 3)
       {
-        returnValue = 2;                                                                                // after minimum count is reached, decrese the value of the playback input gain (g--)
+        returnValue = 2;                                                                                        // after minimum count is reached, decrese the value of the playback input gain (g--)
       }// End of RMS comparison...
 
       // Print values for comparison
@@ -387,7 +387,7 @@ uint8_t rmsModulation()
 void switchMode( int m )
 {
     Serial.print( "\nMode = "  );  Serial.print( mode );
-    mode = m;                                                                                            // Change value of operation mode for continous recording
+    mode = m;                                                                                                   // Change value of operation mode for continous recording
     Serial.print( " -> "  );  Serial.println( mode );
 }
 
