@@ -276,12 +276,12 @@ void waveAmplitudePeaks2()
         }
         else if ( i > 0 )
         {
-          if ( micPeak > (peaks[i-1] + 4) )
+          if ( micPeak > (peak_zero + peak_tolerance) )
           {
-            peaks_zero      = micPeak;
+            peak_zero       = micPeak;
             peak_zero_time  = millis();
           }
-          else if ( micPeak < (peaks[i-1] - 4) )
+          else if ( micPeak < (peak_zero - peak_tolerance) )
           {
             // pass
           }
@@ -290,7 +290,7 @@ void waveAmplitudePeaks2()
             current_time = millis();
             if ( current_time > (peak_zero_time + early_bound) && current_time < (peak_zero_time + late_bound) )
             {
-              peaks_one      = micPeak;
+              peak_one       = micPeak;
               peak_one_time  = millis();
   
               // calculate HR
@@ -320,13 +320,13 @@ void waveAmplitudePeaks2()
       Serial.print("Mic. Peak = ");
       Serial.print(micPeak);
       Serial.print(" | Peak[0] = ");
-      Serial.print(peaks[0]);
+      Serial.print(peak_zero);
       Serial.print(" | Peak[1] = ");
-      Serial.print(peaks[1]);
+      Serial.print(peak_one);
       Serial.print(" | Time[0] = ");
-      Serial.print(peak_time[0]);
+      Serial.print(peak_zero_time);
       Serial.print(" | Time[1] = ");
-      Serial.print(peak_time[1]);
+      Serial.print(peak_one_time);
       Serial.print(" | HR = ");
       Serial.println(hr);
 
