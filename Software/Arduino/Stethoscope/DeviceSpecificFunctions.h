@@ -269,12 +269,12 @@ void waveAmplitudePeaks2()
       if ( micPeak > peak_threshold )
       {
                                                                                // time sample
-        if ( timer < 500 )
+        if ( timer < early_bound )
         {
           Serial.print(" S0 = ");
           Serial.println(timer);
         } 
-        else if ( timer > 500 && timer <= 1250 )
+        else if ( timer > early_bound && timer <= late_bound )
         {
           Serial.print(" S1 = ");
           Serial.println(timer);
