@@ -739,7 +739,7 @@ void continueBlending(String fileName)
   {
     //Serial.print(" Re-playing = ");
     //Serial.println(fileName);
-    char  filePly[fileName.length()+1];                                                                           // Conversion from string to character array
+    char  filePly[fileName.length()+1];                                                                         // Conversion from string to character array
     fileName.toCharArray( filePly, sizeof( filePly ) );
     Serial.println( filePly );
     Serial.println( SD.exists( filePly ) );
