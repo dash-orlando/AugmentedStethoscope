@@ -243,22 +243,22 @@ bool waveAmplitudePeaks()
 uint8_t         peak_zero      = 0;
 uint8_t         peak_one       = 0;
 uint8_t         peak_tolerance = 3;
-uint8_t         peak_threshold = 10;
+uint8_t         peak_threshold = 5;
 
 int             i              = 0;
 
-unsigned long   start_time     = 0;
 unsigned long   current_time   = 0;
 unsigned long   peak_zero_time = 0;
 unsigned long   peak_one_time  = 1000;
-unsigned long   early_bound    = 500;                                                                           // msec.
-unsigned long   late_bound     = 1250;                                                                          // msec.
+int   early_bound    = 500;                                                                           // msec.
+int   late_bound     = 1250;                                                                          // msec.
 
 float           hr             = 0;                                                                             // Heart Rate, bpm - beats per minute
 
+elapsedMillis   timer;
+
 void waveAmplitudePeaks2()
 {
-  start_time = millis();
   if( fps > 24 )
   {
     if ( peak_QrsMeter.available() )                                                                            // if peak is available
@@ -268,6 +268,24 @@ void waveAmplitudePeaks2()
 
       if ( micPeak > peak_threshold )
       {
+                                                                               // time sample
+        if ( timer < 500 )
+        {
+          Serial.print(" S0 = ");
+          Serial.println(timer);
+        } 
+        else if ( timer > 500 && timer <= 1250 )
+        {
+          Serial.print(" S1 = ");
+          Serial.println(timer);
+          //elapsedMillis timer;
+        }
+        else if ( timer > 1250 )
+        {
+          timer = 0;
+        } // End of time-based segmentation
+
+        /*
         if ( i == 0 )
         {
           peak_zero       = micPeak;
@@ -310,8 +328,10 @@ void waveAmplitudePeaks2()
             }
           }
         }
+        */
       } // End of peak threshold check
-     
+      
+     /*
       // plotting amplitude data
       for ( cnt = 0; cnt < 30 - micPeak; cnt++ ) Serial.print( " "  );
       while ( cnt++ < 30 )                       Serial.print( "="  );
@@ -329,6 +349,8 @@ void waveAmplitudePeaks2()
       Serial.print(peak_one_time);
       Serial.print(" | HR = ");
       Serial.println(hr);
+
+      */
 
     } // End of peak availability()
   }
