@@ -240,12 +240,12 @@ bool waveAmplitudePeaks()
 // 
 // Fluvio L. Lobo Fenoglietto 11/13/2017
 // ==============================================================================================================
-uint8_t         first_peak;
-uint8_t         second_peak;
+uint8_t         peak_zero      = 0;
+uint8_t         peak_one       = 0;
 uint8_t         peak_tolerance = 3;
+uint8_t         peak_threshold = 10;
+
 int             i              = 0;
-uint8_t         peaks[2]       = {0,0};
-unsigned long   t[2]           = {0,0};
 
 unsigned long   start_time     = 0;
 unsigned long   current_time   = 0;
@@ -261,84 +261,62 @@ void waveAmplitudePeaks2()
   start_time = millis();
   if( fps > 24 )
   {
-    if (   peak_QrsMeter.available() )
+    if ( peak_QrsMeter.available() )                                                                            // if peak is available
     {
-      fps = 0;
-      uint8_t micPeak = mic_peaks.read()  * 30.0;
+      fps = 0;                                                                                                  // reset fps... 
+      uint8_t micPeak = mic_peaks.read()  * 30.0;                                                               // read peak value
 
-      if ( i == 0 )
+      if ( micPeak > peak_threshold )
       {
-        peaks[i] = micPeak;
-        peak_zero_time = millis();
-        t[i] = peak_zero_time;
-        i = i + 1;
-      }
-      else if ( i > 0 )
-      {
-        if ( micPeak > (peaks[i-1] + 4) )
+        if ( i == 0 )
         {
-          peaks[i-1] = micPeak;
-          peak_zero_time = millis();
-          t[i-1] = peak_zero_time;
+          peak_zero       = micPeak;
+          peak_zero_time  = millis();
+          i               = i + 1;
         }
-        else if ( micPeak < (peaks[i-1] - 4) )
+        else if ( i > 0 )
         {
-          // pass
+          if ( micPeak > (peaks[i-1] + 4) )
+          {
+            peaks_zero      = micPeak;
+            peak_zero_time  = millis();
+          }
+          else if ( micPeak < (peaks[i-1] - 4) )
+          {
+            // pass
+          }
+          else
+          {
+            current_time = millis();
+            if ( current_time > (peak_zero_time + early_bound) && current_time < (peak_zero_time + late_bound) )
+            {
+              peaks_one      = micPeak;
+              peak_one_time  = millis();
+  
+              // calculate HR
+              hr             = 60000/(peak_one_time - peak_zero_time);
+  
+              // reset
+              i              = 0;          
+            }
+            else if ( current_time < (peak_zero_time + early_bound) )
+            {
+              // do nothing...
+            }
+            else if ( current_time > (peak_zero_time + late_bound) )
+            {
+              // reset
+              i              = 0;
+            }
+          }
         }
-        else
-        {
-          current_time = millis();
-          if ( current_time > (peak_zero_time + early_bound) && current_time < (peak_zero_time + late_bound) )
-          {
-            peaks[i] = micPeak;
-            peak_one_time = millis();
-            t[i] = peak_one_time;
-
-            // calculate HR
-            hr = 60000/(peak_one_time - peak_zero_time);
-
-            // reset
-            i = 0;          
-          }
-          else if ( current_time < (peak_zero_time + early_bound) )
-          {
-            // do nothing...
-          }
-          else if ( current_time > (peak_zero_time + late_bound) )
-          {
-            // reset
-            i = 0;
-          }
-        }
-      }
-      //delay(200);
-      /*
-      if ( peaks[0] == 0 )
-      {
-        peaks[0] = micPeak;
-      }
-      else if ( micPeak > (peaks[0]+4) )
-      {
-        peaks[0] = micPeak;
-        //elapsedMillis elapsed_time;
-      }
-      else if ( micPeak < (peaks[0]+4) )
-      {
-        //elapsedMillis elapsed_time;
-      }
-      else if ( micPeak == peaks[0] )
-      {
-        Serial.println("hello");
-        peaks[1]  = micPeak;
-        t[1]      = elapsed_time;
-      }
-
-      hr = 60000*(1/(t[1]));
-      */
-
+      } // End of peak threshold check
+     
+      // plotting amplitude data
       for ( cnt = 0; cnt < 30 - micPeak; cnt++ ) Serial.print( " "  );
       while ( cnt++ < 30 )                       Serial.print( "="  );
                                                  Serial.print( "||" );
+                                                 
       Serial.print("Mic. Peak = ");
       Serial.print(micPeak);
       Serial.print(" | Peak[0] = ");
@@ -346,13 +324,13 @@ void waveAmplitudePeaks2()
       Serial.print(" | Peak[1] = ");
       Serial.print(peaks[1]);
       Serial.print(" | Time[0] = ");
-      Serial.print(t[0]);
+      Serial.print(peak_time[0]);
       Serial.print(" | Time[1] = ");
-      Serial.print(t[1]);
+      Serial.print(peak_time[1]);
       Serial.print(" | HR = ");
       Serial.println(hr);
 
-    }
+    } // End of peak availability()
   }
 } // End of waveAmplitudePeaks2()
 
