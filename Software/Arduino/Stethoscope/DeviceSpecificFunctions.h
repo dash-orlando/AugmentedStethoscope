@@ -816,24 +816,26 @@ void continueBlending(String fileName)
 } // End of continueBlending();
 // ==============================================================================================================
 
+// ==============================================================================================================
+// Stop Blending
+// Blending or mixing the input microphone line with an 
+// audio file from the SD card
+// 
+// This function stops the blending of the playback signal
+// onto the microphone signal
 //
-// *** Stop Blending
-//
+// Fluvio L. Lobo Fenoglietto 11/13/2017
+// ==============================================================================================================
 boolean stopBlending()
 {
   Serial.println( "EXECUTING stopBlending()" );
   blendState = STOPPING;                                                                                        // This will trigger the bleding down and stopping
-  
-  //if ( recordState == PLAYING ) playRaw_sdHeartSound.stop();
-  //mixerLvL    = 1;
-  //recordState = STANDBY;
-  //switchMode( 4 );
-  Serial.println( "Stethoscope will BLENDING" );                                                                // Function execution confirmation over USB serial
+  Serial.println( "Stethoscope will STOP BLENDING" );                                                           // Function execution confirmation over USB serial
   Serial.println( "sending: ACK..." );
   BTooth.write( ACK );                                                                                          // ACKnowledgement sent back through bluetooth serial
   return true;
-}
-
+} // End of stopBlending()
+// ==============================================================================================================
 
 //
 // *** Start Microphone Passthrough Mode
