@@ -434,21 +434,21 @@ uint8_t rmsModulation()
       //float playRawRMS  = playRaw_rms.read();
 
       // RMS comparison
-      if (micRMS == playRawRMS && micRMS > 3)                                                           // if the micRMS is greater then the playRawRMS
+      if (micRMS == playRawRMS && micRMS > 3)                                                                   // if the micRMS is greater then the playRawRMS
       {
-        returnValue = 0;                                                                                // do NOT change the value of the playback input gain
+        returnValue = 0;                                                                                        // do NOT change the value of the playback input gain
       }
-      else if (micRMS > playRawRMS)                                                                     // if the micRMS is greater than the playRawRMS
+      else if (micRMS > playRawRMS)                                                                             // if the micRMS is greater than the playRawRMS
       {
-        returnValue = 1;                                                                                // after minimum count is reached, increase the value of the playback input gain (g++)
+        returnValue = 1;                                                                                        // after minimum count is reached, increase the value of the playback input gain (g++)
       }
-      else if (micRMS < playRawRMS)                                                                     // if the micRMS is smaller than the playRawRMS
+      else if (micRMS < playRawRMS)                                                                             // if the micRMS is smaller than the playRawRMS
       {
-        returnValue = 2;                                                                                // after minimum count is reached, decrease the value of the playback input gain (g--)
+        returnValue = 2;                                                                                        // after minimum count is reached, decrease the value of the playback input gain (g--)
       }
       else if (micRMS < 3)
       {
-        returnValue = 2;                                                                                // after minimum count is reached, decrese the value of the playback input gain (g--)
+        returnValue = 2;                                                                                        // after minimum count is reached, decrese the value of the playback input gain (g--)
       }// End of RMS comparison...
 
       // Print values for comparison
@@ -470,7 +470,7 @@ uint8_t rmsModulation()
 void switchMode( int m )
 {
     Serial.print( "\nMode = "  );  Serial.print( mode );
-    mode = m;                                                                                            // Change value of operation mode for continous recording
+    mode = m;                                                                                                   // Change value of operation mode for continous recording
     Serial.print( " -> "  );  Serial.println( mode );
 }
 
@@ -729,19 +729,25 @@ float   mixer_lvl_OFF                 = 0.0;
 float   mic_mixer_lvl                 = 1.0;                                                                    // microphone mixer gain level (standard and initial)
 float   playback_mixer_lvl            = 0.0;                                                                    // playback mixer gain level (standard and initial)
 float   mic_mixer_lvl_step            = 0.00005;
-float   playback_mixer_lvl_step       = mic_mixer_lvl_step/4;
+float   playback_mixer_lvl_step       = mic_mixer_lvl_step;
 
 float   playback_rms_mixer_lvl        = 0.25;
 float   playback_rms_mixer_lvl_step   = 0.10;                                                                   // mixer level step for rms-based amplitude manipulation
-void continueBlending() 
+void continueBlending(String fileName) 
 {
   if ( !playRaw_sdHeartSound.isPlaying() )                                                                      // check if playback sound is playing/running                                                                 
   {
-    playRaw_sdHeartSound.stop();                                                                                // ...stop if not playing?
+    //Serial.print(" Re-playing = ");
+    //Serial.println(fileName);
+    char  filePly[fileName.length()+1];                                                                           // Conversion from string to character array
+    fileName.toCharArray( filePly, sizeof( filePly ) );
+    Serial.println( filePly );
+    Serial.println( SD.exists( filePly ) );
+    playRaw_sdHeartSound.play( filePly );
   }
 
   // 
-  // Transition Blending
+  // Using blending states, the function fades sound in/continously/out
   //
   if ( blendState == STARTING )                                                                                 // if blendState == STARTING, begin the blending of the signals
   {
@@ -774,7 +780,7 @@ void continueBlending()
     else if ( rms_switch == 1 )                                                                                 // RMS value of mic. > playback signal
     {
       playback_rms_mixer_lvl = playback_rms_mixer_lvl + playback_rms_mixer_lvl_step;                            // ...increase gain value
-      if ( playback_rms_mixer_lvl > 0.50 ) playback_rms_mixer_lvl = 0.50;
+      if ( playback_rms_mixer_lvl > 1.25 ) playback_rms_mixer_lvl = 1.25;
       rms_playRaw_mixer.gain(0, playback_rms_mixer_lvl);                                                        // ...apply gain value
     }
     else if ( rms_switch == 2 )                                                                                 // RMS value of mic. < playback signal
@@ -806,34 +812,7 @@ void continueBlending()
       playRaw_sdHeartSound.stop();                                                                              // stop playback file
       switchMode( 0 );                                                                                          // switch to pre-defined mode (preferably idle/standby)
     } // End of blend mixer level check
-  } // End of blendState check
-
-  /*
-  
-  //uint8_t blendState = rmsAmplitudePeaksDuo();
-  uint8_t blendState = rmsModulation();                                                                         // function returns 0(=), 1(+), or 2(-)
-  if ( blendState == 0 )                                                                                        // if blend state == 0, the RMS values are equal and nothing has to be done
-  {
-    playback_gain = playback_gain;
-    mixer_mic_Sd.gain( 0, 0.10 );                                                                               
-    mixer_mic_Sd.gain( 1, 0.5  ); 
-  }
-  else if ( blendState == 1)                                                                                    // if blend state == 1, the micRMS > playRawRMS and, thus... 
-  {
-    playback_gain = playback_gain + mixer_step;                                                                 // ...the playRawRMS gain must be increased                                           
-    rms_playRaw_mixer.gain(0, playback_gain);                                                                   // ...apply changes to the mixer channel 
-    mixer_mic_Sd.gain( 0, 0.10 );                                                                               
-    mixer_mic_Sd.gain( 1, 0.5  );
-  }
-  else if ( blendState == 2 )
-  {
-    playback_gain = playback_gain - mixer_step;                                                                 // ...the playRawRMS gain must be decreased                                           
-    rms_playRaw_mixer.gain(0, playback_gain);                                                                   // ...apply changes to the mixer channel 
-    mixer_mic_Sd.gain( 0, 0.10 );                                                                               
-    mixer_mic_Sd.gain( 1, 0.5  );
-  }
-  */
-  
+  } // End of blendState check 
 } // End of continueBlending();
 // ==============================================================================================================
 

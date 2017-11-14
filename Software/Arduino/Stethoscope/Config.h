@@ -9,6 +9,7 @@ struct Session
     String    filePly2;
     String    filePly3;
     String    filePly4;
+    String    filePly5;
     String    fileDat;
     int       heartRate;
 };
@@ -32,6 +33,7 @@ void SessionInit( String SID )
               "ESMSYN.RAW",             // Early Systolic Heart Murmur  - Synthetic
               "NHBREC.RAW",             // Normal Heart Beat            - Recorded
               "EHBREC.RAW",             // Exercised Heart Beat         - Recorded
+              "KOROT.RAW",              // Korotkoff Sound (seg.)       - Recorded
               "HRATE.DAT"               // Heart Rate data file 
           };
 }

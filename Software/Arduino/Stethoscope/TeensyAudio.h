@@ -91,7 +91,7 @@ float                     slope1          =    1.0f;
 
 float                     freqLowPass     = 2000.0f;                            // prjc example uses 800.0
 float                     Q2              =    0.707f;                          // 0.707 = Butterworth Filter value;  min: 0.1;
-
+String                    fileName        = "";                                 // String with sound file name
 
 
 /// Functions
