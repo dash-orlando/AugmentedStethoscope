@@ -240,16 +240,25 @@ bool waveAmplitudePeaks()
 // 
 // Fluvio L. Lobo Fenoglietto 11/13/2017
 // ==============================================================================================================
-uint8_t       first_peak;
-uint8_t       second_peak;
-uint8_t       peak_tolerance = 3;
-int           i              = 0;
-uint8_t       peaks[2]       = {0,0};
-uint8_t       t[2]           = {0,0};
-uint8_t       hr             = 0;
-elapsedMillis elapsed_time;
+uint8_t         first_peak;
+uint8_t         second_peak;
+uint8_t         peak_tolerance = 3;
+int             i              = 0;
+uint8_t         peaks[2]       = {0,0};
+unsigned long   t[2]           = {0,0};
+
+unsigned long   start_time     = 0;
+unsigned long   current_time   = 0;
+unsigned long   peak_zero_time = 0;
+unsigned long   peak_one_time  = 1000;
+unsigned long   early_bound    = 500;                                                                           // msec.
+unsigned long   late_bound     = 1250;                                                                          // msec.
+
+float           hr             = 0;                                                                             // Heart Rate, bpm - beats per minute
+
 void waveAmplitudePeaks2()
 {
+  start_time = millis();
   if( fps > 24 )
   {
     if (   peak_QrsMeter.available() )
@@ -257,6 +266,53 @@ void waveAmplitudePeaks2()
       fps = 0;
       uint8_t micPeak = mic_peaks.read()  * 30.0;
 
+      if ( i == 0 )
+      {
+        peaks[i] = micPeak;
+        peak_zero_time = millis();
+        t[i] = peak_zero_time;
+        i = i + 1;
+      }
+      else if ( i > 0 )
+      {
+        if ( micPeak > (peaks[i-1] + 4) )
+        {
+          peaks[i-1] = micPeak;
+          peak_zero_time = millis();
+          t[i-1] = peak_zero_time;
+        }
+        else if ( micPeak < (peaks[i-1] - 4) )
+        {
+          // pass
+        }
+        else
+        {
+          current_time = millis();
+          if ( current_time > (peak_zero_time + early_bound) && current_time < (peak_zero_time + late_bound) )
+          {
+            peaks[i] = micPeak;
+            peak_one_time = millis();
+            t[i] = peak_one_time;
+
+            // calculate HR
+            hr = 60000/(peak_one_time - peak_zero_time);
+
+            // reset
+            i = 0;          
+          }
+          else if ( current_time < (peak_zero_time + early_bound) )
+          {
+            // do nothing...
+          }
+          else if ( current_time > (peak_zero_time + late_bound) )
+          {
+            // reset
+            i = 0;
+          }
+        }
+      }
+      //delay(200);
+      /*
       if ( peaks[0] == 0 )
       {
         peaks[0] = micPeak;
@@ -277,7 +333,8 @@ void waveAmplitudePeaks2()
         t[1]      = elapsed_time;
       }
 
-      hr = 60000*(1/(t[1])); 
+      hr = 60000*(1/(t[1]));
+      */
 
       for ( cnt = 0; cnt < 30 - micPeak; cnt++ ) Serial.print( " "  );
       while ( cnt++ < 30 )                       Serial.print( "="  );
