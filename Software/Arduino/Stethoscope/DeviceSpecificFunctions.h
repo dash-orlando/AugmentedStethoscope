@@ -308,7 +308,7 @@ void waveAmplitudePeaks2()
             hr            = 60000/( peak_one_time - peak_zero_time );
 
             // reset params
-            peak_zero = 0;
+            peak_zero = peak_one;
             peak_one  = 0;
           }
           //Serial.print(" S1 = ");
