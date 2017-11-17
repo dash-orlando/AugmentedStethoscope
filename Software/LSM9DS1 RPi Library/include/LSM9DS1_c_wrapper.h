@@ -4,7 +4,7 @@
 #include "LSM9DS1.h"
 
 extern "C" {
-    LSM9DS1* lsm9ds1_create();
+    LSM9DS1* lsm9ds1_create(uint8_t xgAddr, uint8_t mAddr);
     void lsm9ds1_begin(LSM9DS1* obj);
     void lsm9ds1_calibrate(LSM9DS1* obj);
     void lsm9ds1_calibrateMag(LSM9DS1* obj);

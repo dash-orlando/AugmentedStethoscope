@@ -1,8 +1,8 @@
 #include "LSM9DS1_c_wrapper.h"
 #include "LSM9DS1.h"
 
-LSM9DS1* lsm9ds1_create() {
-    return new LSM9DS1(IMU_MODE_I2C, 0x6b, 0x1e);
+LSM9DS1* lsm9ds1_create(uint8_t xgAddr, uint8_t mAddr) {
+    return new LSM9DS1(IMU_MODE_I2C, xgAddr, mAddr);
 }
 
 void lsm9ds1_begin(LSM9DS1* obj) {
