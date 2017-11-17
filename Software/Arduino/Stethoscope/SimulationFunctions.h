@@ -54,6 +54,19 @@
  } // End of EHBRBlend() function
 
  //
+ // *** Blend Recorded, Korotkoff sound
+ //
+ String KOROTBlend(String fileName)
+ {
+
+  fileName = ses.filePly5;
+  startBlending( fileName );                                                      // Blending of a Recorded, Exercised Heart Beat
+  Serial.println( fileName );
+  return fileName;
+  
+ } // End of KOROTBlend() function
+
+ //
  // *** Augment BP Reading
  //
 boolean startAugmentingBP()
