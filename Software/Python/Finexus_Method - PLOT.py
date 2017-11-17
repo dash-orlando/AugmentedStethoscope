@@ -25,14 +25,56 @@
 
 # Import Modules
 import  numpy               as      np              # Import Numpy
+import  RPi.GPIO            as      GPIO            # Use GPIO pins
 import  matplotlib.pyplot   as      plt             # Plot data
 from    time                import  sleep, clock    # Sleep for stability, clock for profiling
 from    scipy.optimize      import  root            # Solve System of Eqns for (x, y, z)
 from    scipy.linalg        import  norm            # Calculate vector norms (magnitude)
-from    usbProtocol         import  createUSBPort   # Create USB port (serial comm. w\ Arduino)
-from    threading           import  Thread          # Used to thread processes
-from    Queue               import  Queue           # Used to queue input/output
+from    ctypes              import  *               # Import ctypes (VERY IMPORTANT)
 import  os, platform                                # Directory/file manipulation
+
+# ************************************************************************
+# =====================> LOAD CTYPES AND SETUP MUX <=====================*
+# ************************************************************************
+NPINS = 3
+NSENS = 6
+
+# Setup IMU settings
+path = "/home/pi/LSM9DS1_RaspberryPi_Library/lib/liblsm9ds1cwrapper.so"
+lib = cdll.LoadLibrary(path)
+
+lib.lsm9ds1_create.argtypes = []
+lib.lsm9ds1_create.restype = c_void_p
+
+lib.lsm9ds1_begin.argtypes = [c_void_p]
+lib.lsm9ds1_begin.restype = None
+
+lib.lsm9ds1_calibrate.argtypes = [c_void_p]
+lib.lsm9ds1_calibrate.restype = None
+
+lib.lsm9ds1_magAvailable.argtypes = [c_void_p]
+lib.lsm9ds1_magAvailable.restype = c_int
+
+lib.lsm9ds1_readMag.argtypes = [c_void_p]
+lib.lsm9ds1_readMag.restype = c_int
+
+lib.lsm9ds1_getMagX.argtypes = [c_void_p]
+lib.lsm9ds1_getMagX.restype = c_float
+lib.lsm9ds1_getMagY.argtypes = [c_void_p]
+lib.lsm9ds1_getMagY.restype = c_float
+lib.lsm9ds1_getMagZ.argtypes = [c_void_p]
+lib.lsm9ds1_getMagZ.restype = c_float
+
+lib.lsm9ds1_calcMag.argtypes = [c_void_p, c_float]
+lib.lsm9ds1_calcMag.restype = c_float
+
+# Setup multiplexer
+GPIO.setmode(GPIO.BCM)
+GPIO.setwarnings(False)
+GPIO.setup(23, GPIO.OUT)
+GPIO.setup(24, GPIO.OUT)
+GPIO.setup(25, GPIO.OUT)
+
 
 # ************************************************************************
 # =====================> DEFINE NECESSARY FUNCTIONS <====================*
@@ -76,90 +118,43 @@ def bubbleSort(arr, N):
     return (data)
 
 # ****************************************************
-# Define function to pool & return data from Arduino *
+# Define function to calculate corrected magnt field *
 # ****************************************************
-def getData(ser, Q_getData):
-    global CALIBRATING
-    i=0
-    clock()
+def calcMag( imu, IMU_Base ):
 
-    # loop 4EVA!
-    while( True ):
-        # Flush buffer
-        ser.reset_input_buffer()
-        ser.reset_output_buffer()
+    B = np.array(((0.0, 0.0, 0.0) ,
+                  (0.0, 0.0, 0.0) ,
+                  (0.0, 0.0, 0.0) ,
+                  (0.0, 0.0, 0.0) ,
+                  (0.0, 0.0, 0.0) ,
+                  (0.0, 0.0, 0.0)), dtype='float64')
+    
+    # Loop over sensors and construct magnetic field
+    for i in range(0, NSENS):
+        setSensor( i )
+        while lib.lsm9ds1_magAvailable(imu) == 0:
+            pass
+        lib.lsm9ds1_readMag(imu)
 
-        # Allow data to fill-in buffer
-        sleep(0.1)
+        cmx = lib.lsm9ds1_calcMag(imu, lib.lsm9ds1_getMagX(imu))
+        cmy = lib.lsm9ds1_calcMag(imu, lib.lsm9ds1_getMagY(imu))
+        cmz = lib.lsm9ds1_calcMag(imu, lib.lsm9ds1_getMagZ(imu))
 
-        try:
-            # Read incoming data and seperate
-            line    = ser.readline()[:-1]
-            col     = line.split(",")
-
-            # Wait for the sensor to calibrate itself to ambient fields.
-            while( len(col) < 18 ):
-                line    = ser.readline()[:-1]
-                col     = line.split(",")
-                if(CALIBRATING == True):
-                    print( "Calibrating...\n" )
-                    CALIBRATING = False
-
-            # Construct magnetic field array
-            else:
-                # Sensor 1
-                Bx = float(col[0])
-                By = float(col[1])
-                Bz = float(col[2])
-                B1 = np.array( ([Bx],[By],[Bz]), dtype='float64') # Units { G }
-
-                # Sensor 2
-                Bx = float(col[3])
-                By = float(col[4])
-                Bz = float(col[5])
-                B2 = np.array( ([Bx],[By],[Bz]), dtype='float64') # Units { G }
-
-                # Sensor 3
-                Bx = float(col[6])
-                By = float(col[7])
-                Bz = float(col[8])
-                B3 = np.array( ([Bx],[By],[Bz]), dtype='float64') # Units { G }
-
-                # Sensor 4
-                Bx = float(col[9] )
-                By = float(col[10])
-                Bz = float(col[11])
-                B4 = np.array( ([Bx],[By],[Bz]), dtype='float64') # Units { G }
-
-                # Sensor 5
-                Bx = float(col[12])
-                By = float(col[13])
-                Bz = float(col[14])
-                B5 = np.array( ([Bx],[By],[Bz]), dtype='float64') # Units { G }
-
-                # Sensor 6
-                Bx = float(col[15])
-                By = float(col[16])
-                Bz = float(col[17])
-                B6 = np.array( ([Bx],[By],[Bz]), dtype='float64') # Units { G }
-                
-                # Return vectors
-                if (Q_getData==0):
-                    return (B1, B2, B3, B4, B5, B6)
-                else:
-                    Q_getData.put((B1, B2, B3, B4, B5, B6))
-
-        except Exception as e:
-            print( "Caught error in getData()"      )
-            print( "Error type %s" %str(type(e))    )
-            print( "Error Arguments " + str(e.args) )
+        #
+        # Construct magnetic field array
+        #
+        B[i][0] = float(cmx - IMU_Base[i][0])   #
+        B[i][1] = float(cmy - IMU_Base[i][1])   # Units { G }
+        B[i][2] = float(cmz - IMU_Base[i][2])   #
+    
+    # Return matrix
+    return ( B ) 
 
 # ****************************************************
 # Define function to construct equations to solve for
 # ****************************************************
 def LHS( root, K, norms ):
-    global PRINT
-    
+ 
     # Extract x, y, and z
     x, y, z = root
     
@@ -200,7 +195,6 @@ def LHS( root, K, norms ):
 # ****************************************************
 # Determine initial guess based on magnitude of      *
 # magnetic field relative to all the sensors         *
-
 # ****************************************************
 def findIG(magFields):
     # Define IMU positions on the grid
@@ -217,12 +211,12 @@ def findIG(magFields):
                         (0.200, 0.0  ,   0.0)), dtype='float64')
 
     # Read current magnetic field from MCU
-    (H1, H2, H3, H4, H5, H6) = magFields
+    H = magFields
 
     # Compute L2 vector norms
-    HNorm = [ float(norm(H1)), float(norm(H2)),
-              float(norm(H3)), float(norm(H4)),
-              float(norm(H5)), float(norm(H6)) ]
+    HNorm = [ float(norm(H[0])), float(norm(H[1])),
+              float(norm(H[2])), float(norm(H[3])),
+              float(norm(H[4])), float(norm(H[5])) ]
     
     # Determine which sensors to use based on magnetic field value (smallValue==noBueno!)
     sort = argsort(HNorm)               # Auxiliary function sorts norms from smallest to largest
@@ -234,6 +228,49 @@ def findIG(magFields):
     return ( np.array(((IMU_pos[IMUS[0]][0]+IMU_pos[IMUS[1]][0]+IMU_pos[IMUS[2]][0])/3.,
                        (IMU_pos[IMUS[0]][1]+IMU_pos[IMUS[1]][1]+IMU_pos[IMUS[2]][1])/3.,
                        (IMU_pos[IMUS[0]][2]+IMU_pos[IMUS[1]][2]+IMU_pos[IMUS[2]][2])/3. -0.01), dtype='float64') )
+
+# Switch between the multiplexer channels (sensors)
+# =========================    Set Sensor      ========================
+# Set the value on the multiplexer to set the sensor to use
+def setSensor( sensorIndex ):
+    # Sensor 1, 000
+    if ( sensorIndex == 0 ):
+        GPIO.output(23, GPIO.LOW)
+        GPIO.output(24, GPIO.LOW)
+        GPIO.output(25, GPIO.LOW)
+
+    # Sensor 2, 001
+    elif ( sensorIndex == 1 ):
+        GPIO.output(23, GPIO.HIGH)
+        GPIO.output(24, GPIO.LOW)
+        GPIO.output(25, GPIO.LOW)
+
+    # Sensor 3, 010
+    elif ( sensorIndex == 2 ):
+        GPIO.output(23, GPIO.LOW)
+        GPIO.output(24, GPIO.HIGH)
+        GPIO.output(25, GPIO.LOW)
+
+    # Sensor 4, 011
+    elif ( sensorIndex == 3):
+        GPIO.output(23, GPIO.HIGH)
+        GPIO.output(24, GPIO.HIGH)
+        GPIO.output(25, GPIO.LOW)
+
+    # Sensor 5, 100
+    elif ( sensorIndex == 4):
+        GPIO.output(23, GPIO.LOW)
+        GPIO.output(24, GPIO.LOW)
+        GPIO.output(25, GPIO.HIGH)
+
+    # Sensor 6, 101
+    elif (sensorIndex == 5):
+        GPIO.output(23, GPIO.HIGH)
+        GPIO.output(24, GPIO.LOW)
+        GPIO.output(25, GPIO.HIGH)
+
+    else:
+        print("Invalid Index")
 
 # ****************************************************
 #           Plot actual vs measured position         *
@@ -295,50 +332,53 @@ def plotPos(actual, calculated):
 # ************************************************************************
 
 # Useful variables
-global CALIBRATING
-
-CALIBRATING = True                              # Boolean to indicate that device is calibrating
-READY       = False                             # Give time for user to place magnet
-
-K           = 1.615e-7
-#K           = 1.092e-6                          # Magnet's constant (K) || Units { G^2.m^6}
+READY       = False                             # Give time to user
+K           = 1.09e-6                           # Magnet's constant (K) || Units { G^2.m^6}
 dx          = 1e-7                              # Differential step size (Needed for solver)
 calcPos     = []                                # Empty array to hold calculated positions
 
-##initialGuess= np.array((0.10, 0.01, -0.01), 
-##                        dtype='float64' )       # Initial position/guess
+initialGuess= np.array((0.10, 0.01, -0.01), 
+                        dtype='float64' )       # Initial position/guess
 
-# Establish connection with Arduino
-DEVC = "Arduino"                                # Device Name (not very important)
-PORT = 29                                       # Port number (VERY important)
-BAUD = 115200                                   # Baudrate    (VERY VERY important)
+# Averaged base readings (to be subtracted from subsequent RAW readings)
+IMU_Base = np.array(((0.0, 0.0, 0.0) ,
+                     (0.0, 0.0, 0.0) ,
+                     (0.0, 0.0, 0.0) ,
+                     (0.0, 0.0, 0.0) ,
+                     (0.0, 0.0, 0.0) ,
+                     (0.0, 0.0, 0.0)), dtype='float64')
 
-# Create a queue for retrieving data from thread
-Q_getData = Queue( maxsize=0 )                  # FIFO queue with infinte size
+# Initialize all sensors
+for i in range(0, 6):
+    setSensor( i )                          # Select the IMU
+    imu = lib.lsm9ds1_create()              # Create an instance
+    lib.lsm9ds1_begin(imu)                  # Initialize it
 
-# Error handling in case serial communcation fails (1/2)
-try:
-    IMU = createUSBPort( DEVC, PORT, BAUD )     # Create serial connection
-    if IMU.is_open == False:                    # Make sure port is open
-        IMU.open()
-    print( "Serial Port OPEN" )
+    if lib.lsm9ds1_begin(imu) == 0:         # In case it fails
+        print("Failed to communicate with LSM9DS1.")
+        quit()
 
-    # Determine initial guess based on magnet's location
-    initialGuess = findIG(getData(IMU, 0))
+    else:                                   # In case it doesn't, configure
+        CALIBRATION_INDEX = 50              # Average over this many readings
+        lib.lsm9ds1_setMagScale(imu, 16)    # Set scale to +/-16Gauss
+        lib.lsm9ds1_calibrateMag(imu)       # Call built-in calibration routine
 
-# Error handling in case serial communcation fails (2/2)
-except Exception as e:
-    print( "Could NOT open serial port" )
-    print( "Error type %s" %str(type(e)) )
-    print( "Error Arguments " + str(e.args) )
-    sleep( 2.5 )
-    quit()                                      # Shutdown entire program
+        cmx, cmy, cmz = 0, 0, 0
 
-# Start pooling data from serial port
-t_getData = Thread( target=getData, args=(IMU, Q_getData,) )
-t_getData.daemon = True
-t_getData.start()
+        # Perform user-built calibration to further clear noise
+        for j in range(0, CALIBRATION_INDEX):
+            lib.lsm9ds1_readMag(imu)
 
+            cmx += lib.lsm9ds1_calcMag(imu, lib.lsm9ds1_getMagX(imu))
+            cmy += lib.lsm9ds1_calcMag(imu, lib.lsm9ds1_getMagY(imu))
+            cmz += lib.lsm9ds1_calcMag(imu, lib.lsm9ds1_getMagZ(imu))
+
+        IMU_Base[i][0] = cmx/CALIBRATION_INDEX
+        IMU_Base[i][1] = cmy/CALIBRATION_INDEX
+        IMU_Base[i][2] = cmz/CALIBRATION_INDEX
+        print( "Correction constant for sensor %d is:" %(i+1) )
+        print( "x: %.5f, y: %.5f, z: %.5f\n" %(IMU_Base[i][0], IMU_Base[i][1], IMU_Base[i][2]) )
+        
 # ************************************************************************
 # =========================> MAKE IT ALL HAPPEN <=========================
 # ************************************************************************
@@ -372,15 +412,14 @@ if ( mode == '1' ):
                 # Set the device to ready!!
                 READY = True
 
-            # Check if queue has something available for retrieval
-            if Q_getData.qsize() > 0:
-                # Pool data from Arduino
-                (H1, H2, H3, H4, H5, H6) = Q_getData.get()
-            
+            # Get magnetic field readings
+            H = calcMag( imu, IMU_Base )    # Returns data as a matrix
+
+                
             # Compute L2 vector norms
-            HNorm = [ float(norm(H1)), float(norm(H2)),
-                      float(norm(H3)), float(norm(H4)),
-                      float(norm(H5)), float(norm(H6)) ]
+            HNorm = [ float(norm(H[0])), float(norm(H[1])),
+                      float(norm(H[2])), float(norm(H[3])),
+                      float(norm(H[4])), float(norm(H[5])) ]
 
             ### QUESTION FOR MOE:
             #Why do you sort HNorm everywhere but here when you pass it to LMA?
@@ -399,9 +438,7 @@ if ( mode == '1' ):
             if (abs(sol.x[0]*1000) > 500) or (abs(sol.x[1]*1000) > 500) or (abs(sol.x[2]*1000) > 500):
                 # Determine initial guess based on magnet's location
                 #print("NOT STORED\n\n")
-                if ( t_getData.isAlive() ):
-                    t_getData.join(0.1)         # Terminate serial port pooling thread
-                initialGuess = findIG(getData(IMU, 0))
+                initialGuess = findIG( calcMag(imu, IMU_Base) )
                 
             # Update initial guess with current position and feed back to solver
             else:
@@ -411,12 +448,12 @@ if ( mode == '1' ):
 
         # Save data on EXIT
         except KeyboardInterrupt:
-            if platform.system()=='Windows':
+            if platform.system()=='Linux':
 
                 # Define useful paths
                 homeDir = os.getcwd()
-                dst     = homeDir + '\\output'
-                dataFile= dst + '\\data.txt'
+                dst     = homeDir + '/output'
+                dataFile= dst + '/data1.txt'
 
             # Check if directory exists
             if ( os.path.exists(dst)==False ):

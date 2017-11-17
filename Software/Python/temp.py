@@ -41,7 +41,7 @@ def loadLib():
     path = "/home/pi/LSM9DS1_RaspberryPi_Library/lib/liblsm9ds1cwrapper.so"
     lib = cdll.LoadLibrary(path)
 
-    lib.lsm9ds1_create.argtypes = []
+    lib.lsm9ds1_create.argtypes = [c_uint]
     lib.lsm9ds1_create.restype = c_void_p
 
     lib.lsm9ds1_begin.argtypes = [c_void_p]
@@ -122,16 +122,25 @@ def setSensor( sensorIndex ):
 
 # ------------------------------------------------------------------------
 
-def setupIMU( N ):
+def setupIMU():
     ''' Setup IMUS and callibrate them'''
     global IMU_Base
     global imu
+    global imu_LOW
+
+    low1 = 0x1c
+    low2 = 0x6a
+
+    high1 = 0x1e
+    high2 = 0x6b
     
     IMU_Base = np.empty((6,3), dtype='float64') # Construct matrix of size  (6x3)
-    
-    for i in range(0, N):
+
+    # Setup HIGH sensors
+    imu = lib.lsm9ds1_create(1) # Create an instance
+    for i in range(0, 3):
+        print( "SETTING UP HIGH SENSOR %i" %(i+1) )
         setSensor( i )                          # Select the IMU
-        imu = lib.lsm9ds1_create()              # Create an instance
         lib.lsm9ds1_begin(imu)                  # Initialize it
 
         if lib.lsm9ds1_begin(imu) == 0:         # In case it fails
@@ -160,6 +169,40 @@ def setupIMU( N ):
             IMU_Base[i][2] = cmz/CALIBRATION_INDEX
             print( "Correction constant for sensor %d is:" %(i+1) )
             print( "x: %.5f, y: %.5f, z: %.5f\n" %(IMU_Base[i][0], IMU_Base[i][1], IMU_Base[i][2]) )
+
+    # Setup LOW sensors
+    imu_LOW = lib.lsm9ds1_create(0) # Create an instance
+    for i in range(0, 3):
+        print( "SETTING UP LOW SENSOR %i" %(i+4) )
+        setSensor( i )                          # Select the IMU
+        lib.lsm9ds1_begin(imu_LOW)                  # Initialize it
+
+        if lib.lsm9ds1_begin(imu_LOW) == 0:         # In case it fails
+            print("Failed to communicate with LSM9DS1.")
+            quit()
+
+        else:                                   # In case it doesn't, configure
+            CALIBRATION_INDEX = 25             # Average over this many readings
+            lib.lsm9ds1_calibrateMag(imu_LOW)       # Call built-in calibration routine
+            lib.lsm9ds1_setMagScale(imu_LOW, 16)    # Set scale to +/-16Gauss
+            lib.lsm9ds1_calibrateMag(imu_LOW)       # Call built-in calibration routine
+
+            cmx, cmy, cmz = 0, 0, 0
+
+            # Perform user-built calibration to further clear noise
+            for j in range(0, CALIBRATION_INDEX):
+                lib.lsm9ds1_readMag(imu_LOW)
+                
+                cmx += lib.lsm9ds1_calcMag(imu_LOW, lib.lsm9ds1_getMagX(imu_LOW))
+                cmy += lib.lsm9ds1_calcMag(imu_LOW, lib.lsm9ds1_getMagY(imu_LOW))
+                cmz += lib.lsm9ds1_calcMag(imu_LOW, lib.lsm9ds1_getMagZ(imu_LOW))
+
+            # Average all the readings
+            IMU_Base[i+3][0] = cmx/CALIBRATION_INDEX
+            IMU_Base[i+3][1] = cmy/CALIBRATION_INDEX
+            IMU_Base[i+3][2] = cmz/CALIBRATION_INDEX
+            print( "Correction constant for sensor %d is:" %(i+3) )
+            print( "x: %.5f, y: %.5f, z: %.5f\n" %(IMU_Base[i+3][0], IMU_Base[i+3][1], IMU_Base[i+3][2]) )
 
 # ------------------------------------------------------------------------        
 
@@ -194,20 +237,29 @@ def calcMag( N, Q ):
     ''' Collect readings from IMU '''
     B = np.empty((N,3), dtype='float64')                # Construct matrix of size  (Nx3)
     while(True):
-        for i in range(0, N):
+        for i in range(0, 3):
             setSensor( i )                                  # Select sensor ( i )
 
             while lib.lsm9ds1_magAvailable(imu) == 0:       # While no data is available,
                 pass                                        # do nothing
 
             lib.lsm9ds1_readMag(imu)                        # Read values from sensor
-
+            lib.lsm9ds1_readMag(imu_LOW)
+            
             mx = lib.lsm9ds1_calcMag(imu, lib.lsm9ds1_getMagX(imu))
             my = lib.lsm9ds1_calcMag(imu, lib.lsm9ds1_getMagY(imu))
             mz = lib.lsm9ds1_calcMag(imu, lib.lsm9ds1_getMagZ(imu))
 
-            
-            B[i] = np.array( (mx, my, mz), dtype='float64' )   # Units { G }
+            mx_LOW = lib.lsm9ds1_calcMag(imu_LOW, lib.lsm9ds1_getMagX(imu_LOW))
+            my_LOW = lib.lsm9ds1_calcMag(imu_LOW, lib.lsm9ds1_getMagY(imu_LOW))
+            mz_LOW = lib.lsm9ds1_calcMag(imu_LOW, lib.lsm9ds1_getMagZ(imu_LOW))
+
+            if ( i == 0 ):
+                B[i] = np.array( (mx_LOW, my_LOW, mz_LOW), dtype='float64' )   # Units { G }
+                B[i+3] = np.array( (mx, my, mz), dtype='float64' )   # Units { G }
+            else:
+                B[i] = np.array( (mx, my, mz), dtype='float64' )   # Units { G }
+                B[i+3] = np.array( (mx_LOW, my_LOW, mz_LOW), dtype='float64' )   # Units { G }
 
         # Return array
         Q.put_nowait( B - IMU_Base )
@@ -299,16 +351,10 @@ dx          = 1e-7                              # Differential step size (Needed
 H           = np.empty((6,3), dtype='float64')  # Construct matrix of size  (6x3)
 NSENS       = 6                                 # Number of sensors used
 
-LSM9DS1_AG_HGIH = 0x6B
-LSM9DS1_M_HGIH = 0x1E
-
-LSM9DS1_AG_LOW = 0x6A
-LSM9DS1_M_LOW = 0x1C
-
 # Start sensors
 loadLib()
 setupMux()
-setupIMU( NSENS )
+setupIMU()
 
 Q_calcMag = LifoQueue( maxsize=0 )              # LIFO queue qith infinite size
 
