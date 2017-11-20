@@ -36,7 +36,10 @@ from    ctypes              import  *               # Import ctypes (VERY IMPORT
 # ************************************************************************
 
 def loadLib():
-    ''' Load library and prime with ctypes '''
+    '''
+    Load library and prime with ctypes
+    '''
+    
     global imu
     path = "/home/pi/LSM9DS1_RaspberryPi_Library/lib/liblsm9ds1cwrapper.so"
     imu = cdll.LoadLibrary(path)
@@ -70,7 +73,10 @@ def loadLib():
 # ------------------------------------------------------------------------
 
 def setupMux():
-    ''' Setup multiplexer '''
+    '''
+    Setup multiplexer
+    '''
+    
     GPIO.setmode(GPIO.BCM)
     GPIO.setwarnings(False)
     GPIO.setup(23, GPIO.OUT)
@@ -80,7 +86,16 @@ def setupMux():
 # ------------------------------------------------------------------------
 
 def setSensor( sensorIndex ):
-    ''' Switch between all the sensors '''
+    '''
+    Switch between all the sensors
+
+    INPUTS:
+        - sensorIndex: index of the sensor pair
+
+    OUTPUT:
+        - NON
+    '''
+    
     # Sensor 1, 000
     if ( sensorIndex == 0 ):
         GPIO.output(23, GPIO.LOW)
@@ -125,7 +140,16 @@ def setSensor( sensorIndex ):
 # ------------------------------------------------------------------------
 
 def setupIMU( N ):
-    ''' Setup IMUS and callibrate them'''
+    '''
+    Setup IMUs (set scale, calibrate, etc...)
+
+    INPUTS:
+        - N: Number of sensors
+
+    OUTPUT:
+        - No output; sensor setup is global.
+    '''
+    
     global IMU_Base
     global IMU
 
@@ -190,31 +214,38 @@ def setupIMU( N ):
 
 # ------------------------------------------------------------------------
 
-def calMag( N ):
-    ''' Collect readings from IMU '''
-    B = np.zeros( (N,3), dtype='float64' )                                # Construct matrix of size  (Nx3)
+def calcMag( N ):
+    '''
+    Collect readings from IMU.
+    INPUTS:
+        - N: Number of sensors
+
+    OUTPUT:
+        - CALIBRATED magnetic field
+    '''
+
+    B = np.zeros( (N,3), dtype='float64' )                              # Construct matrix of size  (Nx3)
 
     for i in range(0, (N/2)):
-        setSensor( i )                                                      # Select sensor pair (0)
+        setSensor( i )                                                  # Select sensor pair (i)
 
-        imu.readMag( IMU[2 * i] )
-        imu.readMag( IMU[2*i+1] )
+        imu.readMag( IMU[2 * i] )                                       # Read magnetic field for Hi
+        imu.readMag( IMU[2*i+1] )                                       # Read magnetic field for Lo
         
-        mxHi = imu.calcMag( IMU[2 * i], imu.getMagX(IMU[2 * i]) )
-        myHi = imu.calcMag( IMU[2 * i], imu.getMagY(IMU[2 * i]) )
-        mzHi = imu.calcMag( IMU[2 * i], imu.getMagZ(IMU[2 * i]) )
+        mxHi = imu.calcMag( IMU[2 * i], imu.getMagX(IMU[2 * i]) )       # ...
+        myHi = imu.calcMag( IMU[2 * i], imu.getMagY(IMU[2 * i]) )       # Calculate magnetic field for Hi
+        mzHi = imu.calcMag( IMU[2 * i], imu.getMagZ(IMU[2 * i]) )       # ...
 
-        mxLo = imu.calcMag( IMU[2*i+1], imu.getMagX(IMU[2*i+1]) )
-        myLo = imu.calcMag( IMU[2*i+1], imu.getMagY(IMU[2*i+1]) )
-        mzLo = imu.calcMag( IMU[2*i+1], imu.getMagZ(IMU[2*i+1]) )
+        mxLo = imu.calcMag( IMU[2*i+1], imu.getMagX(IMU[2*i+1]) )       # ...
+        myLo = imu.calcMag( IMU[2*i+1], imu.getMagY(IMU[2*i+1]) )       # Calculate magnetic field for Lo
+        mzLo = imu.calcMag( IMU[2*i+1], imu.getMagZ(IMU[2*i+1]) )       # ...
 
-        B[2 * i] = np.array( (mxHi, myHi, mzHi), dtype='float64' )                    # Units { G }
-        B[2*i+1] = np.array( (mxLo, myLo, mzLo), dtype='float64' )        # Units { G }
+        B[2 * i] = np.array( (mxHi, myHi, mzHi), dtype='float64' )      # Units { G }
+        B[2*i+1] = np.array( (mxLo, myLo, mzLo), dtype='float64' )      # Units { G }
 
-    print( B )
+##    print( B )                                                          # Print RAW data (for debugging)
 
-    # Return array
-    return(B - IMU_Base)
+    return(B - IMU_Base)                                                # Return array
 
 
 # ************************************************************************
@@ -228,9 +259,9 @@ NSENS       = 4                                     # Number of sensors used
 H           = np.empty((NSENS,3), dtype='float64')  # Construct matrix of size  (NSENSx3)
 
 # Start sensors
-loadLib()
-setupMux()
-setupIMU( NSENS )
+loadLib()                                           # Load LSM9DS1 Library
+setupMux()                                          # Setup the RPi to use the multiplexer
+setupIMU( NSENS )                                   # Setup IMUs (set scale, calibrate, etc...)
 
 
 # ************************************************************************
@@ -250,7 +281,7 @@ while( True ):
 
     startTime = time()
     # Get magnetic field readings
-    H = calMag( NSENS )
+    H = calcMag( NSENS )
     
 
     print ( "Sensor 1' (UpRight) : < %8.5f , %8.5f , %8.5f >" %(H[0][0], H[0][1], H[0][2]) )
