@@ -525,17 +525,32 @@ void switchMode( int m )
 }
 
 
+// ==============================================================================================================
+// Start Recording
+// Record audio from the input microphone line into
+// the SD card onboard
+// 
+// This function triggers/begins the recording of
+// the input audio signal
 //
-// *** Start Recording
-//
+// Michael Xynidis
+// Fluvio L. Lobo Fenoglietto 11/21/2017
+// ==============================================================================================================
 boolean startRecording()
 {
   Serial.println( "EXECUTING startRecording()" );                                                               // Identification of function executed
 
-  mixer_mic_Sd.gain( 0, mixerInputON  );                                                                        // Set gain of mixer_mic_Sd, channel0 to 0.5 - Microphone on
-  mixer_mic_Sd.gain( 1, mixerInputON  );                                                                        // Set gain of mixer_mic_Sd, channel0 to 0.5 - Microphone on
-  mixer_mic_Sd.gain( 2, mixerInputOFF );                                                                        // Set gain of mixer_mic_Sd, channel2 to 0
-  
+  // Control Mixer Channels and Gains
+  rms_mic_mixer.gain(     0,  mixerInputON  );                                                                  // Set mic input, channel 0 of mic&Sd mixer ON      (g = 1)
+  rms_mic_mixer.gain(     1,  mixerInputON  );                                                                  // Set mic input, channel 1 of mic&Sd mixer ON      (g = 1)
+  rms_playRaw_mixer.gain( 0,  mixerInputOFF );                                                                  // Set plaback, channel 0 of rms mixer OFF          (g = 0)
+  mixer_mic_Sd.gain(      0,  mixerInputON  );                                                                  // Set mic input, channel 0 of mic&Sd mixer ON      (g = 1)
+  mixer_mic_Sd.gain(      1,  mixerInputOFF );                                                                  // Set playback, channel 1 of mic&Sd mixer OFF      (g = 0)
+  mixer_allToSpk,gain(    0,  mixerInputON  );                                                                  // Set mic input, channel 0 of speaker mixer ON     (g = 1)
+  mixer_allToSpk,gain(    1,  mixerInputOFF );                                                                  // Set mic effect, channel 1 of speaker mixer ON    (g = 0)
+  mixer_allToSpk,gain(    2,  mixerInputOFF );                                                                  // Set mem playback, channel 1 of speaker mixer ON  (g = 0)
+
+  fileRec = "REC2.RAW";
   char  fileRec[ses.fileRec.length()+1];                                                                        // Conversion from string to character array
   ses.fileRec.toCharArray( fileRec, sizeof( fileRec ) );
 
@@ -579,8 +594,9 @@ boolean startRecording()
     Serial.println( "sending: NAK..." );
     BTooth.write( NAK );                                                                                        // Negative AcKnowledgement sent back through bluetooth serial
     return false;
-}
-
+    
+} // End of startRecording()
+// ==============================================================================================================
 
 //
 // *** Continue Recording
@@ -595,20 +611,7 @@ void continueRecording()
     queue_recMic.freeBuffer();
     memcpy( buffer + 256, queue_recMic.readBuffer(), 256 );
     queue_recMic.freeBuffer();                                                                                  // write all 512 bytes to the SD card
-    //elapsedMicros usec = 0;
     frec.write( buffer, 512 );
-    // Uncomment these lines to see how long SD writes
-    // are taking.  A pair of audio blocks arrives every
-    // 5802 microseconds, so hopefully most of the writes
-    // take well under 5802 us.  Some will take more, as
-    // the SD library also must write to the FAT tables
-    // and the SD card controller manages media erase and
-    // wear leveling.  The queue1 object can buffer
-    // approximately 301700 us of audio, to allow time
-    // for occasional high SD card latency, as long as
-    // the average write time is under 5802 us.
-    //Serial.print( "SD write, us = " );
-    //Serial.println( usec );
     bool beatCaptured = waveAmplitudePeaks();                                                                   // write HR and time to file at each heart beat
     if ( beatCaptured )
     {
