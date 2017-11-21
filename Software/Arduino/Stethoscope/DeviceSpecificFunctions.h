@@ -546,18 +546,18 @@ boolean startRecording()
   rms_playRaw_mixer.gain( 0,  mixerInputOFF );                                                                  // Set plaback, channel 0 of rms mixer OFF          (g = 0)
   mixer_mic_Sd.gain(      0,  mixerInputON  );                                                                  // Set mic input, channel 0 of mic&Sd mixer ON      (g = 1)
   mixer_mic_Sd.gain(      1,  mixerInputOFF );                                                                  // Set playback, channel 1 of mic&Sd mixer OFF      (g = 0)
-  mixer_allToSpk,gain(    0,  mixerInputON  );                                                                  // Set mic input, channel 0 of speaker mixer ON     (g = 1)
-  mixer_allToSpk,gain(    1,  mixerInputOFF );                                                                  // Set mic effect, channel 1 of speaker mixer ON    (g = 0)
-  mixer_allToSpk,gain(    2,  mixerInputOFF );                                                                  // Set mem playback, channel 1 of speaker mixer ON  (g = 0)
+  mixer_allToSpk.gain(    0,  mixerInputON  );                                                                  // Set mic input, channel 0 of speaker mixer ON     (g = 1)
+  mixer_allToSpk.gain(    1,  mixerInputOFF );                                                                  // Set mic effect, channel 1 of speaker mixer ON    (g = 0)
+  mixer_allToSpk.gain(    2,  mixerInputOFF );                                                                  // Set mem playback, channel 1 of speaker mixer ON  (g = 0)
 
-  fileRec = "REC2.RAW";
-  char  fileRec[ses.fileRec.length()+1];                                                                        // Conversion from string to character array
-  ses.fileRec.toCharArray( fileRec, sizeof( fileRec ) );
+  const char* fileRec = "RECO2.RAW";
+  //char  fileRec[fileRec.length()+1];                                                                        // Conversion from string to character array
+  //fileRec.toCharArray( fileRec, sizeof( fileRec ) );
 
   char  fileDat[ses.fileDat.length()+1];                                                                        // Conversion from string to character array
   ses.fileDat.toCharArray( fileDat, sizeof( fileDat ) );
   
-  if ( SD.exists( fileRec ) ) SD.remove( fileRec );                                                             // Check for existence of RECORD.RAW
+  if ( SD.exists( fileRec ) ) SD.remove( "RECO2.RAW" );                                                             // Check for existence of RECORD.RAW
   if ( SD.exists( fileDat ) ) SD.remove( fileDat );                                                             // Check for existence of HRATE.DAT
 
   frec  = SD.open( fileRec, FILE_WRITE );                                                                       // Create and open RECORD.RAW file
