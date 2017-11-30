@@ -524,6 +524,52 @@ void switchMode( int m )
     Serial.print( " -> "  );  Serial.println( mode );
 }
 
+// ==============================================================================================================
+// Read Line
+// Read information from the serial port passed
+// as a string
+//
+// Fluvio L. Lobo Fenoglietto 11/30/2017
+// ==============================================================================================================
+String inString = "";
+boolean parseString()
+{
+
+  if ( BTooth.available() > 0 )
+  {
+    inString = BTooth.readString();
+  }
+
+  if ( inString.length() > 1 )
+  {
+    Serial.println( "Stethoscope received STRING" );                                                            // Function execution confirmation over USB serial
+    Serial.println( "sending: ACK..." );
+    BTooth.write( ACK );                                                                                        // ACKnowledgement sent back through bluetooth serial
+    return true;
+  }
+  else
+  {
+    Serial.println( "Stethoscope did NOT receive STRING" );                                                            // Function execution confirmation over USB serial
+    Serial.println( "sending: NAK..." );
+    BTooth.write( NAK );                                                                                        // ACKnowledgement sent back through bluetooth serial
+    return false;
+  }
+  
+} // End of parseString() function
+
+
+// ==============================================================================================================
+// Set Recording Filename
+// Receive text information to generate a recording
+// filename and avoid overwriting
+//
+// Fluvio L. Lobo Fenoglietto 11/30/2017
+// ==============================================================================================================
+char* setRecordingFilename()
+{
+  
+} // End of setRecordingFilename() function
+
 
 // ==============================================================================================================
 // Start Recording

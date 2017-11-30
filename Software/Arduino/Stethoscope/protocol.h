@@ -39,6 +39,7 @@ byte STE[] = { 0x53, 0x54, 0x45, 0x00 };        // Stethoscope Device IDs
 #define         STOPHBMONITOR     0x1C          // Stop Monitoring Heart Beat                               					[resp: ACK | NAK]
 #define         STARTBLEND        0x1F          // Start Blending
 #define         STOPBLEND         0x20          // Stop Blending
+#define         PSTRING           0x31          // Parse string data                                                  [resp: ACK | NAK] 
 
 //  Simulation Functions ============================================================================================================= // 
 #define         NHBSYN          	0x1D          // Playback of Synthetic, Normal Heart Beat                           [resp: ACK | NAK]
@@ -49,7 +50,7 @@ byte STE[] = { 0x53, 0x54, 0x45, 0x00 };        // Stethoscope Device IDs
 #define         STARTBPBRADY      0x27          // Start BP Cuff augmentation -- Bradycardia                          [resp: ACK | NAK]
 #define         STARTBPTACHY      0x28          // Start BP Cuff augmentation -- Tachycardia                          [resp: ACK | NAK]
 #define         STOPBPALL         0x29          // Stop BP Cuff augmentation                                          [resp: ACK | NAK]
-#define         KOROT             0x30          // Playback of Korotkoff Sound                                        [resp: ACK | NAK]                                     
+#define         KOROT             0x30          // Playback of Korotkoff Sound                                        [resp: ACK | NAK]                                       
 
 
 

@@ -176,7 +176,11 @@ void parseBtByte( String fn )
         // KOROT : Start Augmenting KorotKoff Sound
         fileName = KOROTBlend(fileName);
       break;
-
+      case PSTRING :
+        // PSTRING : Parse String
+        parseString();
+      break;
+      
       default :
         Serial.print( (char)inByte );
       break;
