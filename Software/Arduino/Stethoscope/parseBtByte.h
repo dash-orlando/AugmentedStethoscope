@@ -100,13 +100,18 @@ void parseBtByte( String fn )
 	    case STARTREC :
         // STARTREC : Start Recording
         Serial.println( "received: STARTREC..." );
-        Serial.print( "readyState is " ); Serial.println( stateToText( readyState ) );
         //startRecording();
+      break;
+      case STARTCREC :
+        // STARTCREC : Start Custom Recording
+        Serial.println( "received: STARTCREC..." );
+        inString = parseString();                                                                      // Parse input string
+        recString = setRecordingFilename( inString, recExtension );                                    // Create recording string with appropriate extension
+        startRecording( recString );                                                                   // Start custom filename recording
       break;
 	    case STOPREC :
   	    // STOPREC : Stop Recording
         Serial.println( "received: STOPREC..." );
-        Serial.print( "readyState is " ); Serial.println( stateToText( readyState ) );
   	    stopRecording();
   	  break;
   	  case STARTPLAY :

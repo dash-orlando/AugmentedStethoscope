@@ -647,7 +647,7 @@ boolean startRecording(String recString)
     recordState = RECORDING;
     switchMode( 1 );
     timeStamp   = 0;
-    sf1.StartSend( STRING, 1000 );                                                                              // Begin transmitting heartrate data as a String
+    //sf1.StartSend( STRING, 1000 );                                                                              // Begin transmitting heartrate data as a String
     Serial.println( "Stethoscope began RECORDING" );                                                            // Function execution confirmation over USB serial
     Serial.println( "sending: ACK..." );
     BTooth.write( ACK );                                                                                        // ACKnowledgement sent back through bluetooth serial
@@ -663,9 +663,13 @@ boolean startRecording(String recString)
 } // End of startRecording()
 // ==============================================================================================================
 
+// ==============================================================================================================
+// Continue Recording
+// Continue recording audio to SD card
 //
-// *** Continue Recording
-//
+// Michael Xynidis
+// Fluvio L. Lobo Fenoglietto 11/21/2017
+// ==============================================================================================================
 void continueRecording()
 {
   if ( queue_recMic.available() >= 2 )
@@ -682,29 +686,34 @@ void continueRecording()
     {
       lineOut = String( heartRateI, DEC ) + "," + String( timeStamp, DEC ) + "\r\n";
       hRate.print( lineOut );
-      txFr = sf1.Get();                                                                                         // get values from existing TX data frame
-      txFr.DataString = String( heartRateI );                                                                   // update data-string value with heartrate
-      sf1.Set( txFr );                                                                                          // set TX data frame with new heartate value
+      //txFr = sf1.Get();                                                                                         // get values from existing TX data frame
+      //txFr.DataString = String( heartRateI );                                                                   // update data-string value with heartrate
+      //sf1.Set( txFr );                                                                                          // set TX data frame with new heartate value
     }
   }
 } // End of continueRecording()
+// ==============================================================================================================
 
-
+// ==============================================================================================================
+// Stop Recording
+// Stops recording audio to SD card
 //
-// *** Stop Recording
-//
+// Michael Xynidis
+// Fluvio L. Lobo Fenoglietto 11/21/2017
+// ==============================================================================================================
 boolean stopRecording()
 {
   Serial.println( "EXECUTING stopRecording" );
 
-  mixer_mic_Sd.gain( 0, mixerInputON  );                                                                        // Set gain of mixer_mic_Sd, channel0 to 0.5 - Microphone on
-  mixer_mic_Sd.gain( 1, mixerInputON  );                                                                        // Set gain of mixer_mic_Sd, channel0 to 0.5 - Microphone on
-  mixer_mic_Sd.gain( 2, mixerInputOFF );                                                                        // Set gain of mixer_mic_Sd, channel2 to 0
+  // No need to modify channel gains
+  //mixer_mic_Sd.gain( 0, mixerInputON  );                                                                        // Set gain of mixer_mic_Sd, channel0 to 0.5 - Microphone on
+  //mixer_mic_Sd.gain( 1, mixerInputON  );                                                                        // Set gain of mixer_mic_Sd, channel0 to 0.5 - Microphone on
+  //mixer_mic_Sd.gain( 2, mixerInputOFF );                                                                        // Set gain of mixer_mic_Sd, channel2 to 0
   
   queue_recMic.end();
   if ( recordState == RECORDING )
   { 
-    sf1.StopSend( STRING );                                                                                     // Terminate transmitting heartrate data as a String
+    //sf1.StopSend( STRING );                                                                                     // Terminate transmitting heartrate data as a String
     Serial.println( "Stethoscope will STOP RECORDING" );                                                        // Function execution confirmation over USB serial
     Serial.println( "sending: ACK..." );
     BTooth.write( ACK );
@@ -725,7 +734,7 @@ boolean stopRecording()
     BTooth.write( NAK );                                                                                        // Negative AcKnowledgement sent back through bluetooth serial
     return false;
 }
-
+// ==============================================================================================================
 
 //
 // *** Start Playing
