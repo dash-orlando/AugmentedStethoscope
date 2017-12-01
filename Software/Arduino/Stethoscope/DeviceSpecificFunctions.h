@@ -532,7 +532,7 @@ void switchMode( int m )
 // Fluvio L. Lobo Fenoglietto 11/30/2017
 // ==============================================================================================================
 String inString = "";
-boolean parseString()
+String parseString()
 {
 
   if ( BTooth.available() > 0 )
@@ -547,14 +547,14 @@ boolean parseString()
     Serial.println( inString );
     Serial.println( "sending: ACK..." );
     BTooth.write( ACK );                                                                                        // ACKnowledgement sent back through bluetooth serial
-    return true;
+    return inString;
   }
   else
   {
     Serial.println( "Stethoscope did NOT receive STRING" );                                                     // Function execution confirmation over USB serial
     Serial.println( "sending: NAK..." );
     BTooth.write( NAK );                                                                                        // ACKnowledgement sent back through bluetooth serial
-    return false;
+    return inString;
   }
   
 } // End of parseString() function
@@ -567,8 +567,24 @@ boolean parseString()
 //
 // Fluvio L. Lobo Fenoglietto 11/30/2017
 // ==============================================================================================================
-char* setRecordingFilename()
+File    recFile;                                                                                                // Recording file definition
+String  recExtension  = ".RAW";                                                                                 // Recording file extension definition
+String  recString     = "";                                                                                     // Recording file string name definiton
+boolean setRecordingFilename( String inString, String recExtension )
 {
+  Serial.println( "EXECUTING setRecordingFilename()" );
+
+  recString = inString + recExtension;                                                                          // Concatenating extension to input filename
+  
+  char  recChar[recString.length()+1];                                                                          // Conversion from string to character array
+  recString.toCharArray( recChar, sizeof( recChar ) );
+
+  Serial.print(   "USING " );
+  Serial.print(   recChar );
+  Serial.println( " as recording filename");
+  
+  if ( SD.exists( recChar ) ) SD.remove( recChar );                                                             // Check for existence of filename
+  recFile = SD.open( recChar, FILE_WRITE );                                                                     // Create using filename and open for recording
   
 } // End of setRecordingFilename() function
 

@@ -178,7 +178,8 @@ void parseBtByte( String fn )
       break;
       case PSTRING :
         // PSTRING : Parse String
-        parseString();
+        inString = parseString();
+        setRecordingFilename( inString, recExtension );
       break;
       
       default :
