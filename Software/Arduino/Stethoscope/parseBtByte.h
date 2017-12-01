@@ -101,7 +101,7 @@ void parseBtByte( String fn )
         // STARTREC : Start Recording
         Serial.println( "received: STARTREC..." );
         Serial.print( "readyState is " ); Serial.println( stateToText( readyState ) );
-        startRecording();
+        //startRecording();
       break;
 	    case STOPREC :
   	    // STOPREC : Stop Recording
@@ -179,7 +179,8 @@ void parseBtByte( String fn )
       case PSTRING :
         // PSTRING : Parse String
         inString = parseString();
-        setRecordingFilename( inString, recExtension );
+        recString = setRecordingFilename( inString, recExtension );
+        startRecording( recString );
       break;
       
       default :

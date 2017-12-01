@@ -570,21 +570,23 @@ String parseString()
 File    recFile;                                                                                                // Recording file definition
 String  recExtension  = ".RAW";                                                                                 // Recording file extension definition
 String  recString     = "";                                                                                     // Recording file string name definiton
-boolean setRecordingFilename( String inString, String recExtension )
+String setRecordingFilename( String inString, String recExtension )
 {
   Serial.println( "EXECUTING setRecordingFilename()" );
 
   recString = inString + recExtension;                                                                          // Concatenating extension to input filename
   
-  char  recChar[recString.length()+1];                                                                          // Conversion from string to character array
-  recString.toCharArray( recChar, sizeof( recChar ) );
+  //char  recChar[recString.length()+1];                                                                          // Conversion from string to character array
+  //recString.toCharArray( recChar, sizeof( recChar ) );
 
   Serial.print(   "USING " );
-  Serial.print(   recChar );
+  Serial.print(   recString );
   Serial.println( " as recording filename");
   
-  if ( SD.exists( recChar ) ) SD.remove( recChar );                                                             // Check for existence of filename
-  recFile = SD.open( recChar, FILE_WRITE );                                                                     // Create using filename and open for recording
+  //if ( SD.exists( recChar ) ) SD.remove( recChar );                                                             // Check for existence of filename
+  //recFile = SD.open( recChar, FILE_WRITE );                                                                     // Create using filename and open for recording
+
+  return recString;
   
 } // End of setRecordingFilename() function
 
@@ -600,7 +602,7 @@ boolean setRecordingFilename( String inString, String recExtension )
 // Michael Xynidis
 // Fluvio L. Lobo Fenoglietto 11/21/2017
 // ==============================================================================================================
-boolean startRecording()
+boolean startRecording(String recString)
 {
   Serial.println( "EXECUTING startRecording()" );                                                               // Identification of function executed
 
@@ -614,22 +616,21 @@ boolean startRecording()
   mixer_allToSpk.gain(    1,  mixerInputOFF );                                                                  // Set mic effect, channel 1 of speaker mixer ON    (g = 0)
   mixer_allToSpk.gain(    2,  mixerInputOFF );                                                                  // Set mem playback, channel 1 of speaker mixer ON  (g = 0)
 
-  const char* fileRec = "RECO2.RAW";
-  //char  fileRec[fileRec.length()+1];                                                                        // Conversion from string to character array
-  //fileRec.toCharArray( fileRec, sizeof( fileRec ) );
+  char  recChar[recString.length()+1];                                                                          // Conversion from string to character array
+  recString.toCharArray( recChar, sizeof( recChar ) );
 
   char  fileDat[ses.fileDat.length()+1];                                                                        // Conversion from string to character array
   ses.fileDat.toCharArray( fileDat, sizeof( fileDat ) );
   
-  if ( SD.exists( fileRec ) ) SD.remove( "RECO2.RAW" );                                                             // Check for existence of RECORD.RAW
+  if ( SD.exists( recChar ) ) SD.remove( recChar );                                                             // Check for existence of RECORD.RAW
   if ( SD.exists( fileDat ) ) SD.remove( fileDat );                                                             // Check for existence of HRATE.DAT
 
-  frec  = SD.open( fileRec, FILE_WRITE );                                                                       // Create and open RECORD.RAW file
+  frec  = SD.open( recChar, FILE_WRITE );                                                                       // Create and open RECORD.RAW file
   Serial.println( frec );
   hRate = SD.open( fileDat,  FILE_WRITE );                                                                      // Create and open HRATE.DAT file
   Serial.println( hRate );
 
-  if (  SD.open( fileRec, FILE_WRITE ) &&                                                                       // Create and open RECORD.RAW file
+  if (  SD.open( recChar, FILE_WRITE ) &&                                                                       // Create and open RECORD.RAW file
         SD.open( fileDat, FILE_WRITE ) )                                                                        // Create and open HRATE.DAT file
   {
 
@@ -639,7 +640,7 @@ boolean startRecording()
     Serial.print( "\nHearsound detection threshold:\t"  );  Serial.print(   sigThreshold  );
     Serial.print( "\nLow-pass filter roll-off freq:\t"  );  Serial.print(   freqLowPass   );
     Serial.print( "\nHighshelf filter roll-off freq:\t" );  Serial.println( freqHighShelf );
-    Serial.print( "\nRecord file on SD is named:\t"   );    Serial.print(   fileRec       );
+    Serial.print( "\nRecord file on SD is named:\t"   );    Serial.print(   recChar       );
     Serial.print( "\nHR Data file on SD is named:\t"    );  Serial.println( fileDat       );
 
     queue_recMic.begin();
@@ -715,7 +716,7 @@ boolean stopRecording()
     frec.close();
     hRate.close();
     recordState = STANDBY;
-    switchMode( 4 );
+    switchMode( 0 );
     return true;
   }
   else
