@@ -543,13 +543,15 @@ boolean parseString()
   if ( inString.length() > 1 )
   {
     Serial.println( "Stethoscope received STRING" );                                                            // Function execution confirmation over USB serial
+    Serial.print(   "Stethoscope received ");
+    Serial.println( inString );
     Serial.println( "sending: ACK..." );
     BTooth.write( ACK );                                                                                        // ACKnowledgement sent back through bluetooth serial
     return true;
   }
   else
   {
-    Serial.println( "Stethoscope did NOT receive STRING" );                                                            // Function execution confirmation over USB serial
+    Serial.println( "Stethoscope did NOT receive STRING" );                                                     // Function execution confirmation over USB serial
     Serial.println( "sending: NAK..." );
     BTooth.write( NAK );                                                                                        // ACKnowledgement sent back through bluetooth serial
     return false;
