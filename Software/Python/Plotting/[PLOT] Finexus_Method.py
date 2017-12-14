@@ -8,46 +8,48 @@
 *       (2) Continuous 3D live plot (BETA)
 *       (2) Guided Point-by-Point
 *
-* VERSION: 0.3.2
-*   - FIXED   : Program now does a check on the received data
-*               to avoid the error we get so often regarding
-*               the array containing invalid data
-*   - MODIFIED: Streamlined code to make it more human friendly
-*   - ADDED   : 3D plotting mode of operation
-*   - ADDED   : Storring data now works under UNIX systems
+* VERSION: 0.4.0
+*   - MODIFIED: Use matplotlib.animation for faster 3D plots
+*               in conjunction with only redrawing the point
+*               in contrast to redrawing the entire canvas.
 *   - MODIFIED: Plotting now takes ~0.15s (previously ~0.30s)
 *
 * KNOWN ISSUES:
 *   - Loss in accuracy in 3D space  (not even surprised)
 *   - Data ouput is slow            (look into multithreading)
-*   - 3D plotting is REALLY slow    (look into using animation instead of Axes3D)
+*   - 3D plotting is sluggish due to
+*     solver being a bottleneck     (look into multithreading)
 *
 * AUTHOR                    :   Edward Nichols
 * LAST CONTRIBUTION DATE    :   Oct. 17th, 2017 Year of Our Lord
 * 
 * AUTHOR                    :   Mohammad Odeh 
-* LAST CONTRIBUTION DATE    :   Nov. 13th, 2017 Year of Our Lord
+* LAST CONTRIBUTION DATE    :   Dec. 14th, 2017 Year of Our Lord
 *
 '''
 
-# Import Modules
-import matplotlib                                       # Import matplotlib first as to be able to ...
-matplotlib.use('GTKAgg')                                # ... change the backend for the subsequent imports
-import  numpy                   as      np              # Import Numpy
-import  matplotlib.pyplot       as      plt             # 2D plotting
-from    mpl_toolkits.mplot3d    import  Axes3D          # 3D plotting
-from    time                    import  sleep, clock    # Sleep for stability, clock for profiling
-from    scipy.optimize          import  root            # Solve System of Eqns for (x, y, z)
-from    scipy.linalg            import  norm            # Calculate vector norms (magnitude)
-from    usbProtocol             import  createUSBPort   # Create USB port (serial comm. w\ Arduino)
-from    threading               import  Thread          # Used to thread processes
-from    Queue                   import  Queue           # Used to queue input/output
-import  os, platform                                    # Directory/file manipulation
+# Plotting Modules
+from    matplotlib                  import  animation       # Animate graph
+from    mpl_toolkits.mplot3d        import  Axes3D          # 3D Cartesian space
+import  matplotlib.pyplot           as      plt             # Plot stuff
+import  pandas                      as      pd              # Data frame creation
+
+# Tracking Modules
+from    time                        import  sleep, clock    # Sleep for stability, clock for profiling
+from    scipy.optimize              import  root            # Solve System of Eqns for (x, y, z)
+from    scipy.linalg                import  norm            # Calculate vector norms (magnitude)
+from    usbProtocol                 import  createUSBPort   # Create USB port (serial comm. w\ Arduino)
+from    threading                   import  Thread          # Used to thread processes
+from    Queue                       import  Queue           # Used to queue input/output
+import  os, platform                                        # Directory/file manipulation
+
+# Shared (Plotting/Tracking) Modules
+import  numpy                       as      np
+
 
 # ************************************************************************
 # =====================> DEFINE NECESSARY FUNCTIONS <====================*
 # ************************************************************************
-
 
 def argsort( seq ):
     '''
@@ -409,24 +411,66 @@ def plotPos( actual, calculated ):
 
 # --------------------------
 
-def plot_3D( pos, ax ):
+def update_3Dplot( num ):
     '''
     3D plotting of computed values in a virtual box.
+
     INPUTS:
-        - xyz: an array/list containing the x-, y-, and z- co-ordinates
-        - ax : matplotlib Axes3D() object
+        - num: A palceholder input parameter (required for animation to work)
+
+    OUTPUT:
+        - title: Updated 3D plot title
+        - graph: Updated 3D plot graph
     '''
-    ax.set_xlim3d(   0, 175 )
-    ax.set_ylim3d( -25, 150 )
-    ax.set_zlim3d(   0, 200 )
-    ax.set_xlabel( 'X Position (mm)' )
-    ax.set_ylabel( 'Y Position (mm)' )
-    ax.set_zlabel( 'Z Position (mm)' )
-    ax.set_title( '3D Tracking' )
-    ax.scatter( float(pos[0]), float(pos[1]), float(pos[2]) )
-    plt.draw()
-    plt.pause(0.0001)
-    ax.cla()
+    
+    global initialGuess
+    
+    # Data acquisition
+    (H1, H2, H3, H4, H5, H6) = getData(IMU)                         # Get data from MCU
+
+    # Compute norms
+    HNorm = [ float(norm(H1)), float(norm(H2)),                     #
+              float(norm(H3)), float(norm(H4)),                     # Compute L2 vector norms
+              float(norm(H5)), float(norm(H6)) ]                    #
+    
+    # Solve system of equations
+    sol = root(LHS, initialGuess, args=(K, HNorm), method='lm',     # Invoke solver using the
+               options={'ftol':1e-10, 'xtol':1e-10, 'maxiter':1000, # Levenberg-Marquardt 
+                        'eps':1e-8, 'factor':0.001})                # Algorithm (aka LMA)
+
+    # Print solution (coordinates) to screen
+    pos = [sol.x[0]*1000, sol.x[1]*1000, -1*sol.x[2]*1000, float(clock())]
+    #print( "(x, y, z): (%.3f, %.3f, %.3f) Time: %.3f" %(pos[0], pos[1], pos[2], pos[3]) )
+
+    # Check if solution makes sense
+    if (abs(sol.x[0]*1000) > 500) or (abs(sol.x[1]*1000) > 500) or (abs(sol.x[2]*1000) > 500):
+        initialGuess = findIG( getData(IMU) )                       # Determine initial guess based on magnet's location
+        
+    # Update initial guess with current position and feed back to solver
+    else:
+        initialGuess = np.array( (sol.x[0]+dx, sol.x[1]+dx,         # Update the initial guess as the
+                                  sol.x[2]+dx), dtype='float64' )   # current position and feed back to LMA
+
+    # Perform required data manipulation for 3D scatter plotting
+    t = np.array( pos[3] ).flatten()                                # Store time needed to find solution as a numpy array
+    pos = np.array( pos[0:3] )                                      # Slice tuple and store position values as a numpy array
+    pos = pos.reshape( 1, 3 )                                       # Reshape array into (1x3) <=== required for scatter plot
+    
+    df = pd.DataFrame( {"time"  : t,                                # ...
+                        "x"     : pos[:,0],                         # Create -
+                        "y"     : pos[:,1],                         # - dataframe
+                        "z"     : pos[:,2]} )                       # ...
+
+    data = df[ df['time']==t ]
+    graph.set_data( data.x, data.y )                                # Update x-, y-coordinates
+    graph.set_3d_properties( data.z )                               # Update z-coordinate
+    title.set_text( 'Live Tracking, time to render={}'.format( float(clock())-t[0] ) )
+
+    print( "Data variable: " )
+    print( data )                                                   # Print dataframe for shits and giggles
+
+    return title, graph,                                            # Display updated plot
+
 
 # ************************************************************************
 # ===========================> SETUP PROGRAM <===========================
@@ -434,6 +478,7 @@ def plot_3D( pos, ax ):
 
 # Useful variables
 global CALIBRATING
+global initialGuess
 
 CALIBRATING = True                              # Boolean to indicate that device is calibrating
 READY       = False                             # Give time for user to place magnet
@@ -465,6 +510,7 @@ except Exception as e:
     print( "Error Arguments " + str(e.args) )
     sleep( 2.5 )
     quit()                                      # Shutdown entire program
+
 
 # ************************************************************************
 # =========================> MAKE IT ALL HAPPEN <=========================
@@ -615,70 +661,55 @@ elif ( mode == '2' ):
 # --------------------------------------------------------------------------------------
 
 # Else if 3D continuous mode was selected:
+'''
+Reference for 3D Plotting:
+https://stackoverflow.com/questions/41602588/matplotlib-3d-scatter-animations
+'''
 if ( mode == '3' ):
 
     # Setup 3D box for plotting
-    plt.ion()                                   # Interactive mode (aka animated, aka live)
-    fig = plt.figure( figsize =                 # figaspect(0.5) makes the figure twice as wide as it is tall
-                      plt.figaspect(0.5)*1.5 )  # *1.5 increases the size of the figure.
-    ax = Axes3D( fig )                          # Create figure
+    fig = plt.figure( figsize =                     # figaspect(0.5) makes the figure twice as wide as it is tall
+                      plt.figaspect(0.5)*1.5 )      # *1.5 increases the size of the figure.
+    ax = fig.add_subplot( 111, projection='3d' )    # Create figure
+    title = ax.set_title( 'Live Tracking' )         # Add title
+
+    ax.set_xlim3d( -25, 200 )                       # ...
+    ax.set_ylim3d( -25, 200 )                       # Set limits
+    ax.set_zlim3d(  50, 275 )                       # ...
+
+    ax.set_xlabel( 'X Position (mm)' )              # ...
+    ax.set_ylabel( 'Y Position (mm)' )              # Label axes
+    ax.set_zlabel( 'Z Position (mm)' )              # ...
     
     print( "\n******************************************" )
     print( "*NOTE: Press Ctrl-C to save data and exit." )
     print( "******************************************\n" )
 
-    while ( True ):
-        try:
-            # Inform user that system is almost ready
-            if(READY == False):
-                print( "Place magnet on track" )
-                sleep( 2.5 )
-                print( "Ready in 3" )
-                sleep( 1.0 )
-                print( "Ready in 2" )
-                sleep( 1.0 )
-                print( "Ready in 1" )
-                sleep( 1.0 )
-                print( "GO!" )
-                start = clock()
+    try:
+        # Create a preliminary dataframe consisiting of the initial guess and start time
+        pos = initialGuess.reshape( 1, 3 )                              # Numpy array (1x3) of initialGuess
+        t   = np.array( [np.ones(1)*i for i in range(1)] ).flatten()    # Array of initial time (t==0)
+        df  = pd.DataFrame( {"time"  : t,                               # ...
+                             "x"     : pos[:,0],                        # Initial -
+                             "y"     : pos[:,1],                        # - dataframe
+                             "z"     : pos[:,2]} )                      # ...
 
-                # Set the device to ready!!
-                READY = True
+                                                                        # Store elements of ...
+        data = df[ df['time']==0 ]                                      # ... dataframe at t==0 ...
+                                                                        # ... into the data variable
 
-            # Data acquisition
-            (H1, H2, H3, H4, H5, H6) = getData(IMU)                         # Get data from MCU
+        # Create a plot with initial dataframe and store it under graph variable                                                                
+        graph, = ax.plot(data.x, data.y, data.z, linestyle="", marker="o")
 
-            # Compute norms
-            HNorm = [ float(norm(H1)), float(norm(H2)),                     #
-                      float(norm(H3)), float(norm(H4)),                     # Compute L2 vector norms
-                      float(norm(H5)), float(norm(H6)) ]                    #
-            
-            # Solve system of equations
-            sol = root(LHS, initialGuess, args=(K, HNorm), method='lm',     # Invoke solver using the
-                       options={'ftol':1e-10, 'xtol':1e-10, 'maxiter':1000, # Levenberg-Marquardt 
-                                'eps':1e-8, 'factor':0.001})                # Algorithm (aka LMA)
+        # Call animation function
+        ani = animation.FuncAnimation( fig, update_3DPlot, 1, 
+                                       interval=1, blit=True )
+        # Display plot
+        plt.show()
 
-            # Print solution (coordinates) to screen
-            pos = [sol.x[0]*1000, sol.x[1]*1000, -1*sol.x[2]*1000, float(clock())]
-            print( "(x, y, z): (%.3f, %.3f, %.3f) Time: %.3f" %(pos[0], pos[1], pos[2], pos[3]) )
-
-            plot_3D( pos, ax )                                              # Plot the computed position
-
-            # Check if solution makes sense
-            if (abs(sol.x[0]*1000) > 500) or (abs(sol.x[1]*1000) > 500) or (abs(sol.x[2]*1000) > 500):
-                initialGuess = findIG( getData(IMU) )                       # Determine initial guess based on magnet's location
-                
-            # Update initial guess with current position and feed back to solver
-            else:
-                calcPos.append( pos )                                       # Append calculated position to list
-                
-                initialGuess = np.array( (sol.x[0]+dx, sol.x[1]+dx,         # Update the initial guess as the
-                                          sol.x[2]+dx), dtype='float64' )   # current position and feed back to LMA
-
-        # Save data on EXIT
-        except KeyboardInterrupt:
-            storeData( calcPos )                                            # Store data in a log file
-            break                                                           # Exit loop 43va!
+    # Save data on EXIT
+    except KeyboardInterrupt:
+        storeData( calcPos )                                            # Store data in a log file
 
 # --------------------------------------------------------------------------------------
 
