@@ -10,6 +10,8 @@ from    Queue                   import  Queue           # Used to queue input/ou
 import  os, platform                                    # Directory/file manipulation
 import  math
 
+mlab.figure(size=(1000, 800))
+
 # ___START: Create Cartesian axes___
 ##xx = yy = zz = np.arange(-0.6,0.7,0.1)
 ##xy = xz = yx = yz = zx = zy = np.zeros_like(xx)
@@ -63,6 +65,30 @@ for i in range (0, K, N):
 ##    mlab.plot3d( lvlCurve_0, H+i, V )                   # yz-plane
 ##    mlab.plot3d( H+i, lvlCurve_0, V )                   # xz-plane
     
+STLfile="SP_PH02_Torso (1).stl"
+f=open(STLfile,'r')
+
+x=[]
+y=[]
+z=[]
+
+scaleFactor = 15.0
+for line in f:
+    strarray=line.split()
+    if strarray[0]=='vertex':
+        x = np.append( x, np.double(strarray[1])/scaleFactor )
+        y = np.append( y, np.double(strarray[2])/scaleFactor )
+        z = np.append( z, np.double(strarray[3])/scaleFactor )
+
+# Snap to origin
+x = x + 50
+y = y + 30
+z = z - 50
+triangles=[(i, i+1, i+2) for i in range(0, len(x),3)]
+
+mlab.triangular_mesh( x, -1*z, y, triangles,
+                      representation='fancymesh',
+                      tube_radius=0.25 )
 
 # Setup cartesian space
 mlab.outline( extent=[0, K-1, 0, K-1, 0, K-1] )
@@ -94,7 +120,7 @@ def anim():
     global initialGuess
     f = mlab.gcf()
     while True:
-        print('Updating scene...')
+        #print('Updating scene...')
         # Data acquisition
         (H1, H2, H3, H4, H5, H6) = getData(IMU)                         # Get data from MCU
         
@@ -110,7 +136,7 @@ def anim():
 
         # Print solution (coordinates) to screen
         position = np.array( (sol.x[0]*1000, sol.x[1]*1000, -1*sol.x[2]*1000), dtype='float64' )
-        print( "(x, y, z): (%.3f, %.3f, %.3f)" %(position[0], position[1], position[2]) )
+        #print( "(x, y, z): (%.3f, %.3f, %.3f)" %(position[0], position[1], position[2]) )
         
         # Check if solution makes sense
         if (abs(sol.x[0]*1000) > 500) or (abs(sol.x[1]*1000) > 500) or (abs(sol.x[2]*1000) > 500):
@@ -120,7 +146,7 @@ def anim():
         else:
             initialGuess = np.array( (sol.x[0]+dx, sol.x[1]+dx,         # Update the initial guess as the
                                       sol.x[2]+dx), dtype='float64' )   # current position and feed back to LMA
-        plt.mlab_source.set(x=position[0], y=position[1], z=position[2])
+        plt.mlab_source.set(x=position[0], y=position[1], z=(position[2]-50))
         yield
 
 
