@@ -1,3 +1,33 @@
+'''
+*
+* Position tracking of magnet based on Finexus
+* https://ubicomplab.cs.washington.edu/pdfs/finexus.pdf
+*
+*   - 3 Modes of operations
+*       (1) Guided Point-by-Point   (DISABLED)
+*       (2) Continuous 2D sampling  (DISABLED)
+*       (3) Continuous 3D live plot
+*
+* VERSION: 1.0.0
+*   - MODIFIED: Use MayaVI to perform plotting since it allows
+*               for greater flexibility and drastically
+*               improves plot update time (does NOT rerender plot
+*               at each iteration )
+*
+* KNOWN ISSUES:
+*   - Loss in accuracy in 3D space  (not even surprised)
+*   - Data ouput is slow            (look into multithreading)
+*   - 3D plotting is sluggish due to
+*     solver being a bottleneck     (look into multithreading)
+*
+* AUTHOR                    :   Edward Nichols
+* LAST CONTRIBUTION DATE    :   Oct. 17th, 2017 Year of Our Lord
+* 
+* AUTHOR                    :   Mohammad Odeh 
+* LAST CONTRIBUTION DATE    :   Dec. 19th, 2017 Year of Our Lord
+*
+'''
+
 # Tracking + Solver Modules
 import  numpy                   as      np              # Import Numpy
 from    mayavi                  import  mlab            # Data visualization
@@ -8,147 +38,6 @@ from    usbProtocol             import  createUSBPort   # Create USB port (seria
 from    threading               import  Thread          # Used to thread processes
 from    Queue                   import  Queue           # Used to queue input/output
 import  os, platform                                    # Directory/file manipulation
-import  math
-
-mlab.figure(size=(1000, 800))
-
-# ___START: Create Cartesian axes___
-##xx = yy = zz = np.arange(-0.6,0.7,0.1)
-##xy = xz = yx = yz = zx = zy = np.zeros_like(xx)
-##
-##lensoffset = 0.1
-##
-##mlab.plot3d( yx, yy+lensoffset, yz, line_width=0.01, tube_radius=0.01)
-##mlab.plot3d( zx, zy+lensoffset, zz, line_width=0.01, tube_radius=0.01)
-##mlab.plot3d( xx, xy+lensoffset, xz, line_width=0.01, tube_radius=0.01)
-
-K = 101     # Number of lines to plot
-N = 5       # Subdivisions (aka K/N lines are drawn)
-
-# Draw horizontal lines on the xy-, yz-, and xz-planes
-lvlCurve_H = np.arange( 0, K, N )                       # Horizontal level curve
-lvlCurve_V = np.zeros_like( lvlCurve_H )                # Vertical level curve
-H, V = np.meshgrid( lvlCurve_H, lvlCurve_V )            # Mesh both arrays to form a matrix (a grid)
-lvlCurve_0 = np.zeros_like( H )                         # Force everything into a 2D plane by setting the 3rd plane to 0
-##H, V = H.flatten(), V.flatten()                         # Flatten matrices
-##lvlCurve_0 = np.zeros_like( H )                         # Force everything into a 2D plane by setting the 3rd plane to 0
-
-for i in range (0, K, N):
-    mlab.mesh( H, V+i, lvlCurve_0, representation='mesh',
-               tube_radius = 0.25, color=(1., 1., 1.) )
-    mlab.mesh( lvlCurve_0, H, V+i, representation='mesh',
-               tube_radius = 0.25, color=(1., 1., 1.) )
-    mlab.mesh( H, lvlCurve_0, V+i, representation='mesh',
-               tube_radius = 0.25, color=(1., 1., 1.) )
-    
-##    mlab.plot3d( H, V+i, lvlCurve_0 )                   # xy-plane
-##    mlab.plot3d( lvlCurve_0, H, V+i )                   # yz-plane
-##    mlab.plot3d( H, lvlCurve_0, V+i )                   # xz-plane
-
-# Draw vertical lines on the xy-, yz-, and xz-planes
-lvlCurve_V = np.arange(0, K, N)                         # Vertical level curve
-lvlCurve_H = np.zeros_like(lvlCurve_V)                  # Horizontal level curve
-H, V = np.meshgrid( lvlCurve_H, lvlCurve_V )            # Mesh both arrays to form a matrix (a grid)
-lvlCurve_0 = np.zeros_like( H )                         # Force everything into a 2D plane by setting the 3rd plane to 0
-##H, V = H.flatten(), V.flatten()                         # Flatten matrices
-##lvlCurve_0 = np.zeros_like( H )                         # Force everything into a 2D plane by setting the 3rd plane to 0
-
-for i in range (0, K, N):
-    mlab.mesh( H+i, V, lvlCurve_0, representation='mesh',
-               tube_radius = 0.25, color=(1., 1., 1.) )
-    mlab.mesh( lvlCurve_0, H+i, V, representation='mesh',
-               tube_radius = 0.25, color=(1., 1., 1.) )
-    mlab.mesh( H+i, lvlCurve_0, V, representation='mesh',
-               tube_radius = 0.25, color=(1., 1., 1.) )
-    
-##    mlab.plot3d( H+i, V, lvlCurve_0 )                   # xy-plane
-##    mlab.plot3d( lvlCurve_0, H+i, V )                   # yz-plane
-##    mlab.plot3d( H+i, lvlCurve_0, V )                   # xz-plane
-    
-STLfile="SP_PH02_Torso (1).stl"
-f=open(STLfile,'r')
-
-x=[]
-y=[]
-z=[]
-
-scaleFactor = 15.0
-for line in f:
-    strarray=line.split()
-    if strarray[0]=='vertex':
-        x = np.append( x, np.double(strarray[1])/scaleFactor )
-        y = np.append( y, np.double(strarray[2])/scaleFactor )
-        z = np.append( z, np.double(strarray[3])/scaleFactor )
-
-# Snap to origin
-x = x + 50
-y = y + 30
-z = z - 50
-triangles=[(i, i+1, i+2) for i in range(0, len(x),3)]
-
-mlab.triangular_mesh( x, -1*z, y, triangles,
-                      representation='fancymesh',
-                      tube_radius=0.25 )
-
-# Setup cartesian space
-mlab.outline( extent=[0, K-1, 0, K-1, 0, K-1] )
-mlab.axes( extent=[0, K-1, 0, K-1, 0, K-1],
-           line_width = 1.0,
-           x_axis_visibility=True,
-           y_axis_visibility=True,
-           z_axis_visibility=True )
-# ___END: Create Cartesian Axes___
-
-alpha = np.linspace(0, 2*math.pi, 100)  
-
-xs = np.cos(alpha)
-ys = np.sin(alpha)
-zs = np.zeros_like(xs)
-s  = 2+np.sin(alpha) 
-##mlab.points3d( 0, 0, 0, resolution=100, scale_factor=5.0 )
-##mlab.outline(extent=[0, 100, 0, 100, 0, 100])
-##mlab.axes( extent=[0, 100, 0, 100, 0, 100],
-##           line_width = 1.0,
-##           x_axis_visibility=True,
-##           y_axis_visibility=True,
-##           z_axis_visibility=True )
-
-plt = mlab.points3d(xs[:1], ys[:1], zs[:1], resolution=100, scale_factor=5.0)
-
-@mlab.animate(delay=25)
-def anim():
-    global initialGuess
-    f = mlab.gcf()
-    while True:
-        #print('Updating scene...')
-        # Data acquisition
-        (H1, H2, H3, H4, H5, H6) = getData(IMU)                         # Get data from MCU
-        
-        # Compute norms
-        HNorm = [ float(norm(H1)), float(norm(H2)),                     #
-                  float(norm(H3)), float(norm(H4)),                     # Compute L2 vector norms
-                  float(norm(H5)), float(norm(H6)) ]                    #
-        
-        # Solve system of equations
-        sol = root(LHS, initialGuess, args=(K, HNorm), method='lm',     # Invoke solver using the
-                   options={'ftol':1e-10, 'xtol':1e-10, 'maxiter':1000, # Levenberg-Marquardt 
-                            'eps':1e-8, 'factor':0.001})                # Algorithm (aka LMA)
-
-        # Print solution (coordinates) to screen
-        position = np.array( (sol.x[0]*1000, sol.x[1]*1000, -1*sol.x[2]*1000), dtype='float64' )
-        #print( "(x, y, z): (%.3f, %.3f, %.3f)" %(position[0], position[1], position[2]) )
-        
-        # Check if solution makes sense
-        if (abs(sol.x[0]*1000) > 500) or (abs(sol.x[1]*1000) > 500) or (abs(sol.x[2]*1000) > 500):
-            initialGuess = findIG( getData(IMU) )                       # Determine initial guess based on magnet's location
-            
-        # Update initial guess with current position and feed back to solver
-        else:
-            initialGuess = np.array( (sol.x[0]+dx, sol.x[1]+dx,         # Update the initial guess as the
-                                      sol.x[2]+dx), dtype='float64' )   # current position and feed back to LMA
-        plt.mlab_source.set(x=position[0], y=position[1], z=(position[2]-50))
-        yield
-
 
 # ************************************************************************
 # =====================> DEFINE NECESSARY FUNCTIONS <====================*
@@ -410,6 +299,184 @@ def findIG( magFields ):
 
 # --------------------------
 
+def generate_cartesian_volume( fig, length = 250, spacing = 10 ):
+    '''
+    Generates a meshed cartesian volume that encapsulates the ROI
+    
+    INPUTS:
+        - fig    : Scene/figure to populate
+        - length : Length of axes ( generates a KxKxK sized cube )
+        - spacing: Spacing between consecutive lines
+
+    OUTPUT:
+        - No return; does internal calls to update plot.
+    '''
+    print( "Constructing cartesian volume ..." ),
+    
+    K = length + 1                                          # Number of lines to plot
+    N = spacing                                             # Subdivisions (aka K/N lines are drawn)
+
+    # Draw horizontal lines on the xy-, yz-, and xz-planes
+    lvlC_H  = np.arange( 0, K, N )                          # Horizontal level curve
+    lvlC_V  = np.zeros_like( lvlC_H )                       # Vertical level curve
+    H, V    = np.meshgrid( lvlC_H, lvlC_V )                 # Mesh both arrays to a matrix (a grid)
+    lvlC_0  = np.zeros_like( H )                            # Force everything into a 2D plane by setting the 3rd plane to 0
+
+    for i in range (0, K, N):
+        mlab.mesh( H, V+i, lvlC_0,
+                   figure = fig,
+                   representation = 'mesh',
+                   tube_radius = 0.25,
+                   color = (1., 1., 1.) )
+        
+        mlab.mesh( lvlC_0, H, V+i,
+                   figure = fig,
+                   representation = 'mesh',
+                   tube_radius = 0.25,
+                   color = (1., 1., 1.) )
+        
+        mlab.mesh( H, lvlC_0, V+i,
+                   figure = fig,
+                   representation = 'mesh',
+                   tube_radius = 0.25,
+                   color = (1., 1., 1.) )
+
+    # Draw vertical lines on the xy-, yz-, and xz-planes
+    lvlC_V  = np.arange( 0, K, N )                          # Vertical level curve
+    lvlC_H  = np.zeros_like( lvlC_V )                       # Horizontal level curve
+    H, V    = np.meshgrid( lvlC_H, lvlC_V )                 # Mesh both arrays to form a matrix (a grid)
+    lvlC_0  = np.zeros_like( H )                            # Force everything into a 2D plane by setting the 3rd plane to 0
+
+    for i in range (0, K, N):
+        mlab.mesh( H+i, V, lvlC_0,
+                   figure = fig,
+                   representation = 'mesh',
+                   tube_radius = 0.25,
+                   color = (1., 1., 1.) )
+        
+        mlab.mesh( lvlC_0, H+i, V,
+                   figure = fig,
+                   representation = 'mesh',
+                   tube_radius = 0.25,
+                   color = (1., 1., 1.) )
+        
+        mlab.mesh( H+i, lvlC_0, V,
+                   figure = fig,
+                   representation = 'mesh',
+                   tube_radius = 0.25,
+                   color = (1., 1., 1.) )
+
+    # Generate outline and label axes
+    mlab.outline( extent = [0, K-1, 0, K-1, 0, K-1], figure = fig )
+    mlab.axes( extent = [0, K-1, 0, K-1, 0, K-1],
+               figure = fig,
+               line_width = 1.0,
+               x_axis_visibility=True,
+               y_axis_visibility=True,
+               z_axis_visibility=True )
+
+    print( "SUCCESS!" )
+
+# --------------------------
+
+def read_STL( fig, STLfile ):
+    '''
+    Generates a meshed cartesian volume that encapsulates the ROI
+    
+    INPUTS:
+        - fig    : Scene/figure to populate
+        - STLfile: A string contating the name/path of the STL file to mesh
+
+    OUTPUT:
+        - No return; generates a mesh on the render window
+    '''
+
+    print( "Generating mesh of STL file ..." ),
+    
+    x=[]    # ...
+    y=[]    # List to hold extracted vertices
+    z=[]    # ...
+
+    # Open STL file and read contents
+    with open( STLfile,'r' ) as f:
+
+        scaleFactor = 1.0                   # Define a scaling factor (if needed)
+        for line in f:                      # Read line-by-line
+            strarray=line.split()           # Split constituent parts into seperate entities
+            if( strarray[0]=='vertex' ):    # Extract vertices
+                x = np.append( x, np.double( strarray[1] )/scaleFactor )
+                y = np.append( y, np.double( strarray[2] )/scaleFactor )
+                z = np.append( z, np.double( strarray[3] )/scaleFactor )
+
+        # Translate mesh from origin to nipple (yay!)
+        x = x + (275.00)/scaleFactor
+        y = y - (125.00)/scaleFactor
+        z = z - (150.00)/scaleFactor
+
+        # Rotate STL mesh
+        temp = np.copy(y)
+        y = -1*np.copy(z)
+        z = temp
+
+        # Identify triangles
+        triangles = [ (i, i+1, i+2) for i in range(0, len(x), 3) ]
+
+        # Generate mesh!
+        mlab.triangular_mesh( x, y, z, triangles,
+                              figure = fig,
+                              representation = 'surface',
+                              tube_radius = 1.0 )
+
+        print( "SUCCESS!" )
+# --------------------------
+
+@mlab.animate(delay=25)
+def animate():
+    '''
+    Callback function to update and animate the plot
+    
+    INPUTS:
+        - magfield: a numpy array containing all the magnetic field readings
+
+    OUTPUT:
+        - No return (does internal calls to update plot)
+    '''
+    
+    global initialGuess
+    f = mlab.gcf()
+    while True:
+        # Data acquisition
+        (H1, H2, H3, H4, H5, H6) = getData(IMU)                         # Get data from MCU
+        
+        # Compute norms
+        HNorm = [ float(norm(H1)), float(norm(H2)),                     #
+                  float(norm(H3)), float(norm(H4)),                     # Compute L2 vector norms
+                  float(norm(H5)), float(norm(H6)) ]                    #
+        
+        # Solve system of equations
+        sol = root(LHS, initialGuess, args=(K, HNorm), method='lm',     # Invoke solver using the
+                   options={'ftol':1e-10, 'xtol':1e-10, 'maxiter':1000, # Levenberg-Marquardt 
+                            'eps':1e-8, 'factor':0.001})                # Algorithm (aka LMA)
+
+        # Print solution (coordinates) to screen
+        position = np.array( (sol.x[0]*1000, sol.x[1]*1000, -1*sol.x[2]*1000), dtype='float64' )
+        #print( "(x, y, z): (%.3f, %.3f, %.3f)" %(position[0], position[1], position[2]) )
+        
+        # Check if solution makes sense
+        if (abs(sol.x[0]*1000) > 500) or (abs(sol.x[1]*1000) > 500) or (abs(sol.x[2]*1000) > 500):
+            initialGuess = findIG( getData(IMU) )                       # Determine initial guess based on magnet's location
+            
+        # Update initial guess with current position and feed back to solver
+        else:
+            initialGuess = np.array( (sol.x[0]+dx, sol.x[1]+dx,         # Update the initial guess as the
+                                      sol.x[2]+dx), dtype='float64' )   # current position and feed back to LMA
+
+        # Update the position of the point in 3D space
+        plt.mlab_source.set( x = position[0], y = position[1], z = (position[2]-50) )
+        yield
+
+# --------------------------
+        
 # ************************************************************************
 # ===========================> SETUP PROGRAM <===========================
 # ************************************************************************
@@ -449,6 +516,13 @@ except Exception as e:
     sleep( 2.5 )
     quit()                                      # Shutdown entire program
 
+# Setup MayaVI environment
+scene = mlab.figure( size=(1000, 800) )         # Create window
+generate_cartesian_volume( scene )              # Generate mesh of volume
+STLfile = "SP_PH02_Torso (ASCII).stl"           # Path to STL file
+read_STL( scene, STLfile )                      # Read STL file
+
+
 # ************************************************************************
 # =========================> MAKE IT ALL HAPPEN <=========================
 # ************************************************************************
@@ -468,6 +542,12 @@ if(READY == False):
         
     # Set the device to ready!!
     READY = True
-    anim()
-    mlab.show()
+
+# Start the plot with the points given by the initial guess
+plt = mlab.points3d( initialGuess[0], initialGuess[1], initialGuess[2],
+                     figure = scene, resolution=100, scale_factor=35.0 )
+
+# Let the show begin!
+animate()
+mlab.show()
 
