@@ -1,58 +1,38 @@
-# Author: Prabhu Ramachandran <prabhu at aero dot iitb dot ac dot in>
-# Copyright (c) 2007, Enthought, Inc.
-# License: BSD style.
+'''
+Create a MayaVI2 cartesian volume with meshed grid planes
+'''
 
-from tvtk.api import tvtk
-from tvtk.array_handler import get_vtk_array_type
-from tvtk.common import is_old_pipeline
-from numpy import array, ogrid, sin, ravel
-from mayavi.scripts import mayavi2
+from    tvtk.api        import  tvtk
+from    mayavi.scripts  import  mayavi2
+import  numpy           as      np
 
-# Make the data.
-dims = array((128, 128, 128))
-vol = array((-5., 5, -5, 5, -5, 5))
-origin = vol[::2]
-spacing = (vol[1::2] - origin)/(dims -1)
-xmin, xmax, ymin, ymax, zmin, zmax = vol
-x, y, z = ogrid[xmin:xmax:dims[0]*1j,
-                ymin:ymax:dims[1]*1j,
-                zmin:zmax:dims[2]*1j]
-x, y, z = [t.astype('f') for t in (x, y, z)]
-scalars = sin(x*y*z)/(x*y*z)
+# Generate meshgrid (cartesian volume)
+data = np.ones((10, 10, 10))
+i = tvtk.ImageData(spacing=(1, 1, 1), origin=(0, 0, 0))
+i.point_data.scalars = data.ravel()
+i.point_data.scalars.name = 'scalars'
+i.dimensions = data.shape
 
-# Make the tvtk dataset.
-spoints = tvtk.StructuredPoints(origin=origin, spacing=spacing,
-                                dimensions=dims)
-# The copy makes the data contiguous and the transpose makes it
-# suitable for display via tvtk.  Note that it is not necessary to
-# make the data contiguous since in that case the array is copied
-# internally.
-s = scalars.transpose().copy()
-spoints.point_data.scalars = ravel(s)
-spoints.point_data.scalars.name = 'scalars'
 
-# This is needed in slightly older versions of VTK (like the 5.0.2
-# release) to prevent a segfault.  VTK does not detect the correct
-# data type.
-if is_old_pipeline():
-    spoints.scalar_type = get_vtk_array_type(s.dtype)
-
-# Uncomment the next two lines to save the dataset to a VTK XML file.
-#w = tvtk.XMLImageDataWriter(input=spoints, file_name='spoints3d.vti')
-#w.write()
-
-# Now view the data.
+# View the data.
 @mayavi2.standalone
 def view():
     from mayavi.sources.vtk_data_source import VTKDataSource
-    from mayavi.modules.outline import Outline
-    from mayavi.modules.image_plane_widget import ImagePlaneWidget
+    from mayavi.modules.api import Outline, GridPlane
 
     mayavi.new_scene()
-    src = VTKDataSource(data = spoints)
+    src = VTKDataSource(data=i)
     mayavi.add_source(src)
     mayavi.add_module(Outline())
-    mayavi.add_module(ImagePlaneWidget())
+    g = GridPlane()
+    g.grid_plane.axis = 'x'
+    mayavi.add_module(g)
+    g = GridPlane()
+    g.grid_plane.axis = 'y'
+    mayavi.add_module(g)
+    g = GridPlane()
+    g.grid_plane.axis = 'z'
+    mayavi.add_module(g)
 
 if __name__ == '__main__':
     view()
