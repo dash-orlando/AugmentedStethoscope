@@ -36,7 +36,7 @@
 #define DECLINATION                   6.29    // Accounting for the Earth's magnetic field
 #define BAUDRATE                      115200  // Serial communication baudrate
 #define MUX_PIN                       10      // Multiplexer "Select pin"
-#define DEBOUNCE                      5       // To ensure select pin voltage has enough time to settle.
+#define DEBOUNCE                      1       // To ensure select pin voltage has enough time to settle.
 
 // MUX lines are on these pins.
 #define S0                            8
@@ -148,7 +148,7 @@ void loop() {
   for (int i = 0; i < 6; i++) {
     for (int j = 0; j < 3; j++) {
       Serial.print(sens[i][j] - cal[i][j], 5);
-      delay(2);
+      //delay(2);
       if (i == 5 && j == 2) {
         //Serial.println();
         continue;
