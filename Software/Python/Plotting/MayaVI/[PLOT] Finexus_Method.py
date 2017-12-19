@@ -8,7 +8,7 @@
 *       (2) Continuous 2D sampling  (DISABLED)
 *       (3) Continuous 3D live plot
 *
-* VERSION: 1.0.0
+* VERSION: 1.0.1
 *   - MODIFIED: Use MayaVI to perform plotting since it allows
 *               for greater flexibility and drastically
 *               improves plot update time (does NOT rerender plot
@@ -16,9 +16,6 @@
 *
 * KNOWN ISSUES:
 *   - Loss in accuracy in 3D space  (not even surprised)
-*   - Data ouput is slow            (look into multithreading)
-*   - 3D plotting is sluggish due to
-*     solver being a bottleneck     (look into multithreading)
 *
 * AUTHOR                    :   Edward Nichols
 * LAST CONTRIBUTION DATE    :   Oct. 17th, 2017 Year of Our Lord
