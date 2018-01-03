@@ -1,3 +1,21 @@
+'''
+*
+* LSM9DS1 class for python based on:
+* https://github.com/akimach/LSM9DS1_RaspberryPi_Library.git
+*
+* VERSION: 1.1
+*   - ADDED   : Initial Release
+*   - ADDED   : Incomplete definition for EMA filter
+*
+* KNOWN ISSUES:
+*   - None ATM
+*
+* Author        :   Mohammad Odeh
+* Date          :   Nov. 21st, 2017 Year of Our Lord
+* Last Modified :   Jan.  3rd, 2018 Year of Our Lord
+*
+'''
+
 import  numpy               as      np              # Import Numpy
 import  RPi.GPIO            as      GPIO            # Use GPIO pins
 from    time                import  sleep           # Sleep for stability
@@ -53,14 +71,18 @@ class IMU(object):
         # Setup the multiplexer (enable pins)
         self.setupMux( pins )
 
-        # Create BASE and RAW readings matrices
+        # Record the number of sensors being used
         self.nSensors = nSensors
         
+        # Check if number of sensors is valid
         if( (nSensors != 1) and (nSensors%2 != 0) ):
             raise TheGreatMoesException
+        
+        # Create necessary matrices
         else:
-            self.IMU_Base = np.zeros( (nSensors,3), dtype='float64' )
-            self.IMU_Raw  = np.zeros( (nSensors,3), dtype='float64' )
+            self.IMU_Base = np.zeros( (nSensors, 3), dtype='float64' )  # Baseline readings (to be subtracted)
+            self.IMU_Raw  = np.zeros( (nSensors, 3), dtype='float64' )  # Raw readings (non calibrated)
+            self.exp_avg  = np.zeros( (nSensors, 3), dtype='float64' )  # Exponential moving average array
             self.IMU = []
 
 # ------------------------------------------------------------------------
@@ -145,7 +167,7 @@ class IMU(object):
         '''
         Create an IMU object
         '''
-        
+        print( "Creating IMU objects..." ) ,
         # A list containing the sensors will alternate between HIGH
         # and LOW addresses (HIGH==even #s, LOW==odd #s)
 
@@ -162,8 +184,10 @@ class IMU(object):
                 self.IMU.append( self.lib.create(agAddrLo, mAddrLo) )
 
             # Start the sensor
-            self.lib.begin( self.IMU[i] )
-                    
+            if( self.lib.begin( self.IMU[i] ) == 0 ):
+                print( "FAILED TO COMMUNICATE!" )
+                quit()
+        print( "DONE!" )
 # ------------------------------------------------------------------------
 
     def setMagScale( self, mScl=16 ):
@@ -173,12 +197,13 @@ class IMU(object):
         INPUTS:
             - mScl: can be 4, 8, 12, or 16
         '''
+        print( "Setting scale..." ) ,
         for i in range( 0, (self.nSensors/2) ):
             self.selectSensor( i )                          # Switch the select line
             
             self.lib.setMagScale( self.IMU[2 * i], mScl )   # Set Hi scale to mScl
             self.lib.setMagScale( self.IMU[2*i+1], mScl )   # Set Lo scale to mScl
-        
+        print( "DONE!" )
 # ------------------------------------------------------------------------
 
     def calibrateMag( self, N_avg=50 ):
@@ -188,19 +213,18 @@ class IMU(object):
         INPUTS:
             - N_avg: number of readings to overage over
         '''
-        
+
         for i in range( 0, (self.nSensors/2) ):
 
             self.selectSensor( i )                      # Switch the select line
             
             self.lib.calibrateMag( self.IMU[2 * i] )    # Call built-in calibration routine
             self.lib.calibrateMag( self.IMU[2*i+1] )    # Call built-in calibration routine
-
             cmxHi, cmyHi, cmzHi = 0, 0, 0               # Temporary calibration ...
             cmxLo, cmyLo, cmzLo = 0, 0, 0               # ... variables for Hi & Lo
 
             # Perform user-built calibration to further clear noise
-            print( "Performing calibration" )
+            print( "Performing calibration" ) ,
             for j in range(0, N_avg):
                 self.lib.readMag( self.IMU[2 * i] )     # Read Hi I2C magnetic field
                 self.lib.readMag( self.IMU[2*i+1] )     # Read Lo I2C magnetic field
@@ -221,6 +245,8 @@ class IMU(object):
             self.IMU_Base[2*i+1][1] = cmyLo/N_avg           # ... Lo I2C and store in ...
             self.IMU_Base[2*i+1][2] = cmzLo/N_avg           # ... the calibration matrix.
 
+            print( "DONE!" )
+            
             print( "Correction constant for Hi sensor %i is:" %(i+1) )
             print( "x: %.5f, y: %.5f, z: %.5f\n" %(self.IMU_Base[2 * i][0],
                                                    self.IMU_Base[2 * i][1],
@@ -230,7 +256,6 @@ class IMU(object):
             print( "x: %.5f, y: %.5f, z: %.5f\n" %(self.IMU_Base[2*i+1][0],
                                                    self.IMU_Base[2*i+1][1],
                                                    self.IMU_Base[2*i+1][2]) )
-
 
 # ------------------------------------------------------------------------
 
@@ -267,9 +292,30 @@ class IMU(object):
 
 # ------------------------------------------------------------------------
 
+    def ema_filter( self, alpha=0.25 ):
+        '''
+        Exponential Moving Average for further smoothing of data.
+        Recall that the exponential moving average has the form of: 
+
+            s_n = ALPHA*x_n + ( 1-ALPHA )*s_{n-1}
+            where 0 < ALPHA < 1 is the smoothing factor
+            High ALPHA: NO smoothing.
+            Low ALPHA : YES smoothing.
+            VERY Low ALPHA: GREAT smoothing but less responsive to recent changes.
+
+        INPUTS:
+            - N: Number of sensors
+
+        OUTPUT:
+            - CALIBRATED magnetic field
+        '''
+        # Filter data
+        exp_avg[sens][axis] = ALPHA*current_value + (1 - ALPHA)*exp_avg[sens][axis];
+# ------------------------------------------------------------------------
+
 path = "/home/pi/LSM9DS1_RaspberryPi_Library/lib/liblsm9ds1cwrapper.so"
-nSensors = 4
-muxPins = [23, 24, 25]
+nSensors = 6
+muxPins = [27, 18, 17]
 
 imus = IMU(path, nSensors, muxPins)
 imus.start()
