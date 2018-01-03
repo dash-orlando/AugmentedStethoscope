@@ -3,9 +3,9 @@
 * LSM9DS1 class for python based on:
 * https://github.com/akimach/LSM9DS1_RaspberryPi_Library.git
 *
-* VERSION: 1.1
+* VERSION: 1.5
 *   - ADDED   : Initial Release
-*   - ADDED   : Incomplete definition for EMA filter
+*   - ADDED   : Smooth data using EMA filter
 *
 * KNOWN ISSUES:
 *   - None ATM
@@ -15,7 +15,6 @@
 * Last Modified :   Jan.  3rd, 2018 Year of Our Lord
 *
 '''
-
 import  numpy               as      np              # Import Numpy
 import  RPi.GPIO            as      GPIO            # Use GPIO pins
 from    time                import  sleep           # Sleep for stability
@@ -91,6 +90,7 @@ class IMU(object):
         '''
         Setup multiplexer
         '''
+        
         self.S0, self.S1, self.S2 = pins
         
         GPIO.setmode(GPIO.BCM)
@@ -167,6 +167,7 @@ class IMU(object):
         '''
         Create an IMU object
         '''
+        
         print( "Creating IMU objects..." ) ,
         # A list containing the sensors will alternate between HIGH
         # and LOW addresses (HIGH==even #s, LOW==odd #s)
@@ -188,6 +189,7 @@ class IMU(object):
                 print( "FAILED TO COMMUNICATE!" )
                 quit()
         print( "DONE!" )
+        
 # ------------------------------------------------------------------------
 
     def setMagScale( self, mScl=16 ):
@@ -197,6 +199,7 @@ class IMU(object):
         INPUTS:
             - mScl: can be 4, 8, 12, or 16
         '''
+        
         print( "Setting scale..." ) ,
         for i in range( 0, (self.nSensors/2) ):
             self.selectSensor( i )                          # Switch the select line
@@ -204,38 +207,60 @@ class IMU(object):
             self.lib.setMagScale( self.IMU[2 * i], mScl )   # Set Hi scale to mScl
             self.lib.setMagScale( self.IMU[2*i+1], mScl )   # Set Lo scale to mScl
         print( "DONE!" )
+        
 # ------------------------------------------------------------------------
 
     def calibrateMag( self, N_avg=50 ):
         '''
-        Calibrate sensor using built-in function + average readings
+        Calibrate sensor using built-in function + average readings.
 
         INPUTS:
             - N_avg: number of readings to overage over
         '''
 
+        hold = np.zeros( (nSensors, 3), dtype='float64' )   # Temporary matrix for intermediate calculations
         for i in range( 0, (self.nSensors/2) ):
 
-            self.selectSensor( i )                      # Switch the select line
+            self.selectSensor( i )                          # Switch the select line
             
-            self.lib.calibrateMag( self.IMU[2 * i] )    # Call built-in calibration routine
-            self.lib.calibrateMag( self.IMU[2*i+1] )    # Call built-in calibration routine
-            cmxHi, cmyHi, cmzHi = 0, 0, 0               # Temporary calibration ...
-            cmxLo, cmyLo, cmzLo = 0, 0, 0               # ... variables for Hi & Lo
+            self.lib.calibrateMag( self.IMU[2 * i] )        # Call built-in calibration routine
+            self.lib.calibrateMag( self.IMU[2*i+1] )        # Call built-in calibration routine
+            cmxHi, cmyHi, cmzHi = 0, 0, 0                   # Temporary calibration ...
+            cmxLo, cmyLo, cmzLo = 0, 0, 0                   # ... variables for Hi & Lo
 
             # Perform user-built calibration to further clear noise
-            print( "Performing calibration" ) ,
+            print( "Performing calibration..." ) ,
             for j in range(0, N_avg):
-                self.lib.readMag( self.IMU[2 * i] )     # Read Hi I2C magnetic field
-                self.lib.readMag( self.IMU[2*i+1] )     # Read Lo I2C magnetic field
+                self.lib.readMag( self.IMU[2 * i] )         # Read Hi I2C magnetic field
+                self.lib.readMag( self.IMU[2*i+1] )         # Read Lo I2C magnetic field
+                
+                xHi = self.lib.calcMag( self.IMU[2 * i], self.lib.getMagX(self.IMU[2 * i]) )
+                yHi = self.lib.calcMag( self.IMU[2 * i], self.lib.getMagY(self.IMU[2 * i]) )
+                zHi = self.lib.calcMag( self.IMU[2 * i], self.lib.getMagZ(self.IMU[2 * i]) )
 
-                cmxHi += self.lib.calcMag( self.IMU[2 * i], self.lib.getMagX(self.IMU[2 * i]) )
-                cmyHi += self.lib.calcMag( self.IMU[2 * i], self.lib.getMagY(self.IMU[2 * i]) )
-                cmzHi += self.lib.calcMag( self.IMU[2 * i], self.lib.getMagZ(self.IMU[2 * i]) )
+                xLo = self.lib.calcMag( self.IMU[2 * i], self.lib.getMagX(self.IMU[2 * i]) )
+                yLo = self.lib.calcMag( self.IMU[2 * i], self.lib.getMagY(self.IMU[2 * i]) )
+                zLo = self.lib.calcMag( self.IMU[2 * i], self.lib.getMagZ(self.IMU[2 * i]) )
 
-                cmxLo += self.lib.calcMag( self.IMU[2*i+1], self.lib.getMagX(self.IMU[2*i+1]) )
-                cmyLo += self.lib.calcMag( self.IMU[2*i+1], self.lib.getMagY(self.IMU[2*i+1]) )
-                cmzLo += self.lib.calcMag( self.IMU[2*i+1], self.lib.getMagZ(self.IMU[2*i+1]) )
+                hold[2 * i] = np.array( (xHi, yHi, zHi),    # Store readings for Hi I2C
+                                         dtype='float64' )  # (filtered then averaged for IMU_Base)
+                hold[2*i+1] = np.array( (xLo, yLo, zLo),    # Store readings for Lo I2C
+                                         dtype='float64' )  # (filtered then averaged for IMU_Base)
+
+                hold[2 * i] = self.ema_filter( (2 * i),     # Apply filter on Hi readings
+                                               hold[2 * i],
+                                               first_run=True )
+                hold[2*i+1] = self.ema_filter( (2*i+1),     # Apply filter on Lo readings
+                                               hold[2*i+1],
+                                               first_run=True )
+
+                cmxHi += hold[2 * i][0]                     # ...
+                cmyHi += hold[2 * i][1]                     # Sum all Hi readings
+                cmzHi += hold[2 * i][2]                     # ...
+
+                cmxLo += hold[2*i+1][0]                     # ...
+                cmyLo += hold[2*i+1][1]                     # Sum all Lo readings
+                cmzLo += hold[2*i+1][2]                     # ...
             
             self.IMU_Base[2 * i][0] = cmxHi/N_avg           # Average the readings for ...
             self.IMU_Base[2 * i][1] = cmyHi/N_avg           # ... Hi I2C and store in ...
@@ -270,10 +295,10 @@ class IMU(object):
         '''
         
         for i in range(0, (self.nSensors/2) ):
-            self.selectSensor( i )                  # Switch the select line
+            self.selectSensor( i )                                  # Switch the select line
             
-            self.lib.readMag( self.IMU[2 * i] )     # Read Hi I2C magnetic field
-            self.lib.readMag( self.IMU[2*i+1] )     # Read Lo I2C magnetic field
+            self.lib.readMag( self.IMU[2 * i] )                     # Read Hi I2C magnetic field
+            self.lib.readMag( self.IMU[2*i+1] )                     # Read Lo I2C magnetic field
 
             mxHi = self.lib.calcMag( self.IMU[2 * i], self.lib.getMagX(self.IMU[2 * i]) )
             myHi = self.lib.calcMag( self.IMU[2 * i], self.lib.getMagY(self.IMU[2 * i]) )
@@ -285,14 +310,17 @@ class IMU(object):
 
             self.IMU_Raw[2 * i] = np.array( (mxHi, myHi, mzHi),     # Store RAW readings for Hi I2C
                                             dtype='float64' )       # Units { G }
+            self.ema_filter( (2 * i), self.IMU_Raw[2 * i] )         # Apply EMA Filter
+            
             self.IMU_Raw[2*i+1] = np.array( (mxLo, myLo, mzLo),     # Store RAW readings for Lo I2C
                                             dtype='float64' )       # Units { G }
+            self.ema_filter( (2*i+1), self.IMU_Raw[2*i+1] )         # Apply EMA Filter
 
-        return(self.IMU_Raw - self.IMU_Base)            # Return CALIBRATED readings
+        return(self.IMU_Raw - self.IMU_Base)                        # Return CALIBRATED readings
 
 # ------------------------------------------------------------------------
 
-    def ema_filter( self, alpha=0.25 ):
+    def ema_filter( self, ndx, current_val, ALPHA=0.25, first_run=False ):
         '''
         Exponential Moving Average for further smoothing of data.
         Recall that the exponential moving average has the form of: 
@@ -304,18 +332,34 @@ class IMU(object):
             VERY Low ALPHA: GREAT smoothing but less responsive to recent changes.
 
         INPUTS:
-            - N: Number of sensors
+            - ndx        : index of readings (which IMU's readings)
+            - current_val: readings to be smoothed
+            - ALPHA      : Alpha value
+            - first_run  : If True, then the function operates under calibration mode
 
         OUTPUT:
-            - CALIBRATED magnetic field
+            - Smoothed data readings
         '''
+        
         # Filter data
-        exp_avg[sens][axis] = ALPHA*current_value + (1 - ALPHA)*exp_avg[sens][axis];
+        self.exp_avg[ndx] = ALPHA*current_val + (1 - ALPHA)*self.exp_avg[ndx]
+
+        # Put back filtered data into the correct matrix\index
+        if( first_run ):
+            return( self.exp_avg[ndx] )
+        else:
+            self.IMU_Raw[ndx]  = self.exp_avg[ndx]
+            
 # ------------------------------------------------------------------------
 
 path = "/home/pi/LSM9DS1_RaspberryPi_Library/lib/liblsm9ds1cwrapper.so"
-nSensors = 6
+nSensors = 4
 muxPins = [27, 18, 17]
 
 imus = IMU(path, nSensors, muxPins)
 imus.start()
+while( True ):
+    val = imus.calcMag()
+    print( val )
+    #sleep( 0.01 )
+
