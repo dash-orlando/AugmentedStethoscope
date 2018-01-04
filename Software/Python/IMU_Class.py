@@ -218,7 +218,7 @@ class IMU(object):
             - N_avg: number of readings to overage over
         '''
 
-        hold = np.zeros( (nSensors, 3), dtype='float64' )   # Temporary matrix for intermediate calculations
+        hold = np.zeros((self.nSensors,3), dtype='float64') # Temporary matrix for intermediate calculations
         for i in range( 0, (self.nSensors/2) ):
 
             self.selectSensor( i )                          # Switch the select line
