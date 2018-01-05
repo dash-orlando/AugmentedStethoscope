@@ -3,16 +3,17 @@
 * LSM9DS1 class for python based on:
 * https://github.com/akimach/LSM9DS1_RaspberryPi_Library.git
 *
-* VERSION: 1.5
+* VERSION: 1.5.1
 *   - ADDED   : Initial Release
 *   - ADDED   : Smooth data using EMA filter
+*   - FIXED   : EMA filter storing values at the wrong index
 *
 * KNOWN ISSUES:
 *   - None ATM
 *
 * Author        :   Mohammad Odeh
 * Date          :   Nov. 21st, 2017 Year of Our Lord
-* Last Modified :   Jan.  3rd, 2018 Year of Our Lord
+* Last Modified :   Jan.  5th, 2018 Year of Our Lord
 *
 '''
 import  numpy               as      np              # Import Numpy
@@ -101,7 +102,7 @@ class IMU(object):
 
 # ------------------------------------------------------------------------
 
-    def selectSensor( self, sensorIndex ):
+    def selectSensor( self, sensorIndex, debounce=0.005 ):
         '''
         Switch between all the sensors
 
@@ -117,38 +118,42 @@ class IMU(object):
             GPIO.output(self.S0, GPIO.LOW)
             GPIO.output(self.S1, GPIO.LOW)
             GPIO.output(self.S2, GPIO.LOW)
-            sleep( 0.1 )
-
+            sleep( debounce )
+            
         # Line 2, 001
         elif ( sensorIndex == 1 ):
             GPIO.output(self.S0, GPIO.HIGH)
             GPIO.output(self.S1, GPIO.LOW)
             GPIO.output(self.S2, GPIO.LOW)
-            sleep( 0.1 )
+            sleep( debounce )
 
         # Line 3, 010
         elif ( sensorIndex == 2 ):
             GPIO.output(self.S0, GPIO.LOW)
             GPIO.output(self.S1, GPIO.HIGH)
             GPIO.output(self.S2, GPIO.LOW)
-
+            sleep( debounce )
+            
         # Line 4, 011
         elif ( sensorIndex == 3):
             GPIO.output(self.S0, GPIO.HIGH)
             GPIO.output(self.S1, GPIO.HIGH)
             GPIO.output(self.S2, GPIO.LOW)
+            sleep( debounce )
 
         # Line 5, 100
         elif ( sensorIndex == 4):
             GPIO.output(self.S0, GPIO.LOW)
             GPIO.output(self.S1, GPIO.LOW)
             GPIO.output(self.S2, GPIO.HIGH)
+            sleep( debounce )
 
         # Line 6, 101
         elif (sensorIndex == 5):
             GPIO.output(self.S0, GPIO.HIGH)
             GPIO.output(self.S1, GPIO.LOW)
             GPIO.output(self.S2, GPIO.HIGH)
+            sleep( debounce )
 
         else:
             print("Invalid Index")
@@ -222,14 +227,18 @@ class IMU(object):
         for i in range( 0, (self.nSensors/2) ):
 
             self.selectSensor( i )                          # Switch the select line
+            print( "Sensor pair %d selected" %(i+1) )
             
+            print( "Performing built-in calibration routine..." ) ,
             self.lib.calibrateMag( self.IMU[2 * i] )        # Call built-in calibration routine
             self.lib.calibrateMag( self.IMU[2*i+1] )        # Call built-in calibration routine
+            print( "DONE!" )
+            
             cmxHi, cmyHi, cmzHi = 0, 0, 0                   # Temporary calibration ...
             cmxLo, cmyLo, cmzLo = 0, 0, 0                   # ... variables for Hi & Lo
 
             # Perform user-built calibration to further clear noise
-            print( "Performing calibration..." ) ,
+            print( "Performing user-defined calibration routine..." ) ,
             for j in range(0, N_avg):
                 self.lib.readMag( self.IMU[2 * i] )         # Read Hi I2C magnetic field
                 self.lib.readMag( self.IMU[2*i+1] )         # Read Lo I2C magnetic field
@@ -238,9 +247,9 @@ class IMU(object):
                 yHi = self.lib.calcMag( self.IMU[2 * i], self.lib.getMagY(self.IMU[2 * i]) )
                 zHi = self.lib.calcMag( self.IMU[2 * i], self.lib.getMagZ(self.IMU[2 * i]) )
 
-                xLo = self.lib.calcMag( self.IMU[2 * i], self.lib.getMagX(self.IMU[2 * i]) )
-                yLo = self.lib.calcMag( self.IMU[2 * i], self.lib.getMagY(self.IMU[2 * i]) )
-                zLo = self.lib.calcMag( self.IMU[2 * i], self.lib.getMagZ(self.IMU[2 * i]) )
+                xLo = self.lib.calcMag( self.IMU[2*i+1], self.lib.getMagX(self.IMU[2*i+1]) )
+                yLo = self.lib.calcMag( self.IMU[2*i+1], self.lib.getMagY(self.IMU[2*i+1]) )
+                zLo = self.lib.calcMag( self.IMU[2*i+1], self.lib.getMagZ(self.IMU[2*i+1]) )
 
                 hold[2 * i] = np.array( (xHi, yHi, zHi),    # Store readings for Hi I2C
                                          dtype='float64' )  # (filtered then averaged for IMU_Base)
@@ -352,14 +361,17 @@ class IMU(object):
             
 # ------------------------------------------------------------------------
 
-path = "/home/pi/LSM9DS1_RaspberryPi_Library/lib/liblsm9ds1cwrapper.so"
-nSensors = 4
-muxPins = [27, 18, 17]
-
-imus = IMU(path, nSensors, muxPins)
-imus.start()
-while( True ):
-    val = imus.calcMag()
-    print( val )
-    #sleep( 0.01 )
+##path = "/home/pi/LSM9DS1_RaspberryPi_Library/lib/liblsm9ds1cwrapper.so"
+##nSensors = 6
+##muxPins = [22, 23, 24]
+##
+##imus = IMU(path, nSensors, muxPins)
+##imus.start()
+##while( True ):
+##    val = imus.calcMag()
+##    for i in range( 0, len(val)/2 ):
+##        print( "PAIR #%i" %(i+1) )
+##        print( "    Hi: %.5f, %.5f, %.5f" %(val[2 * i][0], val[2 * i][1], val[2 * i][2]) )
+##        print( "    Lo: %.5f, %.5f, %.5f" %(val[2*i+1][0], val[2*i+1][1], val[2*i+1][2]) )
+##    print( "" )
 
