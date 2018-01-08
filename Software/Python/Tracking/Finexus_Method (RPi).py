@@ -3,165 +3,45 @@
 * Position tracking of magnet based on Finexus ported to Raspberry Pi
 * https://ubicomplab.cs.washington.edu/pdfs/finexus.pdf
 *
-* VERSION: 0.1.1
-*   - MODIFIED: Initial Release
-*   - MODIFIED: Code is less horrible but still ugly af
-*   - MODIFIED: Restructured code in order to streamline and
-*               later on multithread code execution
+* VERSION: 0.2
+*   - ADDED   : Draw region on TFT screen
+*   - MODIFIED: Use IMU class for ease of programming (hooray Moe)
 *
 * KNOWN ISSUES:
-*   - Damn z-axis refuses to work!
+*   - No known issues for now (at least I, Moe, couldn't spot any)
+*
+* ROADMAP:
+*   - Clean up code as it looks hideous.
+*   - Update code so it is parallel in state to the windows version.
+*   - Implement multithreading.
 *
 * Author        :   Nicolas Maduro (aka Danny) 
 * Last Modified :   Oct. 16th, 2017 Year of Our Lord
 *
 * Author        :   Mohammad Odeh 
-* Last Modified :   Oct. 19th, 2017 Year of Our Lord
+* Last Modified :   Jan.  8th, 2018 Year of Our Lord
 *
 '''
 
-# Import Modules
+# Import Tracking Modules
 import  numpy               as      np              # Import Numpy
 import  RPi.GPIO            as      GPIO            # Use GPIO pins
 from    time                import  sleep, time     # Sleep for stability / time execution
 from    scipy.optimize      import  root            # Solve System of Eqns for (x, y, z)
 from    scipy.linalg        import  norm            # Calculate vector norms (magnitude)
-from    Queue               import  LifoQueue       # Last in First out queue
-from    threading           import  Thread          # Multithread data
-from    ctypes              import  *               # Import ctypes (VERY IMPORTANT)
+from    IMU_Class           import  *
 
+# Import Drawing (TFT) Modules
+import  Adafruit_ILI9341    as      TFT
+import  Adafruit_GPIO       as      GPIO
+import  Adafruit_GPIO.SPI   as      SPI
+from    PIL                 import  Image
+from    PIL                 import  ImageDraw
+from    PIL                 import  ImageFont
 
 # ************************************************************************
 # =====================> DEFINE NECESSARY FUNCTIONS <====================*
-# ************************************************************************
-
-def loadLib():
-    ''' Load library and prime with ctypes '''
-    global lib
-    path = "/home/pi/LSM9DS1_RaspberryPi_Library/lib/liblsm9ds1cwrapper.so"
-    lib = cdll.LoadLibrary(path)
-
-    lib.lsm9ds1_create.argtypes = []
-    lib.lsm9ds1_create.restype = c_void_p
-
-    lib.lsm9ds1_begin.argtypes = [c_void_p]
-    lib.lsm9ds1_begin.restype = None
-
-    lib.lsm9ds1_calibrate.argtypes = [c_void_p]
-    lib.lsm9ds1_calibrate.restype = None
-
-    lib.lsm9ds1_magAvailable.argtypes = [c_void_p]
-    lib.lsm9ds1_magAvailable.restype = c_int
-
-    lib.lsm9ds1_readMag.argtypes = [c_void_p]
-    lib.lsm9ds1_readMag.restype = c_int
-
-    lib.lsm9ds1_getMagX.argtypes = [c_void_p]
-    lib.lsm9ds1_getMagX.restype = c_float
-    lib.lsm9ds1_getMagY.argtypes = [c_void_p]
-    lib.lsm9ds1_getMagY.restype = c_float
-    lib.lsm9ds1_getMagZ.argtypes = [c_void_p]
-    lib.lsm9ds1_getMagZ.restype = c_float
-
-    lib.lsm9ds1_calcMag.argtypes = [c_void_p, c_float]
-    lib.lsm9ds1_calcMag.restype = c_float
-
-
-# ------------------------------------------------------------------------
-
-def setupMux():
-    ''' Setup multiplexer '''
-    GPIO.setmode(GPIO.BCM)
-    GPIO.setwarnings(False)
-    GPIO.setup(23, GPIO.OUT)
-    GPIO.setup(24, GPIO.OUT)
-    GPIO.setup(25, GPIO.OUT)
-
-# ------------------------------------------------------------------------
-
-def setSensor( sensorIndex ):
-    ''' Switch between all the sensors '''
-    # Sensor 1, 000
-    if ( sensorIndex == 0 ):
-        GPIO.output(23, GPIO.LOW)
-        GPIO.output(24, GPIO.LOW)
-        GPIO.output(25, GPIO.LOW)
-
-    # Sensor 2, 001
-    elif ( sensorIndex == 1 ):
-        GPIO.output(23, GPIO.HIGH)
-        GPIO.output(24, GPIO.LOW)
-        GPIO.output(25, GPIO.LOW)
-
-    # Sensor 3, 010
-    elif ( sensorIndex == 2 ):
-        GPIO.output(23, GPIO.LOW)
-        GPIO.output(24, GPIO.HIGH)
-        GPIO.output(25, GPIO.LOW)
-
-    # Sensor 4, 011
-    elif ( sensorIndex == 3):
-        GPIO.output(23, GPIO.HIGH)
-        GPIO.output(24, GPIO.HIGH)
-        GPIO.output(25, GPIO.LOW)
-
-    # Sensor 5, 100
-    elif ( sensorIndex == 4):
-        GPIO.output(23, GPIO.LOW)
-        GPIO.output(24, GPIO.LOW)
-        GPIO.output(25, GPIO.HIGH)
-
-    # Sensor 6, 101
-    elif (sensorIndex == 5):
-        GPIO.output(23, GPIO.HIGH)
-        GPIO.output(24, GPIO.LOW)
-        GPIO.output(25, GPIO.HIGH)
-
-    else:
-        print("Invalid Index")
-
-# ------------------------------------------------------------------------
-
-def setupIMU( N ):
-    ''' Setup IMUS and callibrate them'''
-    global IMU_Base
-    global imu
-    
-    IMU_Base = np.empty((6,3), dtype='float64') # Construct matrix of size  (6x3)
-    
-    for i in range(0, N):
-        setSensor( i )                          # Select the IMU
-        imu = lib.lsm9ds1_create()              # Create an instance
-        lib.lsm9ds1_begin(imu)                  # Initialize it
-
-        if lib.lsm9ds1_begin(imu) == 0:         # In case it fails
-            print("Failed to communicate with LSM9DS1.")
-            quit()
-
-        else:                                   # In case it doesn't, configure
-            CALIBRATION_INDEX = 25             # Average over this many readings
-            lib.lsm9ds1_calibrateMag(imu)       # Call built-in calibration routine
-            lib.lsm9ds1_setMagScale(imu, 16)    # Set scale to +/-16Gauss
-            lib.lsm9ds1_calibrateMag(imu)       # Call built-in calibration routine
-
-            cmx, cmy, cmz = 0, 0, 0
-
-            # Perform user-built calibration to further clear noise
-            for j in range(0, CALIBRATION_INDEX):
-                lib.lsm9ds1_readMag(imu)
-
-                cmx += lib.lsm9ds1_calcMag(imu, lib.lsm9ds1_getMagX(imu))
-                cmy += lib.lsm9ds1_calcMag(imu, lib.lsm9ds1_getMagY(imu))
-                cmz += lib.lsm9ds1_calcMag(imu, lib.lsm9ds1_getMagZ(imu))
-
-            # Average all the readings
-            IMU_Base[i][0] = cmx/CALIBRATION_INDEX
-            IMU_Base[i][1] = cmy/CALIBRATION_INDEX
-            IMU_Base[i][2] = cmz/CALIBRATION_INDEX
-            print( "Correction constant for sensor %d is:" %(i+1) )
-            print( "x: %.5f, y: %.5f, z: %.5f\n" %(IMU_Base[i][0], IMU_Base[i][1], IMU_Base[i][2]) )
-
-# ------------------------------------------------------------------------        
+# ************************************************************************       
 
 def argsort(seq):
     ''' Sort list from lowest to highest. Returns the indices of the respective values in a list '''
@@ -190,31 +70,7 @@ def bubbleSort(arr, N):
 
 # ------------------------------------------------------------------------
 
-def calcMag( N, Q ):
-    ''' Collect readings from IMU '''
-    B = np.empty((N,3), dtype='float64')                # Construct matrix of size  (Nx3)
-    while(True):
-        for i in range(0, N):
-            setSensor( i )                                  # Select sensor ( i )
-
-            while lib.lsm9ds1_magAvailable(imu) == 0:       # While no data is available,
-                pass                                        # do nothing
-
-            lib.lsm9ds1_readMag(imu)                        # Read values from sensor
-
-            mx = lib.lsm9ds1_calcMag(imu, lib.lsm9ds1_getMagX(imu))
-            my = lib.lsm9ds1_calcMag(imu, lib.lsm9ds1_getMagY(imu))
-            mz = lib.lsm9ds1_calcMag(imu, lib.lsm9ds1_getMagZ(imu))
-
-            
-            B[i] = np.array( (mx, my, mz), dtype='float64' )   # Units { G }
-
-        # Return array
-        Q.put_nowait( B - IMU_Base )
-
-# ------------------------------------------------------------------------
-
-def findIG( Q ):
+def findIG( magField ):
     ''' Guess the magnet's initial position '''
     # Define IMU positions on the grid
     #      / sensor 1: (x, y, z)
@@ -222,15 +78,15 @@ def findIG( Q ):
     # Mat=      :          :
     #     \     :          :
     #      \ sensor 6: (x, y, z)
-    IMU_pos = np.array(((0.0  , 0.125,   0.0) ,
+    IMU_pos = np.array(((0.000, 0.000,   0.0) ,
+                        (0.000, 0.125,   0.0) ,
                         (0.100, 0.175,   0.0) ,
                         (0.200, 0.125,   0.0) ,
-                        (0.0  , 0.0  ,   0.0) ,
-                        (0.100,-0.050,   0.0) ,
-                        (0.200, 0.0  ,   0.0)), dtype='float64')
+                        (0.200, 0.000,   0.0) ,
+                        (0.100,-0.050,   0.0)), dtype='float64')
 
     # Read current magnetic field from MCU
-    H = Q.get()
+    H = magField
 
     # Compute L2 vector norms
     HNorm = [ float(norm(H[0])), float(norm(H[1])),
@@ -260,12 +116,12 @@ def LHS( root, K, norms ):
     #     : Standing on sensor(n), how many units in
     #       the x/y/z direction should I march to get
     #       back to sensor1 (origin)?
-    r1 = float( ( (x+0.000)**2. + (y-0.125)**2. + (z+0.00)**2. )**(1/2.) )  # Sensor 1
-    r2 = float( ( (x-0.100)**2. + (y-0.175)**2. + (z+0.00)**2. )**(1/2.) )  # Sensor 2
-    r3 = float( ( (x-0.200)**2. + (y-0.125)**2. + (z+0.00)**2. )**(1/2.) )  # Sensor 3
-    r4 = float( ( (x+0.000)**2. + (y+0.000)**2. + (z+0.00)**2. )**(1/2.) )  # Sensor 4 (ORIGIN)
-    r5 = float( ( (x-0.100)**2. + (y+0.050)**2. + (z+0.00)**2. )**(1/2.) )  # Sensor 5
-    r6 = float( ( (x-0.200)**2. + (y-0.000)**2. + (z+0.00)**2. )**(1/2.) )  # Sensor 6
+    r1 = float( ( (x+0.000)**2. + (y+0.000)**2. + (z+0.00)**2. )**(1/2.) )  # Sensor 1
+    r2 = float( ( (x+0.000)**2. + (y-0.125)**2. + (z+0.00)**2. )**(1/2.) )  # Sensor 2
+    r3 = float( ( (x-0.100)**2. + (y-0.175)**2. + (z+0.00)**2. )**(1/2.) )  # Sensor 3
+    r4 = float( ( (x-0.200)**2. + (y-0.125)**2. + (z+0.00)**2. )**(1/2.) )  # Sensor 4 (ORIGIN)
+    r5 = float( ( (x-0.200)**2. + (y+0.000)**2. + (z+0.00)**2. )**(1/2.) )  # Sensor 5
+    r6 = float( ( (x-0.100)**2. + (y+0.050)**2. + (z+0.00)**2. )**(1/2.) )  # Sensor 6
 
     # Construct the equations
     Eqn1 = ( K*( r1 )**(-6.) * ( 3.*( z/r1 )**2. + 1 ) ) - norms[0]**2.     # Sensor 1
@@ -289,43 +145,176 @@ def LHS( root, K, norms ):
     # Return vector
     return ( f )
 
+# ------------------------------------------------------------------------
+
+def dispRegion( norms ):
+    global triggered
+    sort = argsort( norms )
+    sort.reverse()
+    arr = bubbleSort(sort, 3)
+
+    # Sum up numbers for determining what region we are in
+    region = arr[0]*100 + arr[1]*10 + arr[2]
+
+    if( region == 12 and triggered[0] == False ):
+        image = Image.open( images[012] )
+        # Resize the image and rotate it so it's 240x320 pixels.
+        image = image.rotate(90).resize((240, 320))
+        # Write buffer to display hardware, must be called to make things visible on the
+        # display!
+        disp.display(image)
+        # Set triggered to True and everything else to False
+        triggered = [ False ]*10
+        triggered[0] = True
+        
+    elif( region == 123 and triggered[1] == False):
+        image = Image.open( images[123] )
+        # Resize the image and rotate it so it's 240x320 pixels.
+        image = image.rotate(90).resize((240, 320))
+        # Write buffer to display hardware, must be called to make things visible on the
+        # display!
+        disp.display(image)
+        # Set triggered to True and everything else to False
+        triggered = [ False ]*10
+        triggered[1] = True
+        
+    elif( region == 234 and triggered[2] == False ):
+        image = Image.open( images[234] )
+        # Resize the image and rotate it so it's 240x320 pixels.
+        image = image.rotate(90).resize((240, 320))
+        # Write buffer to display hardware, must be called to make things visible on the
+        # display!
+        disp.display(image)
+        # Set triggered to True and everything else to False
+        triggered = [ False ]*10
+        triggered[2] = True
+        
+    elif( region == 345 and triggered[3] == False ):
+        image = Image.open( images[345] )
+        # Resize the image and rotate it so it's 240x320 pixels.
+        image = image.rotate(90).resize((240, 320))
+        # Write buffer to display hardware, must be called to make things visible on the
+        # display!
+        disp.display(image)
+        # Set triggered to True and everything else to False
+        triggered = [ False ]*10
+        triggered[3] = True
+        
+    elif( region == 45 and triggered[4] == False ):
+        image = Image.open( images[045] )
+        # Resize the image and rotate it so it's 240x320 pixels.
+        image = image.rotate(90).resize((240, 320))
+        # Write buffer to display hardware, must be called to make things visible on the
+        # display!
+        disp.display(image)
+        # Set triggered to True and everything else to False
+        triggered = [ False ]*10
+        triggered[4] = True
+        
+    elif( region == 15 and triggered[5] == False ):
+        image = Image.open( images[015] )
+        # Resize the image and rotate it so it's 240x320 pixels.
+        image = image.rotate(90).resize((240, 320))
+        # Write buffer to display hardware, must be called to make things visible on the
+        # display!
+        disp.display(image)
+        # Set triggered to True and everything else to False
+        triggered = [ False ]*10
+        triggered[5] = True
+        
+    elif( region == 25 and triggered[6] == False ):
+        image = Image.open( images[025] )
+        # Resize the image and rotate it so it's 240x320 pixels.
+        image = image.rotate(90).resize((240, 320))
+        # Write buffer to display hardware, must be called to make things visible on the
+        # display!
+        disp.display(image)
+        # Set triggered to True and everything else to False
+        triggered = [ False ]*10
+        triggered[6] = True
+        
+    elif( region == 245 and triggered[7] == False ):
+        image = Image.open( images[245] )
+        # Resize the image and rotate it so it's 240x320 pixels.
+        image = image.rotate(90).resize((240, 320))
+        # Write buffer to display hardware, must be called to make things visible on the
+        # display!
+        disp.display(image)
+        # Set triggered to True and everything else to False
+        triggered = [ False ]*10
+        triggered[7] = True
+        
+    elif( region == 125 and triggered[8] == False ):
+        image = Image.open( images[125] )
+        # Resize the image and rotate it so it's 240x320 pixels.
+        image = image.rotate(90).resize((240, 320))
+        # Write buffer to display hardware, must be called to make things visible on the
+        # display!
+        disp.display(image)
+        # Set triggered to True and everything else to False
+        triggered = [ False ]*10
+        triggered[8] = True
+        
+    elif( region == 235 and triggered[9] == False ):
+        image = Image.open( images[235] )
+        # Resize the image and rotate it so it's 240x320 pixels.
+        image = image.rotate(90).resize((240, 320))
+        # Write buffer to display hardware, must be called to make things visible on the
+        # display!
+        disp.display(image)
+        # Set triggered to True and everything else to False
+        triggered = [ False ]*10
+        triggered[9] = True
+        
+    else: print( "i cri evrytim rejin iz nut lst8" )
+    
 # ************************************************************************
 # ===========================> SETUP PROGRAM <===========================
 # ************************************************************************
 
 # Useful variables
+
+
 K           = 1.09e-6                           # Magnet's constant (K) || Units { G^2.m^6}
 dx          = 1e-7                              # Differential step size (Needed for solver)
 H           = np.empty((6,3), dtype='float64')  # Construct matrix of size  (6x3)
 NSENS       = 6                                 # Number of sensors used
 
-LSM9DS1_AG_HGIH = 0x6B
-LSM9DS1_M_HGIH = 0x1E
+# Setup sensors
+path    = "/home/pi/LSM9DS1_RaspberryPi_Library/lib/liblsm9ds1cwrapper.so"
+muxPins = [22, 23, 24]                          # GPIO pins used for the multiplexer
+imus    = IMU(path, NSENS, muxPins)             # Instantiate IMU objects
+imus.start()                                    # Start IMUs
 
-LSM9DS1_AG_LOW = 0x6A
-LSM9DS1_M_LOW = 0x1C
+# Setup TFT screen
+DC = 25                                         # DC line used by ILI9340 (needs to be this pin)
+RST = 16                                        # Reset line
+SPI_PORT = 0                                    # SPI port (as per adafruit)
+SPI_DEVICE = 0                                  # SPI devc (as per adafruit)
 
-# Start sensors
-loadLib()
-setupMux()
-setupIMU( NSENS )
+# Create TFT LCD display class.
+disp = TFT.ILI9341( DC, rst=RST,
+                    spi=SPI.SpiDev(SPI_PORT,
+                                   SPI_DEVICE,
+                                   max_speed_hz=64000000) )
+disp.begin()                                    # Initialize display.
+disp.clear()                                    # Clear the display to a black background.
 
-Q_calcMag = LifoQueue( maxsize=0 )              # LIFO queue qith infinite size
+global images
+images = { 012: '1.jpg', 123: '2.jpg',          # ...
+           234: '3.jpg', 345: '4.jpg',          # Tie each region
+           045: '5.jpg', 015: '6.jpg',          # with its corres-
+           025: '7.jpg', 245: '8.jpg',          # ponding image.
+           125: '9.jpg', 235:'10.jpg' }         # ...
 
-# Start pooling data from serial port
-t_calcMag = Thread( target=calcMag, args=(NSENS, Q_calcMag,) )
-t_calcMag.daemon = True
-t_calcMag.start()
+global triggered
+triggered = [ False ]*10         # ...
 
 # ************************************************************************
 # =========================> MAKE IT ALL HAPPEN <=========================
 # ************************************************************************
 
 print( "Place magnet on grid" )
-print( "Ready in 5" )
-sleep( 1.0 )
-print( "Ready in 4" )
-sleep( 1.0 )
 print( "Ready in 3" )
 sleep( 1.0 )
 print( "Ready in 2" )
@@ -334,7 +323,7 @@ print( "Ready in 1" )
 sleep( 1.0 )
 print( "GO!" )
 
-initialGuess = findIG( Q_calcMag )
+initialGuess = findIG( imus.calcMag() )
 
 
 # Start iteration
@@ -342,7 +331,7 @@ while( True ):
 
     startTime = time()
     # Get magnetic field readings
-    H = Q_calcMag.get_nowait()
+    H = imus.calcMag()
     
     # Compute L2 vector norms
     HNorm = [ float(norm(H[0])), float(norm(H[1])),
@@ -354,6 +343,9 @@ while( True ):
                options={'ftol':1e-10, 'xtol':1e-10, 'maxiter':500,
                         'eps':1e-8, 'factor':0.001})
 
+    # Draw region on TFT screen
+    dispRegion( HNorm )                  
+    
     # Print solution (coordinates) to screen
     print( "Current position (x , y , z):" )
     print( "(%.5f , %.5f , %.5f)mm\n" %(sol.x[0]*1000, sol.x[1]*1000, sol.x[2]*1000) )
@@ -362,7 +354,7 @@ while( True ):
     if (abs(sol.x[0]*1000) > 500) or (abs(sol.x[1]*1000) > 500) or (abs(sol.x[2]*1000) > 500):
         print( "Invalid solution. Resetting Calculations" )
         # Determine initial guess based on magnet's location
-        initialGuess = findIG( Q_calcMag )
+        initialGuess = findIG( imus.calcMag() )
         
     # Update initial guess with current position and feed back to solver
     else:    
