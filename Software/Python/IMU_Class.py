@@ -3,22 +3,21 @@
 * LSM9DS1 class for python based on:
 * https://github.com/akimach/LSM9DS1_RaspberryPi_Library.git
 *
-* VERSION: 1.5.1
-*   - ADDED   : Initial Release
-*   - ADDED   : Smooth data using EMA filter
-*   - FIXED   : EMA filter storing values at the wrong index
+* VERSION: 1.6
+*   - ADDED   : Multithreading for faster performance
 *
 * KNOWN ISSUES:
 *   - None ATM
 *
 * Author        :   Mohammad Odeh
 * Date          :   Nov. 21st, 2017 Year of Our Lord
-* Last Modified :   Jan.  5th, 2018 Year of Our Lord
+* Last Modified :   Jan.  9th, 2018 Year of Our Lord
 *
 '''
 import  numpy               as      np              # Import Numpy
 import  RPi.GPIO            as      GPIO            # Use GPIO pins
-from    time                import  sleep           # Sleep for stability
+from    threading           import  Thread          # Multithread for faster performance
+from    time                import  sleep, time     # Sleep for stability
 from    ctypes              import  *               # Import ctypes (VERY IMPORTANT)
 
 class TheGreatMoesException(Exception):
@@ -90,6 +89,12 @@ class IMU(object):
     def setupMux( self, pins ):
         '''
         Setup multiplexer
+
+        INPUTS:
+            - pins: GPIO pins used for controlling select lines
+
+        OUTPUT:
+            - NON
         '''
         
         self.S0, self.S1, self.S2 = pins
@@ -161,6 +166,17 @@ class IMU(object):
 # ------------------------------------------------------------------------
 
     def start( self, mScl=16, N_avg=50 ):
+        '''
+        Create, set scale, and calibrate IMUS in one go.
+
+        INPUTS:
+            - mScl : can be 4, 8, 12, or 16
+            - N_avg: number of readings to average over
+
+        OUTPUT:
+            - NON
+        '''
+        
         print( "Starting %i IMUs" %self.nSensors )
         self.create()
         self.setMagScale( mScl )
@@ -170,15 +186,23 @@ class IMU(object):
 
     def create( self ):
         '''
-        Create an IMU object
+        Create an IMU object.
+
+        INPUTS:
+            - NON
+
+        OUTPUT:
+            - NON
         '''
         
         print( "Creating IMU objects..." ) ,
+        
         # A list containing the sensors will alternate between HIGH
         # and LOW addresses (HIGH==even #s, LOW==odd #s)
-
+        
         agAddrHi, mAddrHi = 0x6b, 0x1e
         agAddrLo, mAddrLo = 0x6b, 0x1c
+        
         for i in range(0, self.nSensors):
 
             # Store HIGH I2C Address in even indices
@@ -193,6 +217,7 @@ class IMU(object):
             if( self.lib.begin( self.IMU[i] ) == 0 ):
                 print( "FAILED TO COMMUNICATE!" )
                 quit()
+                
         print( "DONE!" )
         
 # ------------------------------------------------------------------------
@@ -206,11 +231,13 @@ class IMU(object):
         '''
         
         print( "Setting scale..." ) ,
+        
         for i in range( 0, (self.nSensors/2) ):
             self.selectSensor( i )                          # Switch the select line
             
             self.lib.setMagScale( self.IMU[2 * i], mScl )   # Set Hi scale to mScl
             self.lib.setMagScale( self.IMU[2*i+1], mScl )   # Set Lo scale to mScl
+
         print( "DONE!" )
         
 # ------------------------------------------------------------------------
@@ -220,7 +247,7 @@ class IMU(object):
         Calibrate sensor using built-in function + average readings.
 
         INPUTS:
-            - N_avg: number of readings to overage over
+            - N_avg: number of readings to average over
         '''
 
         hold = np.zeros((self.nSensors,3), dtype='float64') # Temporary matrix for intermediate calculations
@@ -293,39 +320,90 @@ class IMU(object):
 
 # ------------------------------------------------------------------------
 
-    def calcMag( self ):
+    def calcMag( self, multithreading=True ):
         '''
         Calibrated magnitude readings.
+        
         INPUTS:
-            - N: Number of sensors
+            - multithreading: True (default) enables multithreading
 
         OUTPUT:
-            - CALIBRATED magnetic field
+            - Calibrated/smoothed magnetic field readings
+        '''
+        start = time()
+        for i in range(0, (self.nSensors/2) ):
+
+            self.selectSensor( i )                                  # Switch the select line
+
+            # If multithreading is flagged
+            if( multithreading ):
+                t_calcHi = Thread ( target=self.__calcHi,           # Create a thread for the Hi IMU
+                                    args=(i, ) )                    # ...
+                t_calcLo = Thread ( target=self.__calcLo,           # Create a thread for the Lo IMU
+                                    args=(i, ) )                    # ...
+                
+                t_calcHi.daemon = True                              # Set thread as daemon
+                t_calcLo.daemon = True                              # Set thread as daemon
+                
+                t_calcHi.start()                                    # Start threads for ...
+                t_calcLo.start()                                    # ... Hi & Lo IMUs
+
+            # If multithreading is set to False
+            else:
+                self.__calcHi( i )                                  # Call private method to read Hi IMU
+                self.__calcLo( i )                                  # Call private method to read Lo IMU
+            
+        print( time()-start )
+        
+        return(self.IMU_Raw - self.IMU_Base)                        # Return CALIBRATED readings
+    
+# ------------------------------------------------------------------------
+
+    def __calcHi( self, i ):
+        '''
+        Private method that returns calibrated magnitude
+        readings for Hi sensor.
+        
+        INPUTS:
+            - i: index at which the select line is
+
+        OUTPUT:
+            - NON
         '''
         
-        for i in range(0, (self.nSensors/2) ):
-            self.selectSensor( i )                                  # Switch the select line
-            
-            self.lib.readMag( self.IMU[2 * i] )                     # Read Hi I2C magnetic field
-            self.lib.readMag( self.IMU[2*i+1] )                     # Read Lo I2C magnetic field
+        self.lib.readMag( self.IMU[2 * i] )                     # Read Hi I2C magnetic field
 
-            mxHi = self.lib.calcMag( self.IMU[2 * i], self.lib.getMagX(self.IMU[2 * i]) )
-            myHi = self.lib.calcMag( self.IMU[2 * i], self.lib.getMagY(self.IMU[2 * i]) )
-            mzHi = self.lib.calcMag( self.IMU[2 * i], self.lib.getMagZ(self.IMU[2 * i]) )
+        mxHi = self.lib.calcMag( self.IMU[2 * i], self.lib.getMagX(self.IMU[2 * i]) )
+        myHi = self.lib.calcMag( self.IMU[2 * i], self.lib.getMagY(self.IMU[2 * i]) )
+        mzHi = self.lib.calcMag( self.IMU[2 * i], self.lib.getMagZ(self.IMU[2 * i]) )
 
-            mxLo = self.lib.calcMag( self.IMU[2*i+1], self.lib.getMagX(self.IMU[2*i+1]) )
-            myLo = self.lib.calcMag( self.IMU[2*i+1], self.lib.getMagY(self.IMU[2*i+1]) )
-            mzLo = self.lib.calcMag( self.IMU[2*i+1], self.lib.getMagZ(self.IMU[2*i+1]) )
+        self.IMU_Raw[2 * i] = np.array( (mxHi, myHi, mzHi),     # Store RAW readings for Hi I2C
+                                        dtype='float64' )       # Units { G }
+        self.ema_filter( (2 * i), self.IMU_Raw[2 * i] )         # Apply EMA Filter
 
-            self.IMU_Raw[2 * i] = np.array( (mxHi, myHi, mzHi),     # Store RAW readings for Hi I2C
-                                            dtype='float64' )       # Units { G }
-            self.ema_filter( (2 * i), self.IMU_Raw[2 * i] )         # Apply EMA Filter
-            
-            self.IMU_Raw[2*i+1] = np.array( (mxLo, myLo, mzLo),     # Store RAW readings for Lo I2C
-                                            dtype='float64' )       # Units { G }
-            self.ema_filter( (2*i+1), self.IMU_Raw[2*i+1] )         # Apply EMA Filter
+# ------------------------------------------------------------------------
 
-        return(self.IMU_Raw - self.IMU_Base)                        # Return CALIBRATED readings
+    def __calcLo( self, i ):
+        '''
+        Private method that returns calibrated magnitude
+        readings for Lo sensor.
+        
+        INPUTS:
+            - i: index at which the select line is
+
+        OUTPUT:
+            - NON
+        '''
+
+        self.lib.readMag( self.IMU[2*i+1] )                     # Read Lo I2C magnetic field
+
+        mxLo = self.lib.calcMag( self.IMU[2*i+1], self.lib.getMagX(self.IMU[2*i+1]) )
+        myLo = self.lib.calcMag( self.IMU[2*i+1], self.lib.getMagY(self.IMU[2*i+1]) )
+        mzLo = self.lib.calcMag( self.IMU[2*i+1], self.lib.getMagZ(self.IMU[2*i+1]) )
+        
+        self.IMU_Raw[2*i+1] = np.array( (mxLo, myLo, mzLo),     # Store RAW readings for Lo I2C
+                                        dtype='float64' )       # Units { G }
+        self.ema_filter( (2*i+1), self.IMU_Raw[2*i+1] )         # Apply EMA Filter
 
 # ------------------------------------------------------------------------
 
@@ -374,4 +452,4 @@ class IMU(object):
 ##        print( "    Hi: %.5f, %.5f, %.5f" %(val[2 * i][0], val[2 * i][1], val[2 * i][2]) )
 ##        print( "    Lo: %.5f, %.5f, %.5f" %(val[2*i+1][0], val[2*i+1][1], val[2*i+1][2]) )
 ##    print( "" )
-
+##
