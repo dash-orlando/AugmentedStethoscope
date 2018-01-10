@@ -3,9 +3,11 @@
 * Position tracking of magnet based on Finexus ported to Raspberry Pi
 * https://ubicomplab.cs.washington.edu/pdfs/finexus.pdf
 *
-* VERSION: 0.2
+* VERSION: 0.2.1
 *   - ADDED   : Draw region on TFT screen
 *   - MODIFIED: Use IMU class for ease of programming (hooray Moe)
+*   - MODIFIED: Instead of displaying images of the region, the code
+*               now draws the regions on-demand!
 *
 * KNOWN ISSUES:
 *   - No known issues for now (at least I, Moe, couldn't spot any)
@@ -15,11 +17,11 @@
 *   - Update code so it is parallel in state to the windows version.
 *   - Implement multithreading.
 *
-* Author        :   Nicolas Maduro (aka Danny) 
-* Last Modified :   Oct. 16th, 2017 Year of Our Lord
+* Author        :   Edward Daniel Nichols
+* Last Modified :   Jan.  9th, 2018 Year of Our Lord
 *
 * Author        :   Mohammad Odeh 
-* Last Modified :   Jan.  8th, 2018 Year of Our Lord
+* Last Modified :   Jan. 10th, 2018 Year of Our Lord
 *
 '''
 
@@ -43,71 +45,77 @@ from    PIL                 import  ImageFont
 # =====================> DEFINE NECESSARY FUNCTIONS <====================*
 # ************************************************************************       
 
-def argsort(seq):
-    ''' Sort list from lowest to highest. Returns the indices of the respective values in a list '''
-    ''' i.e. Given: [6, 20, 9, 18] || Returns: [1, 3, 2, 0] '''
+def argsort( seq ):
+    '''
+    Sort a list's elements from smallest to largest and
+    return the sorted INDICES NOT VALUES!
+    i.e. Given: [6, 20, 9, 18] || Returns: [0, 2, 3, 1]
+    
+    INPUTS:
+        - seq: A list whose elements are to be sorted 
+
+    OUTPUT:
+        - A list containing the indices of the given list's elements
+          arranged from the index of the element with the smallest
+          value to the index of the element with the largest value
+    '''
+    
     # http://stackoverflow.com/questions/3071415/efficient-method-to-calculate-the-rank-vector-of-a-list-in-python
-    return sorted(range(len(seq)), key=seq.__getitem__)
+    return( sorted( range( len(seq) ), key=seq.__getitem__ ) )
 
 # ------------------------------------------------------------------------
 
-def bubbleSort(arr, N):
-    ''' Sort list elements from smallest to largest '''
-    ''' i.e. Given: t = [6, 20, 9, 18] || bubbleSort(t, 3) = [6, 9, 20]'''
+def bubbleSort( arr, N ):
+    '''
+    Sort a list's elements from smallest to largest.
+    i.e. Given: t = [6, 20, 9, 18] || bubbleSort(t, 3) = [6, 9, 20]
+    
+    INPUTS:
+        - arr: List to be sorted
+        - N  : Number of elements in said list that need to be sorted
+                (i.e list has 5 elements, if N=3, sort the first 3)
+
+    OUTPUT:
+        - A sorted list of size N
+    '''
+    
     data = []
-    for i in range(0, N):
+    for i in range( 0, N ):
         data.append( arr[i] )
 
-    for i in range(0, len(data)):
-        for j in range(0, len(data)-i-1):
-            if (data[j] > data[j+1]):
-                temp = data[j]
-                data[j] = data[j+1]
+    for i in range( 0, len(data) ):
+        for j in range( 0, len(data)-i-1 ):
+            if( data[ j ] > data[j+1] ):
+                temp = data[ j ]
+                data[ j ] = data[j+1]
                 data[j+1] = temp
             else:
                 continue
-    return (data)
-
-# ------------------------------------------------------------------------
-
-def findIG( magField ):
-    ''' Guess the magnet's initial position '''
-    # Define IMU positions on the grid
-    #      / sensor 1: (x, y, z)
-    #     /  sensor 2: (x, y, z)
-    # Mat=      :          :
-    #     \     :          :
-    #      \ sensor 6: (x, y, z)
-    IMU_pos = np.array(((0.000, 0.000,   0.0) ,
-                        (0.000, 0.125,   0.0) ,
-                        (0.100, 0.175,   0.0) ,
-                        (0.200, 0.125,   0.0) ,
-                        (0.200, 0.000,   0.0) ,
-                        (0.100,-0.050,   0.0)), dtype='float64')
-
-    # Read current magnetic field from MCU
-    H = magField
-
-    # Compute L2 vector norms
-    HNorm = [ float(norm(H[0])), float(norm(H[1])),
-              float(norm(H[2])), float(norm(H[3])),
-              float(norm(H[4])), float(norm(H[5])) ]
-    
-    # Determine which sensors to use based on magnetic field value (smallValue==noBueno!)
-    sort = argsort(HNorm)               # Auxiliary function sorts norms from smallest to largest
-    sort.reverse()                      # Python built-in function reverses elements of list
-
-    IMUS = bubbleSort(sort, 3)
-
-    # Return the initial guess as the centroid of the detected triangle
-    return ( np.array(((IMU_pos[IMUS[0]][0]+IMU_pos[IMUS[1]][0]+IMU_pos[IMUS[2]][0])/3.,
-                       (IMU_pos[IMUS[0]][1]+IMU_pos[IMUS[1]][1]+IMU_pos[IMUS[2]][1])/3.,
-                       (IMU_pos[IMUS[0]][2]+IMU_pos[IMUS[1]][2]+IMU_pos[IMUS[2]][2])/3. -0.01), dtype='float64') )
+    return( data )
 
 # ------------------------------------------------------------------------
 
 def LHS( root, K, norms ):
+    '''
+    Construct the left hand side (LHS) of the equations
+    to numerically solve for.
+    Recall that in order to solve a system numerically it
+    must have the form of,
+    
+                >$\  f(x, y, z, ...) = LHS = 0
+    
+    INPUTS:
+        - root  : a numpy array contating the initial guesses of the roots
+        - K     : K is a property of the magnet and has units of { G^2.m^6}
+        - norms : An array/list of the vector norms of the magnetic field
+                  vectors for all the sensors
 
+    OUTPUT:
+        - An array of equations that are sorted corresponding to which
+          3 sensors' equations are going to be used with the LMA solver.
+          The sorting is based on which 3 sensors are closest to the magnet.
+    '''
+    
     # Extract x, y, and z
     x, y, z = root
     
@@ -147,126 +155,159 @@ def LHS( root, K, norms ):
 
 # ------------------------------------------------------------------------
 
+def findIG( magField ):
+    '''
+    Dynamic search of initial guess for the LMA solver based on magnitude
+    of the magnetic field relative to all the sensors.
+    A high magnitude reading indicates magnet is close to some 3
+    sensors, the centroid of the traingle created by said sensors
+    is fed as the initial guess
+    
+    INPUTS:
+        - magfield: a numpy array containing all the magnetic field readings
+
+    OUTPUT:
+        - A numpy array containing <x, y, z> values for the initial guess
+    '''
+    
+    # Define IMU positions on the grid
+    #      / sensor 1: (x, y, z)
+    #     /  sensor 2: (x, y, z)
+    # Mat=      :          :
+    #     \     :          :
+    #      \ sensor 6: (x, y, z)
+    IMU_pos = np.array(((0.000, 0.000,   0.0) ,
+                        (0.000, 0.125,   0.0) ,
+                        (0.100, 0.175,   0.0) ,
+                        (0.200, 0.125,   0.0) ,
+                        (0.200, 0.000,   0.0) ,
+                        (0.100,-0.050,   0.0)), dtype='float64')
+
+    # Read current magnetic field from MCU
+    H = magField
+
+    # Compute L2 vector norms
+    HNorm = [ float(norm(H[0])), float(norm(H[1])),
+              float(norm(H[2])), float(norm(H[3])),
+              float(norm(H[4])), float(norm(H[5])) ]
+    
+    # Determine which sensors to use based on magnetic field value (smallValue==noBueno!)
+    sort = argsort( HNorm )             # Auxiliary function sorts norms from smallest to largest
+    sort.reverse()                      # Python built-in function reverses elements of list
+
+    IMUS = bubbleSort( sort, 3 )        # Sort obtained indices from argsort() from smallest to largest
+
+    # Return the initial guess as the centroid of the detected triangle
+    return ( np.array(((IMU_pos[IMUS[0]][0]+IMU_pos[IMUS[1]][0]+IMU_pos[IMUS[2]][0])/3.,
+                       (IMU_pos[IMUS[0]][1]+IMU_pos[IMUS[1]][1]+IMU_pos[IMUS[2]][1])/3.,
+                       (IMU_pos[IMUS[0]][2]+IMU_pos[IMUS[1]][2]+IMU_pos[IMUS[2]][2])/3. -0.01), dtype='float64') )
+
+# ------------------------------------------------------------------------
+
 def dispRegion( norms ):
-    global triggered
+    global triggered, location
     sort = argsort( norms )
     sort.reverse()
     arr = bubbleSort(sort, 3)
-
-    # Sum up numbers for determining what region we are in
+    
+    #My God, this is ugly.
+    
+    # Sum up numbers for determining what region we are in...
     region = arr[0]*100 + arr[1]*10 + arr[2]
 
+    # For each case, the display is cleared, populated with appropriate polygons, and then rendered.
+    # The image is only updated when another case is "triggered".
     if( region == 12 and triggered[0] == False ):
-        image = Image.open( images[012] )
-        # Resize the image and rotate it so it's 240x320 pixels.
-        image = image.rotate(90).resize((240, 320))
-        # Write buffer to display hardware, must be called to make things visible on the
-        # display!
-        disp.display(image)
-        # Set triggered to True and everything else to False
+        disp.clear()
+        draw.polygon( [ loc['S0'], loc['S1'], loc['S2'],
+                        loc['S3'], loc['S4'], loc['S5'] ], outline=(0,0,0), fill=(0,255,255) )
+        draw.polygon( [ loc['S0'], loc['S1'], loc['S2'] ], outline=(0,0,0), fill=(255,255,0) )
+        disp.display()
         triggered = [ False ]*10
         triggered[0] = True
         
     elif( region == 123 and triggered[1] == False):
-        image = Image.open( images[123] )
-        # Resize the image and rotate it so it's 240x320 pixels.
-        image = image.rotate(90).resize((240, 320))
-        # Write buffer to display hardware, must be called to make things visible on the
-        # display!
-        disp.display(image)
-        # Set triggered to True and everything else to False
+        disp.clear()
+        draw.polygon([ loc['S0'], loc['S1'], loc['S2'],
+                       loc['S3'], loc['S4'], loc['S5'] ], outline=(0,0,0), fill=(0,255,255) )
+        draw.polygon([ loc['S1'], loc['S2'], loc['S3'] ], outline=(0,0,0), fill=(255,255,0) )
+        disp.display()
         triggered = [ False ]*10
         triggered[1] = True
         
     elif( region == 234 and triggered[2] == False ):
-        image = Image.open( images[234] )
-        # Resize the image and rotate it so it's 240x320 pixels.
-        image = image.rotate(90).resize((240, 320))
-        # Write buffer to display hardware, must be called to make things visible on the
-        # display!
-        disp.display(image)
-        # Set triggered to True and everything else to False
+        disp.clear()
+        draw.polygon( [ loc['S0'], loc['S1'], loc['S2'],
+                        loc['S3'], loc['S4'], loc['S5'] ], outline=(0,0,0), fill=(0,255,255) )
+        draw.polygon( [ loc['S2'], loc['S3'], loc['S4'] ], outline=(0,0,0), fill=(255,255,0) )
+        disp.display()
         triggered = [ False ]*10
         triggered[2] = True
         
     elif( region == 345 and triggered[3] == False ):
-        image = Image.open( images[345] )
-        # Resize the image and rotate it so it's 240x320 pixels.
-        image = image.rotate(90).resize((240, 320))
-        # Write buffer to display hardware, must be called to make things visible on the
-        # display!
-        disp.display(image)
-        # Set triggered to True and everything else to False
+        disp.clear()
+        draw.polygon( [ loc['S0'], loc['S1'], loc['S2'],
+                        loc['S3'], loc['S4'], loc['S5'] ], outline=(0,0,0), fill=(0,255,255) )
+        draw.polygon( [ loc['S3'], loc['S4'], loc['S5'] ], outline=(0,0,0), fill=(255,255,0) )
+        disp.display()
         triggered = [ False ]*10
         triggered[3] = True
         
     elif( region == 45 and triggered[4] == False ):
-        image = Image.open( images[045] )
-        # Resize the image and rotate it so it's 240x320 pixels.
-        image = image.rotate(90).resize((240, 320))
-        # Write buffer to display hardware, must be called to make things visible on the
-        # display!
-        disp.display(image)
-        # Set triggered to True and everything else to False
+        disp.clear()
+        draw.polygon( [ loc['S0'], loc['S1'], loc['S2'],
+                        loc['S3'], loc['S4'], loc['S5'] ], outline=(0,0,0), fill=(0,255,255) )
+        draw.polygon( [ loc['S0'], loc['S4'], loc['S5'] ], outline=(0,0,0), fill=(255,255,0) )
+        disp.display()
         triggered = [ False ]*10
         triggered[4] = True
         
     elif( region == 15 and triggered[5] == False ):
-        image = Image.open( images[015] )
-        # Resize the image and rotate it so it's 240x320 pixels.
-        image = image.rotate(90).resize((240, 320))
-        # Write buffer to display hardware, must be called to make things visible on the
-        # display!
-        disp.display(image)
-        # Set triggered to True and everything else to False
+        disp.clear()
+        draw.polygon( [ loc['S0'], loc['S1'], loc['S2'],
+                        loc['S3'], loc['S4'], loc['S5'] ], outline=(0,0,0), fill=(0,255,255) )
+        draw.polygon( [ loc['S0'], loc['S1'], loc['S5'] ], outline=(0,0,0), fill=(255,255,0) )
+        disp.display()
         triggered = [ False ]*10
         triggered[5] = True
         
     elif( region == 25 and triggered[6] == False ):
-        image = Image.open( images[025] )
-        # Resize the image and rotate it so it's 240x320 pixels.
-        image = image.rotate(90).resize((240, 320))
-        # Write buffer to display hardware, must be called to make things visible on the
-        # display!
-        disp.display(image)
-        # Set triggered to True and everything else to False
+        disp.clear()
+        draw.polygon( [ loc['S0'], loc['S1'], loc['S2'],
+                        loc['S3'], loc['S4'], loc['S5'] ], outline=(0,0,0), fill=(0,255,255) )
+        draw.polygon( [ loc['S0'], loc['S2'], loc['S5'] ], outline=(0,0,0), fill=(255,255,0) )
+        disp.display()
         triggered = [ False ]*10
         triggered[6] = True
         
     elif( region == 245 and triggered[7] == False ):
-        image = Image.open( images[245] )
-        # Resize the image and rotate it so it's 240x320 pixels.
-        image = image.rotate(90).resize((240, 320))
-        # Write buffer to display hardware, must be called to make things visible on the
-        # display!
-        disp.display(image)
-        # Set triggered to True and everything else to False
+        disp.clear()
+        draw.polygon( [ loc['S0'], loc['S1'], loc['S2'],
+                        loc['S3'], loc['S4'], loc['S5'] ], outline=(0,0,0), fill=(0,255,255) )
+        draw.polygon( [ loc['S2'], loc['S4'], loc['S5'] ], outline=(0,0,0), fill=(255,255,0) )
+        disp.display()
         triggered = [ False ]*10
         triggered[7] = True
         
     elif( region == 125 and triggered[8] == False ):
-        image = Image.open( images[125] )
-        # Resize the image and rotate it so it's 240x320 pixels.
-        image = image.rotate(90).resize((240, 320))
-        # Write buffer to display hardware, must be called to make things visible on the
-        # display!
-        disp.display(image)
-        # Set triggered to True and everything else to False
+        disp.clear()
+        draw.polygon( [ loc['S0'], loc['S1'], loc['S2'],
+                        loc['S3'], loc['S4'], loc['S5'] ], outline=(0,0,0), fill=(0,255,255) )
+        draw.polygon( [ loc['S1'], loc['S2'], loc['S5'] ], outline=(0,0,0), fill=(255,255,0) )
+        disp.display()
         triggered = [ False ]*10
         triggered[8] = True
         
     elif( region == 235 and triggered[9] == False ):
-        image = Image.open( images[235] )
-        # Resize the image and rotate it so it's 240x320 pixels.
-        image = image.rotate(90).resize((240, 320))
-        # Write buffer to display hardware, must be called to make things visible on the
-        # display!
-        disp.display(image)
-        # Set triggered to True and everything else to False
+        disp.clear()
+        draw.polygon( [ loc['S0'], loc['S1'], loc['S2'],
+                        loc['S3'], loc['S4'], loc['S5'] ], outline=(0,0,0), fill=(0,255,255) )
+        draw.polygon( [ loc['S2'], loc['S3'], loc['S5'] ], outline=(0,0,0), fill=(255,255,0) )
+        disp.display()
         triggered = [ False ]*10
         triggered[9] = True
         
-    else: print( "i cri evrytim rejin iz nut lst8" )
+    else: pass
     
 # ************************************************************************
 # ===========================> SETUP PROGRAM <===========================
@@ -274,8 +315,8 @@ def dispRegion( norms ):
 
 # Useful variables
 
-
-K           = 1.09e-6                           # Magnet's constant (K) || Units { G^2.m^6}
+#K           = 1.615e-7                          # Small magnet's constant   (K) || Units { G^2.m^6}
+K           = 1.09e-6                           # Big magnet's constant     (K) || Units { G^2.m^6}
 dx          = 1e-7                              # Differential step size (Needed for solver)
 H           = np.empty((6,3), dtype='float64')  # Construct matrix of size  (6x3)
 NSENS       = 6                                 # Number of sensors used
@@ -292,20 +333,29 @@ RST = 16                                        # Reset line
 SPI_PORT = 0                                    # SPI port (as per adafruit)
 SPI_DEVICE = 0                                  # SPI devc (as per adafruit)
 
+global loc
+loc = { 'S0': ( 180, 260 ), 'S1': (  55, 260) ,
+        'S2': (   5, 160 ), 'S3': (  55,  60) ,
+        'S4': ( 180,  60 ), 'S5': ( 230, 160)  }
+
+
 # Create TFT LCD display class.
 disp = TFT.ILI9341( DC, rst=RST,
                     spi=SPI.SpiDev(SPI_PORT,
                                    SPI_DEVICE,
                                    max_speed_hz=64000000) )
+
+
 disp.begin()                                    # Initialize display.
 disp.clear()                                    # Clear the display to a black background.
 
-global images
-images = { 012: '1.jpg', 123: '2.jpg',          # ...
-           234: '3.jpg', 345: '4.jpg',          # Tie each region
-           045: '5.jpg', 015: '6.jpg',          # with its corres-
-           025: '7.jpg', 245: '8.jpg',          # ponding image.
-           125: '9.jpg', 235:'10.jpg' }         # ...
+# Get a PIL Draw object to start drawing on the display buffer.
+draw = disp.draw()
+# Populate the display buffer with a hexagon at the scaled dimension: 1px = 1mm
+draw.polygon([ loc['S0'], loc['S1'], loc['S2'], loc['S3'], loc['S4'], loc['S5'] ], outline=(255,255,255), fill=(0,255,0))
+
+# Render the image in the display buffer
+disp.display()
 
 global triggered
 triggered = [ False ]*10         # ...
