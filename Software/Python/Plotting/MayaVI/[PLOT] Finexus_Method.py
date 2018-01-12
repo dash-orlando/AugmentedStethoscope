@@ -4,15 +4,19 @@
 * https://ubicomplab.cs.washington.edu/pdfs/finexus.pdf
 *
 *   - 3 Modes of operations
-*       (1) Guided Point-by-Point   (DISABLED)
-*       (2) Continuous 2D sampling  (DISABLED)
-*       (3) Continuous 3D live plot
+*       (1) Point-by-Point (Data Sampling)  [DISABLED]
+*       (2) 2D Static Plot (Data Sampling)  [DISABLED]
+*       (3) 3D Static Plot (Data Sampling)
+*       (4) 3D Continuous Live Plot
 *
-* VERSION: 1.0.1
+* VERSION: 1.1.0
 *   - MODIFIED: Use MayaVI to perform plotting since it allows
 *               for greater flexibility and drastically
 *               improves plot update time (does NOT rerender plot
-*               at each iteration )
+*               at each iteration ).
+*   - ADDED   : Added a 4th mode of operation for 3D
+*               data sampling and plotting (NOT tracking)
+*   - MODIFIED: Restructured code to reduce clutter
 *
 * KNOWN ISSUES:
 *   - Loss in accuracy in 3D space  (not even surprised)
@@ -21,7 +25,7 @@
 * LAST CONTRIBUTION DATE    :   Oct. 17th, 2017 Year of Our Lord
 * 
 * AUTHOR                    :   Mohammad Odeh 
-* LAST CONTRIBUTION DATE    :   Dec. 19th, 2017 Year of Our Lord
+* LAST CONTRIBUTION DATE    :   Jan. 12th, 2018 Year of Our Lord
 *
 '''
 
@@ -61,15 +65,15 @@ def argsort( seq ):
 
 def bubbleSort( arr, N ):
     '''
-    Sort a list's elements from smallest to largest 
+    Sort a list's elements from smallest to largest.
     
     INPUTS:
-        - arr: List to be sorted
-        - N  : Number of elements in said list that need to be sorted
+        - arr: List to be sorted.
+        - N  : Number of elements in said list that need to be sorted.
                 (i.e list has 5 elements, if N=3, sort the first 3)
 
     OUTPUT:
-        - A sorted list of size N
+        - A sorted list of size N.
     '''
     data = []
     for i in range(0, N):
@@ -83,7 +87,7 @@ def bubbleSort( arr, N ):
                 data[j+1] = temp
             else:
                 continue
-    return (data)
+    return( data )
 
 # --------------------------
 
@@ -98,10 +102,10 @@ def getData( ser ):
     
     INPUTS:
         - ser: a serial object. Note that the serial port MUST be open before
-               passing it the to function
+               passing it the to function.
 
     OUTPUT:
-        - Individual numpy arrays of all the magnetic field vectors
+        - Individual numpy arrays of all the magnetic field vectors.
     '''
     global CALIBRATING
 
@@ -197,10 +201,10 @@ def LHS( root, K, norms ):
                 >$\  f(x, y, z, ...) = LHS = 0
     
     INPUTS:
-        - root  : a numpy array contating the initial guesses of the roots
-        - K     : K is a property of the magnet and has units of { G^2.m^6}
+        - root  : a numpy array contating the initial guesses of the roots.
+        - K     : K is a property of the magnet and has units of { G^2.m^6 }.
         - norms : An array/list of the vector norms of the magnetic field
-                  vectors for all the sensors
+                  vectors for all the sensors.
 
     OUTPUT:
         - An array of equations that are sorted corresponding to which
@@ -253,13 +257,13 @@ def findIG( magFields ):
     of the magnetic field relative to all the sensors.
     A high magnitude reading indicates magnet is close to some 3
     sensors, the centroid of the traingle created by said sensors
-    is fed as the initial guess
+    is fed as the initial guess.
     
     INPUTS:
-        - magfield: a numpy array containing all the magnetic field readings
+        - magfield: a numpy array containing all the magnetic field readings.
 
     OUTPUT:
-        - A numpy array containing <x, y, z> values for the initial guess
+        - A numpy array containing <x, y, z> values for the initial guess.
     '''
     
     # Define IMU positions on the grid
@@ -298,12 +302,12 @@ def findIG( magFields ):
 
 def generate_cartesian_volume( fig, length = 250, spacing = 10 ):
     '''
-    Generates a meshed cartesian volume that encapsulates the ROI
+    Generates a meshed cartesian volume that encapsulates the ROI.
     
     INPUTS:
-        - fig    : Scene/figure to populate
-        - length : Length of axes ( generates a KxKxK sized cube )
-        - spacing: Spacing between consecutive lines
+        - fig    : Scene/figure to populate.
+        - length : Length of axes ( generates a KxKxK sized cube ).
+        - spacing: Spacing between consecutive lines.
 
     OUTPUT:
         - No return; does internal calls to update plot.
@@ -376,16 +380,19 @@ def generate_cartesian_volume( fig, length = 250, spacing = 10 ):
 
 # --------------------------
 
-def read_STL( fig, STLfile ):
+def read_STL( fig, STLfile, meshMode ):
     '''
-    Generates a meshed cartesian volume that encapsulates the ROI
+    Read ASCII STL file and generate mesh.
     
     INPUTS:
-        - fig    : Scene/figure to populate
-        - STLfile: A string contating the name/path of the STL file to mesh
+        - fig     : Scene/figure to populate.
+        - STLfile : A string contating the name/path of the STL file to mesh.
+        - meshMode: Sets the meshing mode;
+                    meshMode=='staticMesh'  for static  plots.
+                    meshMode=='dynamicMesh' for dynamic plots.
 
     OUTPUT:
-        - No return; generates a mesh on the render window
+        - No return; generates a mesh on the render window.
     '''
 
     print( "Generating mesh of STL file ..." ),
@@ -405,16 +412,27 @@ def read_STL( fig, STLfile ):
                 y = np.append( y, np.double( strarray[2] )/scaleFactor )
                 z = np.append( z, np.double( strarray[3] )/scaleFactor )
 
-        # Translate mesh from origin to nipple (yay!)
-        x = x + (275.00)/scaleFactor
-        y = y - (125.00)/scaleFactor
-        z = z - (150.00)/scaleFactor
+        if( meshMode=='staticMesh' ):
+            # 3D Track Mesh
+            # Translate mesh to origin
+            x = x + (50.00)/scaleFactor
+            y = y + (00.00)/scaleFactor
+            z = z + (95.00)/scaleFactor
+            
+        elif( meshMode=='dynamicMesh' ):
+            # Standarized Patient Mesh
+            # Translate mesh from origin to nipple (yay!)
+            x = x + (275.00)/scaleFactor
+            y = y - (125.00)/scaleFactor
+            z = z - (150.00)/scaleFactor
 
-        # Rotate STL mesh
-        temp = np.copy(y)
-        y = -1*np.copy(z)
-        z = temp
+            # Rotate STL mesh
+            temp = np.copy(y)
+            y = -1*np.copy(z)
+            z = temp
 
+        else: raise Exception
+        
         # Identify triangles
         triangles = [ (i, i+1, i+2) for i in range(0, len(x), 3) ]
 
@@ -422,56 +440,89 @@ def read_STL( fig, STLfile ):
         mlab.triangular_mesh( x, y, z, triangles,
                               figure = fig,
                               representation = 'surface',
-                              tube_radius = 1.0 )
+                              tube_radius = 1.0,
+                              color = (1, 1, 1),
+                              opacity = 0.75 )
 
         print( "SUCCESS!" )
+        
+# --------------------------
+
+def compute_coordinate():
+    '''
+    Compute the magnet's position in cartesian space.
+    
+    INPUTS:
+        - No inputs.
+
+    OUTPUT:
+        - position: The most current and updated position
+                    of the magnet in cartesian space.
+    '''
+
+    global initialGuess                                             # Modify from within function
+
+    # Data acquisition
+    (H1, H2, H3, H4, H5, H6) = getData(IMU)                         # Get data from MCU
+    
+    # Compute norms
+    HNorm = [ float(norm(H1)), float(norm(H2)),                     #
+              float(norm(H3)), float(norm(H4)),                     # Compute L2 vector norms
+              float(norm(H5)), float(norm(H6)) ]                    #
+    
+    # Solve system of equations
+    sol = root(LHS, initialGuess, args=(K, HNorm), method='lm',     # Invoke solver using the
+               options={'ftol':1e-10, 'xtol':1e-10, 'maxiter':1000, # Levenberg-Marquardt 
+                        'eps':1e-8, 'factor':0.001})                # Algorithm (aka LMA)
+
+    # Print solution (coordinates) to screen
+    position = np.array( (sol.x[0]*1000, sol.x[1]*1000, -1*sol.x[2]*1000), dtype='float64' )
+    print( "(x, y, z, t): (%.3f, %.3f, %.3f, %.3f)" %( position[0],
+                                                       position[1],
+                                                       position[2],
+                                                       clock() ) )
+    
+    # Check if solution makes sense
+    if (abs(sol.x[0]*1000) > 500) or (abs(sol.x[1]*1000) > 500) or (abs(sol.x[2]*1000) > 500):
+        initialGuess = findIG( getData(IMU) )                       # Determine initial guess based on magnet's location
+        
+    # Update initial guess with current position and feed back to solver
+    else:
+        initialGuess = np.array( (sol.x[0]+dx, sol.x[1]+dx,         # Update the initial guess as the
+                                  sol.x[2]+dx), dtype='float64' )   # current position and feed back to LMA
+                                 
+        return( position )                                          # Return position
+            
 # --------------------------
 
 @mlab.animate(delay=25)
 def animate():
     '''
-    Callback function to update and animate the plot
+    Callback function to update and animate the plot.
     
     INPUTS:
-        - magfield: a numpy array containing all the magnetic field readings
+        - No inputs.
 
     OUTPUT:
-        - No return (does internal calls to update plot)
+        - No return; does internal calls to update plot.
     '''
     
-    global initialGuess
-    f = mlab.gcf()
-    while True:
-        # Data acquisition
-        (H1, H2, H3, H4, H5, H6) = getData(IMU)                         # Get data from MCU
-        
-        # Compute norms
-        HNorm = [ float(norm(H1)), float(norm(H2)),                     #
-                  float(norm(H3)), float(norm(H4)),                     # Compute L2 vector norms
-                  float(norm(H5)), float(norm(H6)) ]                    #
-        
-        # Solve system of equations
-        sol = root(LHS, initialGuess, args=(K, HNorm), method='lm',     # Invoke solver using the
-                   options={'ftol':1e-10, 'xtol':1e-10, 'maxiter':1000, # Levenberg-Marquardt 
-                            'eps':1e-8, 'factor':0.001})                # Algorithm (aka LMA)
+    f = mlab.gcf()                                      # Get engine handle of figure
+    
+    while( True ):                                      # Loop 43va
+        try:
+            # Update
+            pos = compute_coordinate()                  # Get updated magnet position
 
-        # Print solution (coordinates) to screen
-        position = np.array( (sol.x[0]*1000, sol.x[1]*1000, -1*sol.x[2]*1000), dtype='float64' )
-        #print( "(x, y, z): (%.3f, %.3f, %.3f)" %(position[0], position[1], position[2]) )
-        
-        # Check if solution makes sense
-        if (abs(sol.x[0]*1000) > 500) or (abs(sol.x[1]*1000) > 500) or (abs(sol.x[2]*1000) > 500):
-            initialGuess = findIG( getData(IMU) )                       # Determine initial guess based on magnet's location
+            # Draw
+            plt.mlab_source.set( x = pos[0],            # Update last drawn point ...
+                                 y = pos[1],            # ... on graph with the ...
+                                 z = pos[2] )           # ... current position.
+            yield
+
+        except KeyboardInterrupt:
+            mlab.close( all=True )                      # Close all figures and scenes
             
-        # Update initial guess with current position and feed back to solver
-        else:
-            initialGuess = np.array( (sol.x[0]+dx, sol.x[1]+dx,         # Update the initial guess as the
-                                      sol.x[2]+dx), dtype='float64' )   # current position and feed back to LMA
-
-        # Update the position of the point in 3D space
-        plt.mlab_source.set( x = position[0], y = position[1], z = (position[2]-50) )
-        yield
-
 # --------------------------
         
 # ************************************************************************
@@ -482,28 +533,28 @@ def animate():
 global CALIBRATING
 global initialGuess
 
-CALIBRATING = True                              # Boolean to indicate that device is calibrating
-READY       = False                             # Give time for user to place magnet
+CALIBRATING = True                                      # Boolean to indicate that device is calibrating
 
-#K           = 7.27e-8                           # Small magnet's constant   (K) || Units { G^2.m^6}
-K           = 1.09e-6                           # Big magnet's constant     (K) || Units { G^2.m^6}
-dx          = 1e-7                              # Differential step size (Needed for solver)
-calcPos     = []                                # Empty array to hold calculated positions
+##K           = 7.27e-8                                   # Small magnet's constant   (K) || Units { G^2.m^6}
+K           = 1.09e-6                                   # Big magnet's constant     (K) || Units { G^2.m^6}
+dx          = 1e-7                                      # Differential step size (Needed for solver)
+calcPos     = []                                        # Empty array to hold calculated positions
 
 
 # Establish connection with Arduino
-DEVC = "Arduino"                                # Device Name (not very important)
-PORT = 4                                        # Port number (VERY important)
-BAUD = 115200                                   # Baudrate    (VERY VERY important)
+DEVC = "Arduino"                                        # Device Name (not very important)
+PORT = 4                                                # Port number (VERY important)
+BAUD = 115200                                           # Baudrate    (VERY VERY important)
 
 # Error handling in case serial communcation fails (1/2)
 try:
-    IMU = createUSBPort( DEVC, PORT, BAUD )     # Create serial connection
-    if IMU.is_open == False:                    # Make sure port is open
+    IMU = createUSBPort( DEVC, PORT, BAUD )             # Create serial connection
+    if IMU.is_open == False:                            # Make sure port is open
         IMU.open()
     print( "Serial Port OPEN" )
 
-    initialGuess = findIG( getData(IMU) )       # Determine initial guess based on magnet's location
+    initialGuess = findIG( getData(IMU) )               # Determine initial guess based on magnet's location
+    clock()                                             # Call clock() for accurate time readings
 
 # Error handling in case serial communcation fails (2/2)
 except Exception as e:
@@ -511,40 +562,74 @@ except Exception as e:
     print( "Error type %s" %str(type(e)) )
     print( "Error Arguments " + str(e.args) )
     sleep( 2.5 )
-    quit()                                      # Shutdown entire program
-
-# Setup MayaVI environment
-scene = mlab.figure( size=(1000, 800) )         # Create window
-generate_cartesian_volume( scene )              # Generate mesh of volume
-STLfile = "SP_PH02_Torso (ASCII).stl"           # Path to STL file
-read_STL( scene, STLfile )                      # Read STL file
-
+    quit()                                              # Shutdown entire program
 
 # ************************************************************************
 # =========================> MAKE IT ALL HAPPEN <=========================
 # ************************************************************************
 
-# Inform user that system is almost ready
-if(READY == False):
-    print( "Place magnet on track" )
-    sleep( 2.5 )
-    print( "Ready in 3" )
-    sleep( 1.0 )
-    print( "Ready in 2" )
-    sleep( 1.0 )
-    print( "Ready in 1" )
-    sleep( 1.0 )
-    print( "GO!" )
-    start = clock()
+# Choose mode of operation
+print( "Choose plotting mode:" )                        # ...
+print( "1. Point-by-Point (Data Sampling)." )           # Inform user of ...
+print( "2. 2D Static Plot (Data Sampling)." )           # all the possible ...
+print( "3. 3D Static Plot (Data Sampling)" )            # plotting modes.
+print( "4. 3D Continuous Live Plot." )                  # ...
+
+mode = raw_input(">\ ")                                 # Wait for user input
+
+# --------------------------------------------------------------------------------------
+
+# If "3D Static Plot" mode was selected:
+if ( mode == '3' ):
+    
+    x, y, z = np.array([]), np.array([]), np.array([])  # Initialize empty numpy arrays
+    
+    while( True ):                                      # Loop 43va
+        try:
+            # Update
+            pos = compute_coordinate()                  # Get updated magnet position
+            
+            x = np.append( x, pos[0] )
+            y = np.append( y, pos[1] )
+            z = np.append( z, pos[2] )
+            
+        except KeyboardInterrupt:
+            # Setup MayaVI environment
+            scene = mlab.figure( size=(1000, 800) )     # Create window
+            generate_cartesian_volume( scene )          # Generate mesh of volume
+            STLfile = "trackforMoe.stl"                 # Path to STL file
+            read_STL( scene, STLfile, 'staticMesh' )    # Read STL file
+
+            # Draw
+            nodes = mlab.points3d( x, y, z,             # ...
+                                   figure = scene,      # Insert collected data to plot
+                                   scale_factor=5.0 )   # ...
+
+            # Impose properties
+            colors = 1.0 * (x + y)/(max(x)+max(y))      # Rainbow color the plotted points
+            nodes.glyph.scale_mode = 'scale_by_vector'
+            nodes.mlab_source.dataset.point_data.scalars = colors
+
+            mlab.show()                                 # Show figure
+
+            break                                       # Break from loop!
         
-    # Set the device to ready!!
-    READY = True
+# --------------------------------------------------------------------------------------
 
-# Start the plot with the points given by the initial guess
-plt = mlab.points3d( initialGuess[0], initialGuess[1], initialGuess[2],
-                     figure = scene, resolution=100, scale_factor=35.0 )
+# If "3D Live Plot" mode was selected:
+elif ( mode == '4' ):
 
-# Let the show begin!
-animate()
-mlab.show()
+    # Setup MayaVI environment
+    scene = mlab.figure( size=(1000, 800) )             # Create window
+    generate_cartesian_volume( scene )                  # Generate mesh of volume
+    STLfile = "SP_PH02_Torso (ASCII).stl"               # Path to STL file
+    read_STL( scene, STLfile, 'dynamicMesh' )           # Read STL file
+
+    # Start the plot with the points given by the initial guess
+    plt = mlab.points3d( initialGuess[0], initialGuess[1], initialGuess[2],
+                         figure = scene, resolution=100, scale_factor=35.0 )
+
+    # Let the show begin!
+    animate()
+    mlab.show()
 
