@@ -5,11 +5,11 @@
 *
 *   - 3 Modes of operations
 *       (1) Point-by-Point (Data Sampling)  [DISABLED]
-*       (2) 2D Static Plot (Data Sampling)  [DISABLED]
+*       (2) 2D Static Plot (Data Sampling)
 *       (3) 3D Static Plot (Data Sampling)
 *       (4) 3D Continuous Live Plot
 *
-* VERSION: 1.1.0
+* VERSION: 1.1.1
 *   - MODIFIED: Use MayaVI to perform plotting since it allows
 *               for greater flexibility and drastically
 *               improves plot update time (does NOT rerender plot
@@ -17,15 +17,16 @@
 *   - ADDED   : Added a 4th mode of operation for 3D
 *               data sampling and plotting (NOT tracking)
 *   - MODIFIED: Restructured code to reduce clutter
+*   - ADDED   : Re-enabled 2D plotting (crappy looking code though)
 *
 * KNOWN ISSUES:
-*   - Loss in accuracy in 3D space  (not even surprised)
+*   - Minor loss in accuracy in 3D space
 *
 * AUTHOR                    :   Edward Nichols
 * LAST CONTRIBUTION DATE    :   Oct. 17th, 2017 Year of Our Lord
 * 
 * AUTHOR                    :   Mohammad Odeh 
-* LAST CONTRIBUTION DATE    :   Jan. 12th, 2018 Year of Our Lord
+* LAST CONTRIBUTION DATE    :   Jan. 16th, 2018 Year of Our Lord
 *
 '''
 
@@ -51,7 +52,7 @@ def argsort( seq ):
     return the sorted INDICES NOT VALUES!
     
     INPUTS:
-        - seq: A list whose elements are to be sorted 
+        - seq: A list whose elements are to be sorted.
 
     OUTPUT:
         - A list containing the indices of the given list's elements
@@ -310,7 +311,7 @@ def generate_cartesian_volume( fig, length = 250, spacing = 10 ):
         - spacing: Spacing between consecutive lines.
 
     OUTPUT:
-        - No return; does internal calls to update plot.
+        - No return; generates a mesh on the render window.
     '''
     print( "Constructing cartesian volume ..." ),
     
@@ -415,9 +416,9 @@ def read_STL( fig, STLfile, meshMode ):
         if( meshMode=='staticMesh' ):
             # 3D Track Mesh
             # Translate mesh to origin
-            x = x + (50.00)/scaleFactor
+            x = x + (25.00)/scaleFactor
             y = y + (00.00)/scaleFactor
-            z = z + (95.00)/scaleFactor
+            z = z + (50.00)/scaleFactor
             
         elif( meshMode=='dynamicMesh' ):
             # Standarized Patient Mesh
@@ -524,6 +525,44 @@ def animate():
             mlab.close( all=True )                      # Close all figures and scenes
             
 # --------------------------
+
+def plot_2D( points, a=0, b=251 ):
+    '''
+    Perfom a 2D plot.
+    
+    INPUTS:
+        - points: numpy array of points to plot in the order of (x, y, z).
+        - a     : placeholder for now
+        - b     : placeholder for now
+
+    OUTPUT:
+        - No return; generates a 2D plot.
+    '''
+    
+    x, y = points                                       # Store data into arrays
+    z = np.zeros_like(x)                                # We don't want th
+
+    scene = mlab.figure( size= (1000, 800),             # Create scene
+                         fgcolor=(0, 0, 0),             # Set foreground color
+                         bgcolor=(1, 1, 1) )            # Set background color
+
+    nodes = mlab.points3d( x, y, z,                     # ...
+                           figure = scene,              # Insert collected data to plot
+                           scale_factor=5.0 )           # ...
+    
+    xlab = mlab.xlabel( "x" )                           # Set x-axis label
+    ylab = mlab.ylabel( "y" )                           # Set y-axis label
+    
+    mlab.axes( extent = [0, b-1, 0, b-1, 0, 0.5],       # Set extent of axes
+               figure = scene,                          # The figure to populate
+               y_axis_visibility=False)                 # Remove the z-axis (designated y for some MayaVi reason)
+
+    scene.scene.z_plus_view()                           # Look at it from the top!
+    scene.scene.parallel_projection = True              # 2D projection of 3D plane
+
+    mlab.show()
+            
+# --------------------------
         
 # ************************************************************************
 # ===========================> SETUP PROGRAM <===========================
@@ -579,6 +618,27 @@ mode = raw_input(">\ ")                                 # Wait for user input
 
 # --------------------------------------------------------------------------------------
 
+# If "Point-by-Point" mode was selected:
+if ( mode == '1' ):
+    quit()
+
+# If "2D Static Plot" mode was selected:
+if ( mode == '2' ):
+    x, y = np.array([]), np.array([])                   # Initialize empty numpy arrays
+    
+    while( True ):                                      # Loop 43va
+        try:
+            # Update
+            pos = compute_coordinate()                  # Get updated magnet position
+            
+            x = np.append( x, pos[0] )
+            y = np.append( y, pos[1] )
+
+        except KeyboardInterrupt:
+            listly = (x, y)                             # Pack numpy array in a list
+            plot_2D( listly )                           # Plot!
+            break                                       # Break out of loop.
+            
 # If "3D Static Plot" mode was selected:
 if ( mode == '3' ):
     
