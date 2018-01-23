@@ -9,15 +9,12 @@
 *       (3) 3D Static Plot (Data Sampling)
 *       (4) 3D Continuous Live Plot
 *
-* VERSION: 1.1.1
+* VERSION: 1.2
 *   - MODIFIED: Use MayaVI to perform plotting since it allows
 *               for greater flexibility and drastically
 *               improves plot update time (does NOT rerender plot
 *               at each iteration ).
-*   - ADDED   : Added a 4th mode of operation for 3D
-*               data sampling and plotting (NOT tracking)
-*   - MODIFIED: Restructured code to reduce clutter
-*   - ADDED   : Re-enabled 2D plotting (crappy looking code though)
+*   - ADDED   : Store data into a log file
 *
 * KNOWN ISSUES:
 *   - Minor loss in accuracy in 3D space
@@ -26,7 +23,7 @@
 * LAST CONTRIBUTION DATE    :   Oct. 17th, 2017 Year of Our Lord
 * 
 * AUTHOR                    :   Mohammad Odeh 
-* LAST CONTRIBUTION DATE    :   Jan. 16th, 2018 Year of Our Lord
+* LAST CONTRIBUTION DATE    :   Jan. 23rd, 2018 Year of Our Lord
 *
 '''
 
@@ -476,16 +473,26 @@ def compute_coordinate():
                options={'ftol':1e-10, 'xtol':1e-10, 'maxiter':1000, # Levenberg-Marquardt 
                         'eps':1e-8, 'factor':0.001})                # Algorithm (aka LMA)
 
+    # Store solution in array
+    position = np.array( (sol.x[0]*1000,
+                          sol.x[1]*1000,
+                          sol.x[2]*1000,
+                          clock()       ), dtype='float64' )
+
+    # Check value
+    if( position[2] < 0 ): position[2] = -1*position[2]             # Make sure z-value
+    else: pass                                                      # ... is ALWAYS +ve
+    
     # Print solution (coordinates) to screen
-    position = np.array( (sol.x[0]*1000, sol.x[1]*1000, -1*sol.x[2]*1000), dtype='float64' )
     print( "(x, y, z, t): (%.3f, %.3f, %.3f, %.3f)" %( position[0],
                                                        position[1],
                                                        position[2],
-                                                       clock() ) )
+                                                       position[3] ) )
     
     # Check if solution makes sense
     if (abs(sol.x[0]*1000) > 500) or (abs(sol.x[1]*1000) > 500) or (abs(sol.x[2]*1000) > 500):
         initialGuess = findIG( getData(IMU) )                       # Determine initial guess based on magnet's location
+        return( compute_coordinate() )                              # Recursive call of function()
         
     # Update initial guess with current position and feed back to solver
     else:
@@ -494,6 +501,48 @@ def compute_coordinate():
                                  
         return( position )                                          # Return position
             
+# --------------------------
+
+def storeData( data ):
+    '''
+    Store computed position co-ordinates into a .txt file
+    
+    INPUTS:
+        - data: A list containing all the computed co-ordinate points
+    '''
+    
+    print( "Storing data log under data.txt" )
+
+    # Unzip data into x, y, z
+    x, y, z, t = data[0], data[1], data[2], data[3]
+
+    # Setup paths!
+    if platform.system()=='Windows':
+
+        # Define useful paths
+        homeDir = os.getcwd()
+        dst     = homeDir + '\\output'
+        dataFile= dst + '\\data.txt'
+
+    elif platform.system()=='Linux':
+
+        # Define useful paths
+        homeDir = os.getcwd()
+        dst = homeDir + '/output'
+        dataFile= dst + '/data.txt'
+    
+    # Check if directory exists
+    if ( os.path.exists(dst)==False ):
+        # Create said directory
+        os.makedirs(dst)
+
+    # Write into file
+    for i in range( 0, len(x) ):
+            with open( dataFile, "a" ) as f:
+                f.write(str(x[i]) + "," + str(y[i]) + "," + str(z[i]) + "," + str(t[i]) + "\n")
+
+    print( "DONE!" )
+
 # --------------------------
 
 @mlab.animate(delay=25)
@@ -576,6 +625,7 @@ CALIBRATING = True                                      # Boolean to indicate th
 
 ##K           = 7.27e-8                                   # Small magnet's constant   (K) || Units { G^2.m^6}
 K           = 1.09e-6                                   # Big magnet's constant     (K) || Units { G^2.m^6}
+##K           = 2.46e-7                                   # Spherical magnet's constant     (K) || Units { G^2.m^6}
 dx          = 1e-7                                      # Differential step size (Needed for solver)
 calcPos     = []                                        # Empty array to hold calculated positions
 
@@ -593,7 +643,6 @@ try:
     print( "Serial Port OPEN" )
 
     initialGuess = findIG( getData(IMU) )               # Determine initial guess based on magnet's location
-    clock()                                             # Call clock() for accurate time readings
 
 # Error handling in case serial communcation fails (2/2)
 except Exception as e:
@@ -617,6 +666,11 @@ print( "4. 3D Continuous Live Plot." )                  # ...
 mode = raw_input(">\ ")                                 # Wait for user input
 
 # --------------------------------------------------------------------------------------
+
+print( "\n******************************************" )
+print( "*NOTE: Press Ctrl-C to save data and exit." )
+print( "******************************************\n" )
+clock()                                                 # Call clock() for accurate time readings
 
 # If "Point-by-Point" mode was selected:
 if ( mode == '1' ):
@@ -642,23 +696,30 @@ if ( mode == '2' ):
 # If "3D Static Plot" mode was selected:
 if ( mode == '3' ):
     
-    x, y, z = np.array([]), np.array([]), np.array([])  # Initialize empty numpy arrays
+    x, y = np.array([]), np.array([])                   # Initialize empty numpy arrays
+    z, t = np.array([]), np.array([])                   # for x, y, z, and t
     
     while( True ):                                      # Loop 43va
         try:
             # Update
             pos = compute_coordinate()                  # Get updated magnet position
             
-            x = np.append( x, pos[0] )
-            y = np.append( y, pos[1] )
-            z = np.append( z, pos[2] )
+            x = np.append( x, pos[0] )                  # Append computed values
+            y = np.append( y, pos[1] )                  # of x, y, z, and t 
+            z = np.append( z, pos[2] )                  # to their respective
+            t = np.append( t, pos[3] )                  # arrays.
             
         except KeyboardInterrupt:
+            print( '' )                                 # Start with a newline for aesthetics
+            
+            # Store data points in text file
+            storeData( (x, y, z, t) )                   # Zip into one list
+            
             # Setup MayaVI environment
             scene = mlab.figure( size=(1000, 800) )     # Create window
             generate_cartesian_volume( scene )          # Generate mesh of volume
             STLfile = "trackforMoe.stl"                 # Path to STL file
-            read_STL( scene, STLfile, 'staticMesh' )    # Read STL file
+##            read_STL( scene, STLfile, 'staticMesh' )    # Read STL file
 
             # Draw
             nodes = mlab.points3d( x, y, z,             # ...
