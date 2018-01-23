@@ -474,10 +474,10 @@ def compute_coordinate():
                         'eps':1e-8, 'factor':0.001})                # Algorithm (aka LMA)
 
     # Store solution in array
-    position = np.array( (sol.x[0]*1000,
-                          sol.x[1]*1000,
-                          sol.x[2]*1000,
-                          clock()       ), dtype='float64' )
+    position = np.array( (sol.x[0]*1000,                            # x-axis
+                          sol.x[1]*1000,                            # y-axis
+                          sol.x[2]*1000,                            # z-axis
+                          clock()       ), dtype='float64' )        # time
 
     # Check value
     if( position[2] < 0 ): position[2] = -1*position[2]             # Make sure z-value
@@ -511,7 +511,7 @@ def storeData( data ):
         - data: A list containing all the computed co-ordinate points
     '''
     
-    print( "Storing data log under data.txt" )
+    print( "Storing data log under data.txt ..." ) ,
 
     # Unzip data into x, y, z
     x, y, z, t = data[0], data[1], data[2], data[3]
@@ -537,11 +537,11 @@ def storeData( data ):
         os.makedirs(dst)
 
     # Write into file
-    for i in range( 0, len(x) ):
-            with open( dataFile, "a" ) as f:
+    with open( dataFile, "a" ) as f:
+        for i in range( 0, len(x) ):
                 f.write(str(x[i]) + "," + str(y[i]) + "," + str(z[i]) + "," + str(t[i]) + "\n")
 
-    print( "DONE!" )
+    print( "SUCCESS!" )
 
 # --------------------------
 
@@ -668,8 +668,9 @@ mode = raw_input(">\ ")                                 # Wait for user input
 # --------------------------------------------------------------------------------------
 
 print( "\n******************************************" )
-print( "*NOTE: Press Ctrl-C to save data and exit." )
+print( "*NOTE: Press Ctrl-C to save data and exit."   )
 print( "******************************************\n" )
+sleep( 1.0 )                                            # Allow user to read note
 clock()                                                 # Call clock() for accurate time readings
 
 # If "Point-by-Point" mode was selected:
