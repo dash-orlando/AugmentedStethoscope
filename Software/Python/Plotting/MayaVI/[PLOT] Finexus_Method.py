@@ -9,12 +9,13 @@
 *       (3) 3D Static Plot (Data Sampling)
 *       (4) 3D Continuous Live Plot
 *
-* VERSION: 1.2
+* VERSION: 1.2.1
 *   - MODIFIED: Use MayaVI to perform plotting since it allows
 *               for greater flexibility and drastically
 *               improves plot update time (does NOT rerender plot
 *               at each iteration ).
 *   - ADDED   : Store data into a log file
+*   - FIXED   : Corrected K values for multiple magnets
 *
 * KNOWN ISSUES:
 *   - Minor loss in accuracy in 3D space
@@ -23,7 +24,7 @@
 * LAST CONTRIBUTION DATE    :   Oct. 17th, 2017 Year of Our Lord
 * 
 * AUTHOR                    :   Mohammad Odeh 
-* LAST CONTRIBUTION DATE    :   Jan. 23rd, 2018 Year of Our Lord
+* LAST CONTRIBUTION DATE    :   Jan. 24rd, 2018 Year of Our Lord
 *
 '''
 
@@ -623,9 +624,10 @@ global initialGuess
 
 CALIBRATING = True                                      # Boolean to indicate that device is calibrating
 
-##K           = 7.27e-8                                   # Small magnet's constant   (K) || Units { G^2.m^6}
-K           = 1.09e-6                                   # Big magnet's constant     (K) || Units { G^2.m^6}
-##K           = 2.46e-7                                   # Spherical magnet's constant     (K) || Units { G^2.m^6}
+##K           = 1.09e-6                                   # Big magnet's constant             (K) || Units { G^2.m^6}
+##K           = 2.46e-7                                   # Spherical magnet's constant       (K) || Units { G^2.m^6}
+K           = 1.87e-7                                   # Small magnet's constant (w\hole)  (K) || Units { G^2.m^6}
+##K           = 1.29e-7                                   # Small magnet's constant  (flat)   (K) || Units { G^2.m^6}
 dx          = 1e-7                                      # Differential step size (Needed for solver)
 calcPos     = []                                        # Empty array to hold calculated positions
 
