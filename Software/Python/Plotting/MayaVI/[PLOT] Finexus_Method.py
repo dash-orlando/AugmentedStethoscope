@@ -4,27 +4,28 @@
 * https://ubicomplab.cs.washington.edu/pdfs/finexus.pdf
 *
 *   - 3 Modes of operations
-*       (1) Point-by-Point (Data Sampling)  [DISABLED]
+*       (1) Point-by-Point (Data Sampling)
 *       (2) 2D Static Plot (Data Sampling)
 *       (3) 3D Static Plot (Data Sampling)
 *       (4) 3D Continuous Live Plot
 *
-* VERSION: 1.2.1
+* VERSION: 1.3
 *   - MODIFIED: Use MayaVI to perform plotting since it allows
 *               for greater flexibility and drastically
 *               improves plot update time (does NOT rerender plot
 *               at each iteration ).
 *   - ADDED   : Store data into a log file
 *   - FIXED   : Corrected K values for multiple magnets
+*   - ADDED   : Point-by-point
 *
 * KNOWN ISSUES:
 *   - Minor loss in accuracy in 3D space
 *
 * AUTHOR                    :   Edward Nichols
-* LAST CONTRIBUTION DATE    :   Oct. 17th, 2017 Year of Our Lord
+* LAST CONTRIBUTION DATE    :   Jan. 25th, 2017 Year of Our Lord
 * 
 * AUTHOR                    :   Mohammad Odeh 
-* LAST CONTRIBUTION DATE    :   Jan. 24rd, 2018 Year of Our Lord
+* LAST CONTRIBUTION DATE    :   Jan. 25th, 2018 Year of Our Lord
 *
 '''
 
@@ -32,6 +33,7 @@
 import  numpy                   as      np              # Import Numpy
 from    mayavi                  import  mlab            # Data visualization
 from    time                    import  sleep, clock    # Sleep for stability, clock for profiling
+from    time                    import  time            # Time for timing (like duh!)
 from    scipy.optimize          import  root            # Solve System of Eqns for (x, y, z)
 from    scipy.linalg            import  norm            # Calculate vector norms (magnitude)
 from    usbProtocol             import  createUSBPort   # Create USB port (serial comm. w\ Arduino)
@@ -414,9 +416,9 @@ def read_STL( fig, STLfile, meshMode ):
         if( meshMode=='staticMesh' ):
             # 3D Track Mesh
             # Translate mesh to origin
-            x = x + (25.00)/scaleFactor
-            y = y + (00.00)/scaleFactor
-            z = z + (50.00)/scaleFactor
+            x = x + (75.00)/scaleFactor
+            y = y + (87.50)/scaleFactor
+            z = z + ( 50.00)/scaleFactor
             
         elif( meshMode=='dynamicMesh' ):
             # Standarized Patient Mesh
@@ -460,6 +462,7 @@ def compute_coordinate():
     '''
 
     global initialGuess                                             # Modify from within function
+    start = time()                                                  # Call clock() for accurate time readings
 
     # Data acquisition
     (H1, H2, H3, H4, H5, H6) = getData(IMU)                         # Get data from MCU
@@ -478,7 +481,7 @@ def compute_coordinate():
     position = np.array( (sol.x[0]*1000,                            # x-axis
                           sol.x[1]*1000,                            # y-axis
                           sol.x[2]*1000,                            # z-axis
-                          clock()       ), dtype='float64' )        # time
+                          time()-start  ), dtype='float64' )        # time
 
     # Check value
     if( position[2] < 0 ): position[2] = -1*position[2]             # Make sure z-value
@@ -626,8 +629,8 @@ CALIBRATING = True                                      # Boolean to indicate th
 
 ##K           = 1.09e-6                                   # Big magnet's constant             (K) || Units { G^2.m^6}
 ##K           = 2.46e-7                                   # Spherical magnet's constant       (K) || Units { G^2.m^6}
-K           = 1.87e-7                                   # Small magnet's constant (w\hole)  (K) || Units { G^2.m^6}
-##K           = 1.29e-7                                   # Small magnet's constant  (flat)   (K) || Units { G^2.m^6}
+##K           = 1.87e-7                                   # Small magnet's constant (w\hole)  (K) || Units { G^2.m^6}
+K           = 1.29e-7                                   # Small magnet's constant  (flat)   (K) || Units { G^2.m^6}
 dx          = 1e-7                                      # Differential step size (Needed for solver)
 calcPos     = []                                        # Empty array to hold calculated positions
 
@@ -667,17 +670,70 @@ print( "4. 3D Continuous Live Plot." )                  # ...
 
 mode = raw_input(">\ ")                                 # Wait for user input
 
-# --------------------------------------------------------------------------------------
-
 print( "\n******************************************" )
 print( "*NOTE: Press Ctrl-C to save data and exit."   )
 print( "******************************************\n" )
 sleep( 1.0 )                                            # Allow user to read note
-clock()                                                 # Call clock() for accurate time readings
+#clock()                                                # Call clock() for accurate time readings
+
+# --------------------------------------------------------------------------------------
 
 # If "Point-by-Point" mode was selected:
 if ( mode == '1' ):
-    quit()
+
+    x, y = np.array([]), np.array([])                   # Initialize empty numpy arrays
+    z, t = np.array([]), np.array([])                   # for x, y, z, and t
+    
+    while( True ):                                      # Loop 43va
+        try:
+            print( "Place magnet at desired location." )# Inform user to place magnet
+            sleep( 1.0 )                                # Allow user time to react
+
+            var = raw_input( "Ready? (Y/N): " )         # Prompt user if ready or nah!
+
+            if( var=='Y' or var=='y' ):
+
+                print( "Collecting data for 20s..." )
+                
+                startTime = time()
+                while( time() - startTime < 20 ):
+                    # Update
+                    pos = compute_coordinate()          # Get updated magnet position
+                    
+                    x = np.append( x, pos[0] )          # Append computed values
+                    y = np.append( y, pos[1] )          # of x, y, z, and t 
+                    z = np.append( z, pos[2] )          # to their respective
+                    t = np.append( t, pos[3] )          # arrays.
+
+                print( "SUCCESS!" )                     # Inform that points were captured.
+
+            else: pass                                  # In case user is not ready, repeat loop
+            
+        except KeyboardInterrupt:
+            print( '' )                                 # Start with a newline for aesthetics
+            
+            # Store data points in text file
+            storeData( (x, y, z, t) )                   # Zip into one list
+            
+            # Setup MayaVI environment
+            scene = mlab.figure( size=(1000, 800) )     # Create window
+            generate_cartesian_volume( scene )          # Generate mesh of volume
+
+            # Draw
+            nodes = mlab.points3d( x, y, z,             # ...
+                                   figure = scene,      # Insert collected data to plot
+                                   scale_factor=0.5 )   # ...
+
+            # Impose properties
+            colors = 1.0 * (x + y)/(max(x)+max(y))      # Rainbow color the plotted points
+            nodes.glyph.scale_mode = 'scale_by_vector'
+            nodes.mlab_source.dataset.point_data.scalars = colors
+
+            mlab.show()                                 # Show figure
+
+            break                                       # Break from loop!
+    
+# --------------------------------------------------------------------------------------
 
 # If "2D Static Plot" mode was selected:
 if ( mode == '2' ):
@@ -695,7 +751,9 @@ if ( mode == '2' ):
             listly = (x, y)                             # Pack numpy array in a list
             plot_2D( listly )                           # Plot!
             break                                       # Break out of loop.
-            
+
+# --------------------------------------------------------------------------------------
+
 # If "3D Static Plot" mode was selected:
 if ( mode == '3' ):
     
@@ -721,8 +779,8 @@ if ( mode == '3' ):
             # Setup MayaVI environment
             scene = mlab.figure( size=(1000, 800) )     # Create window
             generate_cartesian_volume( scene )          # Generate mesh of volume
-            STLfile = "trackforMoe.stl"                 # Path to STL file
-##            read_STL( scene, STLfile, 'staticMesh' )    # Read STL file
+            STLfile = "butts.stl"                       # Path to STL file
+            read_STL( scene, STLfile, 'staticMesh' )    # Read STL file
 
             # Draw
             nodes = mlab.points3d( x, y, z,             # ...
