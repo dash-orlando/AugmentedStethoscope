@@ -681,15 +681,15 @@ void continueRecording()
     memcpy( buffer + 256, queue_recMic.readBuffer(), 256 );
     queue_recMic.freeBuffer();                                                                                  // write all 512 bytes to the SD card
     frec.write( buffer, 512 );
-    bool beatCaptured = waveAmplitudePeaks();                                                                   // write HR and time to file at each heart beat
-    if ( beatCaptured )
-    {
-      lineOut = String( heartRateI, DEC ) + "," + String( timeStamp, DEC ) + "\r\n";
-      hRate.print( lineOut );
-      //txFr = sf1.Get();                                                                                         // get values from existing TX data frame
-      //txFr.DataString = String( heartRateI );                                                                   // update data-string value with heartrate
-      //sf1.Set( txFr );                                                                                          // set TX data frame with new heartate value
-    }
+    //bool beatCaptured = waveAmplitudePeaks();                                                                   // write HR and time to file at each heart beat
+    //if ( beatCaptured )
+    //{
+    //  lineOut = String( heartRateI, DEC ) + "," + String( timeStamp, DEC ) + "\r\n";
+    //  hRate.print( lineOut );
+    //  //txFr = sf1.Get();                                                                                         // get values from existing TX data frame
+    //  //txFr.DataString = String( heartRateI );                                                                   // update data-string value with heartrate
+    //  //sf1.Set( txFr );                                                                                          // set TX data frame with new heartate value
+    //}
   }
 } // End of continueRecording()
 // ==============================================================================================================
