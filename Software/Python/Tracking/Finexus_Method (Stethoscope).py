@@ -344,9 +344,15 @@ draw.polygon( [loc['S0'], loc['S1'], loc['S2'],         # Populate display with 
 disp.display()                                          # Render drawings on display buffer
 
 # Setup BT communications
-BT_addr = "00:06:66:8C:9C:2E"
+BT_addr = { "AS004": "00:06:66:D0:C9:A5",
+            "AS005": "00:06:66:D0:C9:AE" }
 BT_port = 1
-rfObject = createBTPort( BT_addr, BT_port )
+
+try:
+    rfObject = createBTPort( BT_addr[ "AS004" ], BT_port )
+except:
+    rfObject = createBTPort( BT_addr[ "AS005" ], BT_port )
+    
 statusEnquiry( rfObject )
 global stethON
 stethON = False
