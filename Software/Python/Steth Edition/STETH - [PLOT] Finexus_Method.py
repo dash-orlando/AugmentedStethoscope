@@ -515,7 +515,7 @@ def compute_coordinate():
     else:
         initialGuess = np.array( (sol.x[0]+dx, sol.x[1]+dx,         # Update the initial guess as the
                                   sol.x[2]+dx), dtype='float64' )   # current position and feed back to LMA
-                                 
+        trigSteth( HNorm )
         return( position )                                          # Return position
             
 # --------------------------
@@ -593,6 +593,7 @@ def animate():
             yield
 
         except KeyboardInterrupt:
+            closeBTPort( steth )                        # Close BT port at exit
             mlab.close( all=True )                      # Close all figures and scenes
             
 # --------------------------
@@ -643,29 +644,32 @@ def trigSteth( norms ):
 
     crntIMU = arr[0]                                    # Update current IMU
 
-    if( crntIMU != prvsIMU ):                           # Check if we are in the vicinity of the same IMU or not
+    if( crntIMU != lastIMU ):                           # Check if we are in the vicinity of the same IMU or not
         
         if( crntIMU == 0):
-            # Do stuff!
-            return
+            statusEnquiry( steth )
+            
         elif( crntIMU == 1):
-            # Do stuff!
-            return
+            statusEnquiry( steth )
+            
         elif( crntIMU == 2):
-            # Do stuff!
-            return
+            statusEnquiry( steth )
+            
         elif( crntIMU == 3):
-            # Do stuff!
-            return
+            statusEnquiry( steth )
+            
         elif( crntIMU == 4):
-            # Do stuff!
-            return
+            statusEnquiry( steth )
+            
         elif( crntIMU == 5):
-            # Do stuff!
-            return
+            statusEnquiry( steth )
+            
 
     else:
-        return
+        pass
+
+    lastIMU = crntIMU
+    return
 # --------------------------
         
 # ************************************************************************
@@ -892,5 +896,3 @@ elif ( mode == '4' ):
     # Let the show begin!
     animate()
     mlab.show()
-
-closeBTPort( steth )                                    # Close BT port at exit
