@@ -223,11 +223,11 @@ def LHS( root, K, norms ):
     #       the x/y/z direction should I march to get
     #       back to sensor1 (origin)?
     r1 = float( ( (x+0.000)**2. + (y+0.000)**2. + (z+0.00)**2. )**(1/2.) )  # Sensor 1 (ORIGIN)
-    r2 = float( ( (x+0.000)**2. + (y-0.125)**2. + (z+0.00)**2. )**(1/2.) )  # Sensor 2
-    r3 = float( ( (x-0.100)**2. + (y+0.050)**2. + (z+0.00)**2. )**(1/2.) )  # Sensor 3
-    r4 = float( ( (x-0.100)**2. + (y-0.175)**2. + (z+0.00)**2. )**(1/2.) )  # Sensor 4
-    r5 = float( ( (x-0.200)**2. + (y+0.000)**2. + (z+0.00)**2. )**(1/2.) )  # Sensor 5
-    r6 = float( ( (x-0.200)**2. + (y-0.125)**2. + (z+0.00)**2. )**(1/2.) )  # Sensor 6
+    r2 = float( ( (x+0.050)**2. + (y-.0875)**2. + (z+0.00)**2. )**(1/2.) )  # Sensor 2
+    r3 = float( ( (x+0.000)**2. + (y-0.175)**2. + (z+0.00)**2. )**(1/2.) )  # Sensor 3
+    r4 = float( ( (x-0.075)**2. + (y-0.175)**2. + (z+0.00)**2. )**(1/2.) )  # Sensor 4
+    r5 = float( ( (x-0.125)**2. + (y-.0875)**2. + (z+0.00)**2. )**(1/2.) )  # Sensor 5
+    r6 = float( ( (x-0.075)**2. + (y+0.000)**2. + (z+0.00)**2. )**(1/2.) )  # Sensor 6
 
     # Construct the equations
     Eqn1 = ( K*( r1 )**(-6.) * ( 3.*( z/r1 )**2. + 1 ) ) - norms[0]**2.     # Sensor 1
@@ -274,12 +274,12 @@ def findIG( magFields ):
     # Mat=      :          :
     #     \     :          :
     #      \ sensor 6: (x, y, z)
-    IMU_pos = np.array(((0.0  , 0.0  ,   0.0) ,
-                        (0.0  , 0.125,   0.0) ,
-                        (0.100,-0.050,   0.0) ,
-                        (0.100, 0.175,   0.0) ,
-                        (0.200, 0.0  ,   0.0) ,
-                        (0.200, 0.125,   0.0)), dtype='float64')
+    IMU_pos = np.array(((0.000, 0.000,   0.0) ,
+                        (-0.05, .0875,   0.0) ,
+                        (0.000, 0.175,   0.0) ,
+                        (0.075, 0.175,   0.0) ,
+                        (0.125, .0875,   0.0) ,
+                        (0.075, 0.000,   0.0)), dtype='float64')
 
     # Read current magnetic field from MCU
     (H1, H2, H3, H4, H5, H6) = magFields
@@ -302,7 +302,7 @@ def findIG( magFields ):
 
 # --------------------------
 
-def generate_cartesian_volume( fig, length = 250, spacing = 10 ):
+def generate_cartesian_volume( fig, length = 300, spacing = 100 ):
     '''
     Generates a meshed cartesian volume that encapsulates the ROI.
     
@@ -406,7 +406,7 @@ def read_STL( fig, STLfile, meshMode ):
     # Open STL file and read contents
     with open( STLfile,'r' ) as f:
 
-        scaleFactor = 1.0                   # Define a scaling factor (if needed)
+        scaleFactor = 1.5                   # Define a scaling factor (if needed)
         for line in f:                      # Read line-by-line
             strarray=line.split()           # Split constituent parts into seperate entities
             if( strarray[0]=='vertex' ):    # Extract vertices
@@ -419,23 +419,20 @@ def read_STL( fig, STLfile, meshMode ):
             # Translate mesh to origin
             x = x + (75.00)/scaleFactor
             y = y + (87.50)/scaleFactor
-            z = z + ( 50.00)/scaleFactor
+            z = z + (50.00)/scaleFactor
             
         elif( meshMode=='dynamicMesh' ):
+            # Rotate STL mesh
+            temp = np.copy(y)
+            y = np.copy(x)
+            x = -1*temp
+            z = -1.0*z
+
             # Standarized Patient Mesh
             # Translate mesh from origin to nipple (yay!)
-##            x = x + (275.00)/scaleFactor
-##            y = y - (125.00)/scaleFactor
-##            z = z - (150.00)/scaleFactor
-            x = x + (150.00)/scaleFactor
-            y = y - ( 25.00)/scaleFactor
-##            z = z - ( 50.00)/scaleFactor
-
-            # Rotate STL mesh
-##            temp = np.copy(y)
-##            y = -1*np.copy(z)
-##            z = temp
-            z = -1.0*z
+            x = x + (125.00)/scaleFactor
+            y = y + ( 85.00)/scaleFactor
+            z = z - ( 50.00)/scaleFactor
 
         else: raise Exception
         
@@ -682,8 +679,8 @@ global initialGuess
 
 CALIBRATING = True                                      # Boolean to indicate that device is calibrating
 
-##K           = 1.09e-6                                   # Big magnet's constant             (K) || Units { G^2.m^6}
-K           = 5.55e-6                                   # Cylindrical magnet's constant             (K) || Units { G^2.m^6}
+K           = 1.09e-6                                   # Big magnet's constant             (K) || Units { G^2.m^6}
+##K           = 5.55e-6                                   # Cylindrical magnet's constant             (K) || Units { G^2.m^6}
 ##K           = 2.46e-7                                   # Spherical magnet's constant       (K) || Units { G^2.m^6}
 ##K           = 1.87e-7                                   # Small magnet's constant (w\hole)  (K) || Units { G^2.m^6}
 ##K           = 1.29e-7                                   # Small magnet's constant  (flat)   (K) || Units { G^2.m^6}
