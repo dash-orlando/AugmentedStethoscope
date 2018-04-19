@@ -1,4 +1,7 @@
 '''
+*
+* NOTE: REQUIRES A COMPLEMENTARY STETHOSCOPE TO FUNCTION
+*
 * Position tracking of magnet based on Finexus
 * https://ubicomplab.cs.washington.edu/pdfs/finexus.pdf
 *
@@ -8,23 +11,18 @@
 *       (3) 3D Static Plot (Data Sampling)
 *       (4) 3D Continuous Live Plot
 *
-* VERSION: 1.3
-*   - MODIFIED: Use MayaVI to perform plotting since it allows
-*               for greater flexibility and drastically
-*               improves plot update time (does NOT rerender plot
-*               at each iteration ).
-*   - ADDED   : Store data into a log file
-*   - FIXED   : Corrected K values for multiple magnets
-*   - ADDED   : Point-by-point
+* VERSION: 1.0
+*   - ADDED   : Define ROI where specific specific sounds
+*               are being simulated.
 *
 * KNOWN ISSUES:
-*   - Minor loss in accuracy in 3D space
+*   - Non atm
 *
 * AUTHOR                    :   Edward Nichols
 * LAST CONTRIBUTION DATE    :   Jan. 25th, 2017 Year of Our Lord
 * 
 * AUTHOR                    :   Mohammad Odeh 
-* LAST CONTRIBUTION DATE    :   Jan. 25th, 2018 Year of Our Lord
+* LAST CONTRIBUTION DATE    :   Apr. 19th, 2018 Year of Our Lord
 *
 '''
 
@@ -406,7 +404,7 @@ def read_STL( fig, STLfile, meshMode ):
     # Open STL file and read contents
     with open( STLfile,'r' ) as f:
 
-        scaleFactor = 1.5                   # Define a scaling factor (if needed)
+        scaleFactor = 1.25                  # Define a scaling factor (if needed)
         for line in f:                      # Read line-by-line
             strarray=line.split()           # Split constituent parts into seperate entities
             if( strarray[0]=='vertex' ):    # Extract vertices
@@ -512,7 +510,7 @@ def compute_coordinate():
     else:
         initialGuess = np.array( (sol.x[0]+dx, sol.x[1]+dx,         # Update the initial guess as the
                                   sol.x[2]+dx), dtype='float64' )   # current position and feed back to LMA
-        trigSteth( HNorm )
+        trigSteth( position )
         return( position )                                          # Return position
             
 # --------------------------
@@ -633,40 +631,86 @@ def plot_2D( points, a=0, b=301 ):
             
 # --------------------------
 
-def trigSteth( norms ):
-    global stethON, lastIMU
-    sort = argsort( norms )                             # Sort the norms
-    sort.reverse()                                      # Arrange from highest ro lowest
-    arr = bubbleSort(sort, 1)                           # Get the first highest IMU
+def trigSteth( pos ):
+    global stethON, lastROI
+    x, y, z, _ = pos                                    # Unpack position
 
-    crntIMU = arr[0]                                    # Update current IMU
+    # __START__: Get ROI
+    # Region 2
+    if(
+        (-40<=x  and x<=-20) and
+        ( 80<=y  and y<=110) and
+        (z<100)
+        ):
+        crntROI = 2
 
-    if( crntIMU != lastIMU ):                           # Check if we are in the vicinity of the same IMU or not
+    # Region 3
+    elif( (-10<=x and x<=10) and
+          (90<=y and y<=120) and
+          (z<120)
+        ):
+        crntROI = 3
+
+    # Region 4
+    elif(
+          ( 25<=x and x<=45 ) and
+          ( 85<=y and y<=115) and
+          (z<120)
+        ):
+        crntROI = 4
+
+    # Region 5
+    elif(
+          ( 55<=x and x<=75 ) and
+          (110<=y and y<=150) and
+          (z<120)
+        ):
+        crntROI = 5
+
+    # Region 6
+    elif(
+          ( 50<=x and x<=85 ) and
+          (160<=y and y<=180) and
+          (z<120)
+        ):
+        crntROI = 6
+
+    else: crntROI = 0
+    # __END__: Get ROI
+
+    # __START__: Send byte
+    if( crntROI != lastROI ):                           # Check if we need to send a byte
         
-        if( crntIMU == 0):
-            statusEnquiry( steth )
-            
-        elif( crntIMU == 1):
-            statusEnquiry( steth )
-            
-        elif( crntIMU == 2):
-            statusEnquiry( steth )
-            
-        elif( crntIMU == 3):
-            statusEnquiry( steth )
-            
-        elif( crntIMU == 4):
-            statusEnquiry( steth )
-            
-        elif( crntIMU == 5):
-            statusEnquiry( steth )
-            
+        if( crntROI == 0):
+            print( "NOT INSIDE ANY REGION" )
+##            statusEnquiry( steth )
 
-    else:
-        pass
+        elif( crntROI == 2):
+            print( "We are in region #2" )
+            statusEnquiry( steth )
+            
+        elif( crntROI == 3):
+            print( "We are in region #3" )
+            statusEnquiry( steth )
+            
+        elif( crntROI == 4):
+            print( "We are in region #4" )
+            statusEnquiry( steth )
+            
+        elif( crntROI == 5):
+            print( "We are in region #5" )
+            statusEnquiry( steth )
+            
+        elif( crntROI == 6):
+            print( "We are in region #6" )
+            statusEnquiry( steth )
+            
+    else: pass
+    # __END__: Send byte
+    
+    lastROI = crntROI                                   # Update lastROI with the current one
 
-    lastIMU = crntIMU
-    return
+    return                                              # Exit function
 # --------------------------
         
 # ************************************************************************
@@ -732,7 +776,7 @@ except Exception as e:
     sleep( 2.5 )
     quit()  
 
-lastIMU = ''                                            # Start an empty variable for the last recorded IMU
+lastROI = 0                                             # Start an empty variable for the last recorded IMU
 
 # ************************************************************************
 # =========================> MAKE IT ALL HAPPEN <=========================
