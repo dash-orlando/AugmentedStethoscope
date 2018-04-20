@@ -188,6 +188,11 @@ void parseBtByte( String fn )
         startRecording( recString );
       break;
       
+      case EDMSYN :
+        // EDMSYN : Start Augmenting Early Diastolic Heart Murmur
+        fileName = EDMSYNBlend(fileName);
+      break;
+      
       default :
         Serial.print( (char)inByte );
       break;
