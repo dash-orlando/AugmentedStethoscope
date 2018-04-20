@@ -66,8 +66,8 @@
   
  } // End of KOROTBlend() function
 
-  //
- // *** Blend Recorded, Korotkoff sound
+ //
+ // *** Blend Synthetic, Early Diastolic Murmur 
  //
  String EDMSYNBlend(String fileName)
  {
@@ -77,7 +77,46 @@
   Serial.println( fileName );
   return fileName;
   
- } // End of KOROTBlend() function
+ } // End of EDMSYNBlend() function
+
+ //
+ // *** Blend Synthetic, Asys... 
+ //
+ String ASYSYNBlend(String fileName)
+ {
+
+  fileName = ses.filePly7;
+  startBlending( fileName );                                                      // ...
+  Serial.println( fileName );
+  return fileName;
+  
+ } // End of ... function
+
+ //
+ // *** Blend Synthetic, Peject... 
+ //
+ String PEJECTBlend(String fileName)
+ {
+
+  fileName = ses.filePly8;
+  startBlending( fileName );                                                      // ...
+  Serial.println( fileName );
+  return fileName;
+  
+ } // End of ... function
+
+ //
+ // *** Blend Synthetic, Psplit... 
+ //
+ String PSPLITBlend(String fileName)
+ {
+
+  fileName = ses.filePly9;
+  startBlending( fileName );                                                      // ...
+  Serial.println( fileName );
+  return fileName;
+  
+ } // End of ... function
 
  //
  // *** Augment BP Reading

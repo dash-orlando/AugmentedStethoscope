@@ -55,7 +55,7 @@ byte STE[] = { 0x53, 0x54, 0x45, 0x00 };        // Stethoscope Device IDs
 #define         EDMSYN            0x33          // ...........................                                        [resp: ACK | NAK]
 #define         ASYSYN            0x34          // ...........................                                        [resp: ACK | NAK]
 #define         PEJECT            0x35          // ...........................                                        [resp: ACK | NAK]
-#define         SSPLIT            0x36          // ...........................                                        [resp: ACK | NAK]                                        
+#define         PSPLIT            0x36          // ...........................                                        [resp: ACK | NAK]                                        
 
 
 

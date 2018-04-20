@@ -192,6 +192,22 @@ void parseBtByte( String fn )
         // EDMSYN : Start Augmenting Early Diastolic Heart Murmur
         fileName = EDMSYNBlend(fileName);
       break;
+
+      case ASYSYN :
+        // ASYSYN : ...
+        fileName = ASYSYNBlend(fileName);
+      break;
+
+      case PEJECT :
+        // PEJECT : ...
+        fileName = PEJECTBlend(fileName);
+      break;
+
+      case PSPLIT :
+        // PSPLIT : ...
+        fileName = PSPLITBlend(fileName);
+      break;
+
       
       default :
         Serial.print( (char)inByte );
