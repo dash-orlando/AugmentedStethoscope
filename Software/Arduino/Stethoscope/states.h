@@ -15,14 +15,13 @@
  
  enum State
 {
-  CONNECTED, DISCONNECTED, RECORDING, PLAYING, PASSTHRU, DETECTING, AUGMENTING, STARTING, CONTINUING, STOPPING, STANDBY, READY, NOTREADY
+  CONNECTED, DISCONNECTED, RECORDING, PLAYING, PASSTHRU, DETECTING, STARTING, CONTINUING, STOPPING, STANDBY, READY, NOTREADY
 };
 
 State     connectState    = DISCONNECTED;
 State     recordState     = STANDBY;
 State     passthruState   = PASSTHRU;
 State     HBDetectState   = STANDBY;
-State     BPAugmentState  = STANDBY;
 State     blendState      = STANDBY;
 State     readyState;
 
@@ -48,9 +47,6 @@ String stateToText( int state )             // for Serial monitor diagnostics
       break;
     case DETECTING :
       value = "DETECTING";
-      break;
-    case AUGMENTING :
-      value = "AUGMENTING";
       break;
     case STARTING   :
       value = "STARTING";
@@ -87,7 +83,6 @@ String stateToText( int state )             // for Serial monitor diagnostics
  *          = 3   Continue Tracking Mic Stream
  *          = 4   Continue Audio Pass-through
  *          = 5   Continue Blending
- *          = 6   Continue BP Augmentation
  *
  */
 
