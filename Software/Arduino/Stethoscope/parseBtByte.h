@@ -208,6 +208,7 @@ void parseBtByte( String fn )
 
       case PSPLIT :
         // PSPLIT : ...
+        fileName = ses.filePly9;
         fileName = PSPLITBlend(fileName);
       break;
 
