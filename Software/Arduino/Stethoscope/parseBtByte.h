@@ -157,25 +157,6 @@ void parseBtByte( String fn )
       case EHBREC   :
         // EHBREC   : Blending of Recorded, Exercised Heart Beat
         EHBRBlend();
-      break;  
-      case STARTBPNORM :
-        // STARTBPNORM : Start Augmenting BP Heart Sounds (normal rate)
-        ses.heartRate = normalSinus;
-        startAugmentingBP();
-      break;     
-      case STARTBPBRADY :
-        // STARTBPBRADY : Start Augmenting BP Heart Sounds (slow rate)
-        ses.heartRate = bradycardia;
-        startAugmentingBP();
-      break;     
-      case STARTBPTACHY :
-        // STARTBPTACHY : Start Augmenting BP Heart Sounds (rapid rate)
-        ses.heartRate = tachycardia;
-        startAugmentingBP();
-      break;     
-      case STOPBPALL :
-        // STOPBPALL : Stop Augmenting BP Heart Sounds (return to passthrough)
-        stopAugmentingBP();
       break;
       case KOROT :
         // KOROT : Start Augmenting KorotKoff Sound
