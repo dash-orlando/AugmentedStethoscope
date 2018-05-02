@@ -9,59 +9,27 @@
  */
 
 
- //
- // *** Blend Synthetic, Normal Heart Beat
- //
- void NHBSBlend()
- {
-  
-  startBlending( ses.filePly1 );                                                      // Blending of a Synthetic, Normal Heart Beat
-  
- } // End of NHBSBlend() function
+// ==============================================================================================================
+// Blending Functions
+// 
+// Michael Xynidis
+// Fluvio L Lobo Fenoglietto 05/02/2018
+// ============================================================================================================== //
 
+// old format, without continuous blending...
+void NHBSBlend(){ startBlending( ses.filePly1 ); }                                                                // Blending of a Synthetic, Normal Heart Beat
+void ESMSBlend(){ startBlending( ses.filePly2 ); }                                                                // Blending of a Synthetic, Early Systolic Heart Murmur
+void NHBRBlend(){ startBlending( ses.filePly3 ); }                                                                // Blending of a Recorded, Normal Heart Beat
+void EHBRBlend(){ startBlending( ses.filePly4 ); }                                                                // Blending of a Recorded, Exercised Heart Beat
 
- //
- // *** Blend Synthetic, Early Systolic Heart Mumur
- //
- void ESMSBlend()
- {
-  
-  startBlending( ses.filePly2 );                                                      // Blending of a Synthetic, Early Systolic Heart Murmur
-  
- } // End of ESMSBlend() function
-
- //
- // *** Blend Recorded, Normal Heart Beat
- //
- void NHBRBlend()
- {
-  
-  startBlending( ses.filePly3 );                                                      // Blending of a Recorded, Normal Heart Beat
-  
- } // End of NHBRBlend() function
-
-  //
- // *** Blend Recorded, Exercised Heart Beat
- //
- void EHBRBlend()
- {
-  
-  startBlending( ses.filePly4 );                                                      // Blending of a Recorded, Exercised Heart Beat
-  
- } // End of EHBRBlend() function
-
- //
- // *** Blend Recorded, Korotkoff sound
- //
- String KOROTBlend(String fileName)
- {
-
+// new format, with continuous blending
+String KOROTBlend(String fileName)                                                                                // Blending of a Recorded, Exercised Heart Beat
+{
   fileName = ses.filePly5;
-  startBlending( fileName );                                                      // Blending of a Recorded, Exercised Heart Beat
+  startBlending( fileName );                                                      
   Serial.println( fileName );
   return fileName;
-  
- } // End of KOROTBlend() function
+} // End of KOROTBlend() function
 
  //
  // *** Blend Synthetic, Early Diastolic Murmur 
