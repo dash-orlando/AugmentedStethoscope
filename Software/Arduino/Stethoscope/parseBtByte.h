@@ -9,21 +9,24 @@
  */
 
 
-//
-// *** Imports and Includes
-//
+// ==============================================================================================================
+// Import Libraries and/or Modules
+// ============================================================================================================== //
 
 #include  "DiagnosticFunctions.h"
 #include  "OperationalFunctions.h"
 #include  "DeviceSpecificFunctions.h"
 #include  "SimulationFunctions.h"
 
+// ==============================================================================================================
+// Display Byte
 //
-// *** displayByte
-//     This function translates and displays byte information on a connected serial monitor
-//     Serial monitors may be enabled for diagnostics
+// This function translates and displays byte information on a connected serial monitor
+// Serial monitors may be enabled for diagnostics
 //
-
+// Michael Xynidis
+// Fluvio L Lobo Fenoglietto 05/02/2018
+// ============================================================================================================== //
 
 void displayByte( byte byteValue )
 {
@@ -33,6 +36,25 @@ void displayByte( byte byteValue )
   Serial.print( byteValue, HEX );
   Serial.println( ']' );
 }
+
+// ==============================================================================================================
+// Display Byte
+//
+// This function prints the different states of the stethoscope
+//
+// Michael Xynidis
+// Fluvio L Lobo Fenoglietto 05/02/2018
+// ============================================================================================================== //
+
+void displayStatus()
+{
+  Serial.print( "(pre) readyState    : " );  Serial.println( stateToText( readyState     ) );
+  Serial.print( "(pre) connectState  : " );  Serial.println( stateToText( connectState   ) );
+  Serial.print( "(pre) recordState   : " );  Serial.println( stateToText( recordState    ) );
+  Serial.print( "(pre) passthruState : " );  Serial.println( stateToText( passthruState  ) );
+  Serial.print( "(pre) HBDetectState : " );  Serial.println( stateToText( HBDetectState  ) );
+} // End of displayState()
+
 
 //
 // *** parseBtByte
@@ -52,12 +74,12 @@ void parseBtByte( String fn )
 
     inByte = BTooth.read();                     // get incoming byte
     displayByte( inByte );
-    Serial.print( "(pre) readyState    : " );  Serial.println( stateToText( readyState     ) );
-    Serial.print( "(pre) connectState  : " );  Serial.println( stateToText( connectState   ) );
-    Serial.print( "(pre) recordState   : " );  Serial.println( stateToText( recordState    ) );
-    Serial.print( "(pre) passthruState : " );  Serial.println( stateToText( passthruState  ) );
-    Serial.print( "(pre) HBDetectState : " );  Serial.println( stateToText( HBDetectState  ) );
-    Serial.print( "(pre) BPAugmentState: " );  Serial.println( stateToText( BPAugmentState ) );
+    displayStatus();
+    //Serial.print( "(pre) readyState    : " );  Serial.println( stateToText( readyState     ) );
+    //Serial.print( "(pre) connectState  : " );  Serial.println( stateToText( connectState   ) );
+    //Serial.print( "(pre) recordState   : " );  Serial.println( stateToText( recordState    ) );
+    //Serial.print( "(pre) passthruState : " );  Serial.println( stateToText( passthruState  ) );
+    //Serial.print( "(pre) HBDetectState : " );  Serial.println( stateToText( HBDetectState  ) );
     switch ( inByte )
     {
       case ENQ :
@@ -194,12 +216,12 @@ void parseBtByte( String fn )
         Serial.print( (char)inByte );
       break;
     }
-    Serial.print( "(post) readyState    :  " ); Serial.println( stateToText( readyState     ) );
-    Serial.print( "(post) connectState  :  " ); Serial.println( stateToText( connectState   ) );
-    Serial.print( "(post) recordState   :  " ); Serial.println( stateToText( recordState    ) );
-    Serial.print( "(post) passthruState :  " ); Serial.println( stateToText( passthruState  ) );
-    Serial.print( "(post) HBDetectState :  " ); Serial.println( stateToText( HBDetectState  ) );
-    Serial.print( "(post) BPAugmentState:  " ); Serial.println( stateToText( BPAugmentState ) );
+    displayStatus();
+    //Serial.print( "(post) readyState    :  " ); Serial.println( stateToText( readyState     ) );
+    //Serial.print( "(post) connectState  :  " ); Serial.println( stateToText( connectState   ) );
+    //Serial.print( "(post) recordState   :  " ); Serial.println( stateToText( recordState    ) );
+    //Serial.print( "(post) passthruState :  " ); Serial.println( stateToText( passthruState  ) );
+    //Serial.print( "(post) HBDetectState :  " ); Serial.println( stateToText( HBDetectState  ) );
     delay( 10 );
 }
 
