@@ -8,20 +8,21 @@
  * 10/26/2016
  */
 
- 
- //
- // *** Send .WAV file
- //
- 
- void sendWav( String fn )
- {
-   char  filename[fn.length()+1];
-   fn.toCharArray( filename, sizeof( filename ) );
-   
-	 if ( connectState == CONNECTED )
-	 {
-	  if ( SD.exists( filename ) )
-	  {
+// ==============================================================================================================
+// Send WAV file
+// ...
+// 
+// Michael Xynidis --2016
+// ==============================================================================================================
+void sendWav( String fn )
+{
+  char  filename[fn.length()+1];
+  fn.toCharArray( filename, sizeof( filename ) );
+  
+  if ( connectState == CONNECTED )
+  {
+    if ( SD.exists( filename ) )
+    {
 	   Serial.print( "Sending '" );
 		 Serial.print( fn );
      Serial.print( "'.\n" );
@@ -40,6 +41,6 @@
     }
     rootDir = SD.open( "/" );
     printDirectory( rootDir, 1 );
-   }
- }
+  }
+}
 

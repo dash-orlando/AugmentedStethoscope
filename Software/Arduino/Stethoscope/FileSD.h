@@ -9,7 +9,9 @@
  */
 
 
+// ==============================================================================================================
 // Variables
+// ==============================================================================================================
 Sd2Card   card;
 SdVolume  volume;
 char      buffer[512];
@@ -18,7 +20,12 @@ int       type;
 float     size;
 File      rootDir;
 
-// Functions
+// ==============================================================================================================
+// SD Card Check
+// Check status of SD Card
+// 
+// Michael Xynidis --2016
+// ==============================================================================================================
 boolean sdCardCheck()
 {
   // Configure SPI for the audio shield pins
@@ -75,7 +82,12 @@ boolean sdCardCheck()
   return true;
 }
 
-
+// ==============================================================================================================
+// Print directoy
+// Print the informtion stored in the SD card
+// 
+// Michael Xynidis --2016
+// ==============================================================================================================
 void printDirectory( File dir, int numTabs )
 {
   int filesize = 0;
@@ -125,6 +137,13 @@ void printDirectory( File dir, int numTabs )
   }
 }
 
+
+// ==============================================================================================================
+// Load directory
+// ...
+// 
+// Michael Xynidis --2016
+// ==============================================================================================================
 int const arrayElements = 20;
 int const lcdRows       =  4;
 int       fileCount     =  0;
@@ -155,43 +174,21 @@ void loadDirectory( File dir )
     entry.close();
   }
 
-/*
-  lcd.clear();
-  boboPrint( 1, 0, " back       " );
-  boboPrint( 1, 1, "            " );
-  boboPrint( 1, 2, "            " );
-  boboPrint( 0, 3, "    >sound files<   " );
-  lcd.setCursor( 7, 0 );
-  lcd.write( 3 );
-
-  for ( int i = 1; i < lcdRows - 1; i++ )
-  {
-    boboPrint( 2, i, "            " );
-    boboPrint( 2, i, fileEntry[i-1] );
-  }
-  boboPrint( 15, 0, "L=Up " );
-  boboPrint( 15, 1, "M=Sel" );
-  boboPrint( 15, 2, "R=Dwn" );
-  
-  lcd.setCursor( 0, lcdPtr );
-  lcd.write( 1 );
-  // */
-
   Serial.print( "Confirm file count: [" );
   Serial.print( fileCount );
   Serial.println( "]" );
-//  for ( int i = 0; i < fileCount; i++ )
-//  {
-//    Serial.println( fileEntry[i] );
-//  }
   fileCount = 0;
 }
 
-
+// ==============================================================================================================
+// Send data through serial
+// ...
+// 
+// Michael Xynidis --2016
+// ==============================================================================================================
 void sendFileSerial( File  file )
 {
-//  File  file              = SD.open( filename );
-
+  
   int   dataSize          = file.size();
   int   headerSize        =    44;
   int   dataChunkSize     = dataSize + headerSize - 8;
@@ -242,7 +239,7 @@ void sendFileSerial( File  file )
   while( reading ) ;
 
   file.close();
- }
+}
 
 
 
