@@ -10,22 +10,6 @@
  * 10/27/2016
  */
 
- 
-#include "SerialFrame.h"
-
-//
-// *** Variables
-//
-
-SerialFrame sf1 = SerialFrame();
-
-Frame txFr = (Frame)
-  {
-    123,
-    STETHOSCOPE,
-    HEARTRATE,
-    "0"
-  };
 
 File          frec;
 File          hRate;
@@ -54,9 +38,15 @@ bool          soundTwo      = false;
 String        lineOut       = "";
 
 
+// ==============================================================================================================
+// Wave Amplitude Peaks
+// Amplitude Peak Detection and Heart Rate Approximation
 //
-// *** Adjust Microphone Gain Level
-//
+// The following function uses an amplitude peak detection
+// tool to approximate heart-rate
+// 
+// Michael Xynidis 11/12/2017
+// ==============================================================================================================
 void adjustMicLevel()
 {
   // TODO: read the peak_QrsMeter1 object and adjust sgtl5000_1.micGain()
