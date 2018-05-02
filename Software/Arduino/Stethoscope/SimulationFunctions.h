@@ -9,9 +9,6 @@
  */
 
 
-#include "BPCuffResponse.h"
-
-
  //
  // *** Blend Synthetic, Normal Heart Beat
  //
@@ -117,100 +114,5 @@
   return fileName;
   
  } // End of ... function
-
- //
- // *** Augment BP Reading
- //
-boolean startAugmentingBP()
-{
-  switch ( ses.heartRate )
-  {
-    case normalSinus :
-      SetRate( ses.heartRate );
-      BeginHB();
-      BPAugmentState  = AUGMENTING;
-      recordState     = STANDBY;
-      switchMode( 6 );
-      Serial.println( "Augmentation for BP reading STARTED." );
-      BTooth.write( ACK );
-      return true;
-    break;
-    case bradycardia :
-      SetRate( ses.heartRate );
-      BeginHB();
-      BPAugmentState  = AUGMENTING;
-      recordState     = STANDBY;
-      switchMode( 6 );
-      Serial.println( "Augmentation for BP reading STARTED." );
-      BTooth.write( ACK );
-      return true;
-    break;
-    case tachycardia :
-      SetRate( ses.heartRate );
-      BeginHB();
-      BPAugmentState  = AUGMENTING;
-      recordState     = STANDBY;
-      switchMode( 6 );
-      Serial.println( "Augmentation for BP reading STARTED." );
-      BTooth.write( ACK );
-      return true;
-    break;
-    default :
-      BPAugmentState  = STANDBY;
-      recordState     = PASSTHRU;
-      switchMode( 4 );
-      Serial.println( ses.heartRate );
-      Serial.println( "BP Augmentation called with invalid parameter." );
-      BTooth.write( NAK );
-      return false;
-    break;
-  }
-}
-
- //
- // *** Augment BP Reading
- //
-boolean stopAugmentingBP()
-{
-  EndHB();
-  BPAugmentState  = STANDBY;
-  recordState     = PASSTHRU;
-  //switchMode( 6 );
-  Serial.println( "Augmentation for BP reading STOPPED." );
-  BTooth.write( ACK );
-  return true;
-}
-
-
-void continueAugmentingBP()
-{
-  if ( BPAugmentState  == AUGMENTING )
-  {
-    if ( mixerLvL > 0.10 )
-    {
-    mixerLvL = mixerLvL - 0.00005;
-    mixer_allToSpk.gain( 0, mixerLvL );
-    mixer_allToSpk.gain( 1, mixerLvL );
-    mixer_allToSpk.gain( 2, (0.25 - mixerLvL) );
-    //Serial.println( mixerLvL );
-    }
-  }
-  else if ( BPAugmentState == STANDBY )
-  {
-    if ( mixerLvL < 1 )
-    {
-    mixerLvL = mixerLvL + 0.00005;
-    mixer_allToSpk.gain( 0, mixerLvL );                 // ...note that perhaps this channel was not needed at all...
-    mixer_allToSpk.gain( 1, mixerLvL );
-    mixer_allToSpk.gain( 2, (0.25 - mixerLvL) );
-    Serial.println( mixerLvL );
-    }
-    else if ( mixerLvL == 1)
-    {
-      switchMode( 4 );
-    }
-  }
-
-}
 
 
