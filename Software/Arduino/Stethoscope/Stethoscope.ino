@@ -71,7 +71,6 @@ void loop()
   if ( mode == 3 ) continueHeartBeatMonitoring();
   if ( mode == 4 ) continueAudioPassThrough();
   if ( mode == 5 ) continueBlending(fileName);
-  if ( mode == 6 ) continueAugmentingBP();
   
   // Clear the input byte variable
   inByte = 0x00;                                // this line of code may be unnecessary
