@@ -55,13 +55,14 @@ void displayStatus()
   Serial.print( "(pre) HBDetectState : " );  Serial.println( stateToText( HBDetectState  ) );
 } // End of displayState()
 
-
+// ==============================================================================================================
+// Parse Byte
 //
-// *** parseBtByte
-//     This function parses incoming bytes (or byte sequences) and calls/executes functions associated with such bytes
+// This function parses incoming bytes (or byte sequences) and calls/executes functions associated with such bytes
 //
-
-
+// Michael Xynidis
+// Fluvio L Lobo Fenoglietto 05/02/2018
+// ============================================================================================================== //
 void parseBtByte( String fn )
 {
     byte  inByte = 0x00;
@@ -72,7 +73,7 @@ void parseBtByte( String fn )
     Serial.print( "\nBTooth inbound queue, no. of bytes available: " ); 
     Serial.println( BTooth.available() );
 
-    inByte = BTooth.read();                     // get incoming byte
+    inByte = BTooth.read();                                                                                       // get incoming byte
     displayByte( inByte );
     displayStatus();
     //Serial.print( "(pre) readyState    : " );  Serial.println( stateToText( readyState     ) );
@@ -87,7 +88,7 @@ void parseBtByte( String fn )
         Serial.print( "readyState is " );      Serial.println( stateToText( readyState     ) );
         if ( readyState == READY )
         {
-          connectState  = CONNECTED;                                                                  // The ENQ command has to always be sent first
+          connectState  = CONNECTED;                                                                               // The ENQ command has to always be sent first
           Serial.println( "sending: ACK..." );
           BTooth.write( ACK );
         }
@@ -118,7 +119,14 @@ void parseBtByte( String fn )
         //  DELVOLATILE : Delete Volatile Directory
       break;
 
-      // Device-Specific Functions ==================================================================  //
+      // Operational Functions ====================================================================== //
+      case SENDRAW :
+        // SENDRAW : Send Raw Data from SD Card
+        Serial.println( "received: SENDRAW..." );
+        sendRAW( "ESMSYN.RAW" );
+      break;
+      
+      // Device-Specific Functions ================================================================== //
 	    case STARTREC :
         // STARTREC : Start Recording
         Serial.println( "received: STARTREC..." );

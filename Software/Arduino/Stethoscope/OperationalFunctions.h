@@ -9,6 +9,32 @@
  */
 
 // ==============================================================================================================
+// Send RAW file
+// ...
+// 
+// Fluvio L Lobo Fenoglietto 05/03/2018
+// ==============================================================================================================
+void sendRAW( String filename )
+{
+  char  filePly[fileName.length()+1];                                                                           // Conversion from string to character array
+  fileName.toCharArray( filePly, sizeof( filePly ) );
+  File dataFile = SD.open( filePly );
+  BTooth.write( ACK );
+  Serial.println("...Starting...");
+  int fileSize = dataFile.size();
+  Serial.println( fileSize );
+  if( dataFile )
+  {
+    while( dataFile.available() )
+    {
+      BTooth.write( dataFile.read() );
+    }
+    Serial.println("...completed...");
+    dataFile.close();
+  }
+} // End of sendRAW()
+
+// ==============================================================================================================
 // Send WAV file
 // ...
 // 
