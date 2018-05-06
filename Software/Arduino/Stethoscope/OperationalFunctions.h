@@ -14,21 +14,29 @@
 // 
 // Fluvio L Lobo Fenoglietto 05/03/2018
 // ==============================================================================================================
-void sendRAW( String filename )
+void sendRAW( String fileName )
 {
+  Serial.println( fileName );
   char  filePly[fileName.length()+1];                                                                           // Conversion from string to character array
   fileName.toCharArray( filePly, sizeof( filePly ) );
   File dataFile = SD.open( filePly );
   BTooth.write( ACK );
   Serial.println("...Starting...");
+  // determine the size of the file
   int fileSize = dataFile.size();
   Serial.println( fileSize );
+  
   if( dataFile )
   {
     while( dataFile.available() )
+    //for( int i=0; i < 100; i++ )
     {
-      BTooth.write( dataFile.read() );
+      byte inByte = dataFile.read();
+      Serial.println( inByte, HEX );
+      BTooth.write( inByte );
+      //BTooth.write( dataFile.read() );
     }
+    BTooth.write( "END" );
     Serial.println("...completed...");
     dataFile.close();
   }

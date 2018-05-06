@@ -123,7 +123,7 @@ void parseBtByte( String fn )
       case SENDRAW :
         // SENDRAW : Send Raw Data from SD Card
         Serial.println( "received: SENDRAW..." );
-        sendRAW( "ESMSYN.RAW" );
+        sendRAW( "KOROT.RAW" );
       break;
       
       // Device-Specific Functions ================================================================== //
