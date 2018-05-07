@@ -1,16 +1,17 @@
-/*
- * DeviceSpecificFunctions.h
- *
- * The following script comprises all of the functions used for the operation of the device and are also unique to such device
- * 
- * Device: Stethoscope
- *
- * Michael Xynidis
- * Fluvio Lobo Fenoglietto
- * 10/27/2016
- */
+// ==============================================================================================================
+// Device Specific Functions
+//
+// The following script comprises all of the functions used for the operation of the device and are also 
+// unique to such device
+// * Created on 10/27/2016
+// 
+// Michael Xynidis
+// Fluvio L. Lobo Fenoglietto 11/13/2017
+// ==============================================================================================================
 
-
+// ==============================================================================================================
+// Variables
+// ============================================================================================================== //
 File          frec;
 File          hRate;
 
@@ -24,9 +25,9 @@ int           ndx           = 0;
 static int    heartRateI    = 0;
 unsigned int  hrSample[3]   = { 0, 0, 0 };
 unsigned int  intervalRate  = 0;
-unsigned int  minS1S2       = 120;                      // must be greater-than 100ms
-unsigned int  maxS1S2       = 350;                      // must be less-than 400ms
-unsigned int  maxHBInterval = 5000;                     //ms
+unsigned int  minS1S2       = 120;                                                                                // must be greater-than 100ms
+unsigned int  maxS1S2       = 350;                                                                                // must be less-than 400ms
+unsigned int  maxHBInterval = 5000;                                                                               // ms
 
 float         sigThreshold  = 0.30;
 
@@ -235,18 +236,14 @@ uint8_t         peak_one       = 0;
 uint8_t         peaks[2]       = {0,0};
 uint8_t         peak_tolerance = 3;
 uint8_t         peak_threshold = 5;
-
 int             i              = 0;
-
 unsigned long   current_time   = 0;
 unsigned long   peak_zero_time = 0;
 unsigned long   peak_one_time  = 1000;
 unsigned long   peak_times[2]  = {0,0};
 unsigned long   early_bound    = 500;                                                                           // msec.
 unsigned long   late_bound     = 1250;                                                                          // msec.
-
 float           hr             = 0;                                                                             // Heart Rate, bpm - beats per minute
-
 elapsedMillis   timer;
 
 void waveAmplitudePeaks2()
@@ -378,8 +375,6 @@ void rmsAmplitudePeaksSingle()
 // RMS and Amplitude Peak detection based on the input
 // microphone and playback data
 //
-// ...
-// 
 // Fluvio L. Lobo Fenoglietto 11/12/2017
 // ==============================================================================================================
 uint32_t count;
@@ -634,7 +629,7 @@ boolean startRecording(String recString)
     Serial.print( "\nHR Data file on SD is named:\t"    );  Serial.println( fileDat       );
 
     queue_recMic.begin();
-    recordState = RECORDING;
+    deviceState = RECORDING;
     switchMode( 1 );
     timeStamp   = 0;
     //sf1.StartSend( STRING, 1000 );                                                                              // Begin transmitting heartrate data as a String
@@ -701,7 +696,7 @@ boolean stopRecording()
   //mixer_mic_Sd.gain( 2, mixerInputOFF );                                                                        // Set gain of mixer_mic_Sd, channel2 to 0
   
   queue_recMic.end();
-  if ( recordState == RECORDING )
+  if ( deviceState == RECORDING )
   { 
     //sf1.StopSend( STRING );                                                                                     // Terminate transmitting heartrate data as a String
     Serial.println( "Stethoscope will STOP RECORDING" );                                                        // Function execution confirmation over USB serial
@@ -714,7 +709,7 @@ boolean stopRecording()
     }
     frec.close();
     hRate.close();
-    recordState = STANDBY;
+    deviceState = STANDBY;
     switchMode( 0 );
     return true;
   }
@@ -743,7 +738,7 @@ boolean startPlaying( String fileName )
   if ( SD.exists( filePly ) )
   {
     playRaw_sdHeartSound.play( filePly );
-    recordState = PLAYING;
+    deviceState = PLAYING;
     switchMode( 2 );
     Serial.println( "Stethoscope began PLAYING" );                                                              // Function execution confirmation over USB serial
     Serial.println( "sending: ACK..." );
@@ -776,8 +771,8 @@ void continuePlaying()
 boolean stopPlaying()
 {
   Serial.println( "stopPlaying" );
-  if ( recordState == PLAYING ) playRaw_sdHeartSound.stop();
-  recordState = STANDBY;
+  if ( deviceState == PLAYING ) playRaw_sdHeartSound.stop();
+  deviceState = STANDBY;
   switchMode( 4 );
   Serial.println( "Stethoscope stopping PLAY" );                                                                // Function execution confirmation over USB serial
   Serial.println( "sending: ACK..." );
@@ -815,7 +810,7 @@ boolean startBlending( String fileName )
   if ( SD.exists( filePly ) )
   {
     blendState = STARTING;
-    recordState = PLAYING; //...do we need this?
+    deviceState = PLAYING; //...do we need this?
     Serial.println( "Stethoscope will begin BLENDING" );
     playRaw_sdHeartSound.play( filePly );                                                                       // Start playing recorded HB
     BTooth.write( ACK );
@@ -961,15 +956,15 @@ boolean stopBlending()
 boolean startAudioPassThrough()
 {
   Serial.println( "EXECUTING startAudioPassThrough()" );
-  if ( recordState == RECORDING ) stopRecording();                                                              // Stop recording if recording
-  if ( recordState == PLAYING   ) stopPlaying();                                                                // Stop playback if playing
+  if ( deviceState == RECORDING ) stopRecording();                                                              // Stop recording if recording
+  if ( deviceState == PLAYING   ) stopPlaying();                                                                // Stop playback if playing
 
   if ( selectedInput == AUDIO_INPUT_MIC )
   {
     mixer_mic_Sd.gain( 0, mixerInputON  );                                                                      // Set gain of mixer_mic_Sd, channel0 to 0.5 - Microphone on
     mixer_mic_Sd.gain( 1, mixerInputOFF  );                                                                     // Set gain of mixer_mic_Sd, channel0 to 0.5 - Microphone on
     //mixer_mic_Sd.gain( 2, mixerInputOFF );                                                                    // Set gain of mixer_mic_Sd, channel2 to 0
-    recordState = PASSTHRU;
+    deviceState = PASSTHRU;
     switchMode( 4 );
     Serial.println( "Stethoscope switched AUDIO PASSTHROUGH mode." );                                           // Function execution confirmation over USB serial
     Serial.println( "sending: ACK..." );
@@ -995,7 +990,7 @@ boolean continueAudioPassThrough()
   mixer_mic_Sd.gain( 1, mixerInputOFF  );                                                                       // Set gain of mixer_mic_Sd, channel0 to 0.5 - Microphone on
   //mixer_mic_Sd.gain( 2, mixerInputOFF );                                                                      // Set gain of mixer_mic_Sd, channel2 to 0
   rmsAmplitudePeaksSingle();
-  recordState = PASSTHRU;
+  deviceState = PASSTHRU;
   return true;
 } // End of continueAudioPassThrough()
 
@@ -1016,8 +1011,8 @@ boolean continueAudioPassThrough()
 boolean startHeartBeatMonitoring()
 {
   Serial.println( "EXECUTING startTrackingMicStream()" );
-  if ( recordState == RECORDING ) stopRecording();                                                              // Stop recording if recording
-  if ( recordState == PLAYING ) stopPlaying();                                                                  // Stop playback if playing
+  if ( deviceState == RECORDING ) stopRecording();                                                              // Stop recording if recording
+  if ( deviceState == PLAYING ) stopPlaying();                                                                  // Stop playback if playing
   if ( selectedInput == AUDIO_INPUT_MIC )
   {
     // Set-up the initial channel gains
@@ -1030,7 +1025,7 @@ boolean startHeartBeatMonitoring()
     mixer_allToSpk.gain(  2, mixerInputOFF  );                                                                  // turn spk playmem mixer channel "0" OFF (=0)
     
     queue_recMic.begin();
-    recordState = DETECTING;
+    deviceState = DETECTING;
     switchMode( 3 );
     //sf1.StartSend( STRING, 1000 );                                                                              // Begin transmitting heartrate data as a String
     Serial.println( "Stethoscope STARTED DETECTING heartbeat from MIC audio." );                                // Function execution confirmation over USB serial
@@ -1083,9 +1078,9 @@ boolean continueHeartBeatMonitoring()
 boolean stopHeartBeatMonitoring()
 {
   Serial.println( "EXECUTING stopTrackingMicStream()" );
-  if ( recordState == DETECTING )
+  if ( deviceState == DETECTING )
   {
-    recordState = PASSTHRU;
+    deviceState = PASSTHRU;
     switchMode( 0 );
     //sf1.StopSend( STRING );                                                                                     // Terminate transmitting heartrate data as a String
     Serial.println( "Stethoscope will STOP DETECTING heartbeat from MIC audio." );                              // Function execution confirmation over USB serial

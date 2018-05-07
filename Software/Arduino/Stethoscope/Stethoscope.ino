@@ -1,16 +1,16 @@
-/*
- * Stethoscope
- * 
- * The following program has been built to control the stethoscope module
- * 
- * Michael A Xynidis
- * Fluvio L Lobo Fenoglietto
- * 09/14/2016
- */
+// ==============================================================================================================
+// Stethoscope
+//
+// Main script
+// * Created on 09/14/2016
+//
+// Michael Xynidis
+// Fluvio L Lobo Fenoglietto 05/07/2018
+// ============================================================================================================== //
 
-
-#define VERSION  0.05
-
+// ==============================================================================================================
+// Import libraries and/or modules
+// ============================================================================================================== //
 #include  "TeensyAudio.h"
 #include  "Config.h"
 #include  "states.h"
@@ -18,9 +18,15 @@
 #include  "FileSD.h"
 #include  "parseBtByte.h"
 
-byte      inByte = 0x00;
 
+// ==============================================================================================================
+// Variables
+// ============================================================================================================== //
+byte      inByte = 0x00;                                                                                          // Incoming byte variable
 
+// ==============================================================================================================
+// SETUP LOOP
+// ==============================================================================================================
 void setup()
 {
   // Serial Communication Initialization
@@ -34,6 +40,8 @@ void setup()
   SessionInit( "01" );
   
   // SD Reader and Card Check
+  sdCheck()
+  /*
   if ( sdCardCheck() )
   {
     rootDir = SD.open( "/" );
@@ -46,9 +54,12 @@ void setup()
   {
     deviceState = NOTREADY;
   }
+  */
 } // End of setup()
 
-
+// ==============================================================================================================
+// MAIN LOOP
+// ==============================================================================================================
 void loop()
 { // when using a microphone, continuously adjust gain
 /*  Instead of the following line of code, Mic Level will be hard-coded in SetupAudioBoard()
