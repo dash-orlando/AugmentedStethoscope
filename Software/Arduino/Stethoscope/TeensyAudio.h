@@ -14,18 +14,6 @@
 #include <SD.h>
 #include <SerialFlash.h>
 
-#include <Audio.h>
-#include <Wire.h>
-#include <SPI.h>
-#include <SD.h>
-#include <SerialFlash.h>
-
-#include <Audio.h>
-#include <Wire.h>
-#include <SPI.h>
-#include <SD.h>
-#include <SerialFlash.h>
-
 // GUItool: begin automatically generated code
 AudioInputI2S            i2s_mic;        //xy=165,290
 AudioPlaySdRaw           playRaw_sdHeartSound; //xy=214,516
