@@ -50,14 +50,14 @@ void sdCheck()
       rootDir = SD.open( "/" );
       printDirectory( rootDir, 1 );
     }
-    readyState = READY;
+    deviceState = READY;
     BTooth.write( ACK );
     delay( 2000 );
   }
   else
   {
     BTooth.write( NAK );
-    readyState = NOTREADY;
+    deviceState = NOTREADY;
   }
 } // End of sdCheck
 

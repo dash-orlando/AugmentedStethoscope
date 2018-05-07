@@ -53,7 +53,7 @@ void sendWav( String fn )
   char  filename[fn.length()+1];
   fn.toCharArray( filename, sizeof( filename ) );
   
-  if ( connectState == CONNECTED )
+  if ( deviceState == READY )
   {
     if ( SD.exists( filename ) )
     {

@@ -11,30 +11,47 @@
  */
 
  
- // States
- 
- enum State
+// ==============================================================================================================
+// Device States
+//
+// The following structure defines all the possible states of the augmented stethoscope
+//
+// Michael Xynidis
+// Fluvio L Lobo Fenoglietto 05/07/2018
+// ============================================================================================================== //
+
+enum State
 {
-  CONNECTED, DISCONNECTED, RECORDING, PLAYING, PASSTHRU, DETECTING, STARTING, CONTINUING, STOPPING, STANDBY, READY, NOTREADY
+  READY,                                                                                                          // READY to execute functions ( = idle )
+  NOTREADY,                                                                                                       // NOT READY to execute functions ( = error state )
+  RECORDING,                                                                                                      // RECORDING single/multiple audio streams ( this may be broken down later )
+  PLAYING,                                                                                                        // PLAYING audio file
+  MONITORING,                                                                                                     // MONITORING heart beat ( may be paired with recording )
+  BLENDING                                                                                                        // BLENDING microphone input with audio file from SD card
 };
 
-State     connectState    = DISCONNECTED;
-State     recordState     = STANDBY;
-State     passthruState   = PASSTHRU;
-State     HBDetectState   = STANDBY;
-State     blendState      = STANDBY;
-State     readyState;
+State     deviceState     = READY;                                                                                // Single state variable...
 
-String stateToText( int state )             // for Serial monitor diagnostics
+
+// ==============================================================================================================
+// State to Text
+//
+// Function used to print the current state of the augmented stethoscope (or device)
+//
+// Michael Xynidis
+// Fluvio L Lobo Fenoglietto 05/07/2018
+// ============================================================================================================== //
+
+String stateToText( int state )
 {
   String value = "";
   switch ( state )
   {
-    case CONNECTED :
-      value = "CONNECTED";
+    case READY :
+      value = "READY";
       break;
-    case DISCONNECTED :
-      value = "DISCONNECTED";
+    case NOTREADY :
+      value = "NOTREADY";
       break;
     case RECORDING :
       value = "RECORDING";
@@ -42,42 +59,34 @@ String stateToText( int state )             // for Serial monitor diagnostics
     case PLAYING :
       value = "PLAYING";
       break;
-    case PASSTHRU :
-      value = "PASSTHRU";
+    case MONITORING   :
+      value = "MONITORING";
       break;
-    case DETECTING :
-      value = "DETECTING";
-      break;
-    case STARTING   :
-      value = "STARTING";
-      break;
-    case CONTINUING :
-      value = "CONTINUING";
-      break;
-    case STOPPING   :
-      value = "STOPPING";
-      break;
-    case STANDBY :
-      value = "STANDBY";
-      break;
-    case READY :
-      value = "READY";
-      break;
-    case NOTREADY :
-      value = "NOTREADY";
+    case BLENDING :
+      value = "BLENDING";
       break;
     default:
       value = "unknown state";
       break;
   }
   return value;
-}
+} // End of stateToText()
+
+
+// ==============================================================================================================
+// Mode
+//
+// Modes are paired with states for function triggering on the main loop of the stethoscope script
+//
+// Michael Xynidis
+// Fluvio L Lobo Fenoglietto 05/07/2018
+// ============================================================================================================== //
 
 /*	Modes
  * 
  *
  *	(int)	mode	Value	Description
- *					= 0		Idle
+ *					= 0		Ready/Idle --Do nothing
  *					= 1		Continue Recording
  *					= 2		Continue Playing
  *          = 3   Continue Tracking Mic Stream
@@ -85,7 +94,6 @@ String stateToText( int state )             // for Serial monitor diagnostics
  *          = 5   Continue Blending
  *
  */
-
 int			mode	= 0;
 
 

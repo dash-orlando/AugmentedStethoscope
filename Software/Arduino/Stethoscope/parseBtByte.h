@@ -48,11 +48,7 @@ void displayByte( byte byteValue )
 
 void displayStatus()
 {
-  Serial.print( "(pre) readyState    : " );  Serial.println( stateToText( readyState     ) );
-  Serial.print( "(pre) connectState  : " );  Serial.println( stateToText( connectState   ) );
-  Serial.print( "(pre) recordState   : " );  Serial.println( stateToText( recordState    ) );
-  Serial.print( "(pre) passthruState : " );  Serial.println( stateToText( passthruState  ) );
-  Serial.print( "(pre) HBDetectState : " );  Serial.println( stateToText( HBDetectState  ) );
+  Serial.print( "(pre) deviceState    : " );  Serial.println( stateToText( deviceState     ) );
 } // End of displayState()
 
 // ==============================================================================================================
@@ -76,19 +72,13 @@ void parseBtByte( String fn )
     inByte = BTooth.read();                                                                                       // get incoming byte
     displayByte( inByte );
     displayStatus();
-    //Serial.print( "(pre) readyState    : " );  Serial.println( stateToText( readyState     ) );
-    //Serial.print( "(pre) connectState  : " );  Serial.println( stateToText( connectState   ) );
-    //Serial.print( "(pre) recordState   : " );  Serial.println( stateToText( recordState    ) );
-    //Serial.print( "(pre) passthruState : " );  Serial.println( stateToText( passthruState  ) );
-    //Serial.print( "(pre) HBDetectState : " );  Serial.println( stateToText( HBDetectState  ) );
     switch ( inByte )
     {
       case ENQ :
         Serial.println( "received: ENQ..." );
-        Serial.print( "readyState is " );      Serial.println( stateToText( readyState     ) );
-        if ( readyState == READY )
+        Serial.print( "deviceState is " );      Serial.println( stateToText( deviceState     ) );
+        if ( deviceState == READY )
         {
-          connectState  = CONNECTED;                                                                               // The ENQ command has to always be sent first
           Serial.println( "sending: ACK..." );
           BTooth.write( ACK );
         }
@@ -226,11 +216,6 @@ void parseBtByte( String fn )
       break;
     }
     displayStatus();
-    //Serial.print( "(post) readyState    :  " ); Serial.println( stateToText( readyState     ) );
-    //Serial.print( "(post) connectState  :  " ); Serial.println( stateToText( connectState   ) );
-    //Serial.print( "(post) recordState   :  " ); Serial.println( stateToText( recordState    ) );
-    //Serial.print( "(post) passthruState :  " ); Serial.println( stateToText( passthruState  ) );
-    //Serial.print( "(post) HBDetectState :  " ); Serial.println( stateToText( HBDetectState  ) );
     delay( 10 );
 }
 
