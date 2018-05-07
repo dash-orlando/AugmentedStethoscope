@@ -1,6 +1,19 @@
-// Contents of the Config.h file:
+// ==============================================================================================================
+// SD Files Configuration
+//
+// The following script contains the configuration information for the contents of the SD card
+//
+// Michael Xynidis
+// Fluvio L Lobo Fenoglietto 05/07/2018
+// ============================================================================================================== //
 
 
+// ==============================================================================================================
+// Session (structure)
+//
+// Michael Xynidis
+// Fluvio L Lobo Fenoglietto 05/07/2018
+// ============================================================================================================== //
 struct Session
 {
     String    sessionID;
@@ -20,7 +33,12 @@ struct Session
 
 Session  ses;
 
-
+// ==============================================================================================================
+// Session Initialization
+//
+// Michael Xynidis
+// Fluvio L Lobo Fenoglietto 05/07/2018
+// ============================================================================================================== //
 void SessionInit( String SID )
 {
     /* ...read config XML (e.g. "CONFIG.XML")  */
