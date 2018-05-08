@@ -75,18 +75,7 @@ void parseBtByte( String fn )
     switch ( inByte )
     {
       case ENQ :
-        Serial.println( "received: ENQ..." );
-        Serial.print( "deviceState is " );      Serial.println( stateToText( deviceState     ) );
-        if ( deviceState == READY )
-        {
-          Serial.println( "sending: ACK..." );
-          BTooth.write( ACK );
-        }
-        else
-        {
-          Serial.println( "sending: NAK..." ); 
-          BTooth.write( NAK );
-        }
+        statusEnquiry();
       break;
       case ACK :
       case NAK :
