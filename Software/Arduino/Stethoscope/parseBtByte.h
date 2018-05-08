@@ -142,10 +142,10 @@ void parseBtByte( String fn )
   	    // STOPPLAY : Stop Playing
   	    stopPlaying();
   	  break;
-  	  case STARTPASSTHRU :
+  	  //case STARTPASSTHRU :
   	    // STARTPASSTHRU : Start Audio Passthrough from Mic
-  	    startAudioPassThrough();
-  	  break;
+  	    //startAudioPassThrough();
+  	  //break;
   	  case STARTHBMONITOR :
   	    // STARTTRACKING : Start Heart Rate monitoring
   	    startHeartBeatMonitoring();

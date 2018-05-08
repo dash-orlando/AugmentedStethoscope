@@ -40,7 +40,7 @@ void setup()
   SessionInit( "01" );
   
   // SD Reader and Card Check
-  sdCheck()
+  sdCheck();
   /*
   if ( sdCardCheck() )
   {
@@ -73,7 +73,7 @@ void loop()
   if ( mode == 1 ) continueRecording();
   if ( mode == 2 ) continuePlaying();
   if ( mode == 3 ) continueHeartBeatMonitoring();
-  if ( mode == 4 ) continueAudioPassThrough();
+  //if ( mode == 4 ) continueAudioPassThrough();
   if ( mode == 5 ) continueBlending(fileName);
   
   // Clear the input byte variable

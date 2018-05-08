@@ -27,11 +27,11 @@ enum State
   RECORDING,                                                                                                      // RECORDING single/multiple audio streams ( this may be broken down later )
   PLAYING,                                                                                                        // PLAYING audio file
   MONITORING,                                                                                                     // MONITORING heart beat ( may be paired with recording )
-  BLENDING                                                                                                        // BLENDING microphone input with audio file from SD card
+  BLENDING,                                                                                                       // BLENDING microphone input with audio file from SD card
+  CONTINUING
 };
 
 State     deviceState     = READY;                                                                                // Single state variable...
-
 
 // ==============================================================================================================
 // State to Text
