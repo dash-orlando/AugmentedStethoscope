@@ -41,20 +41,7 @@ void setup()
   
   // SD Reader and Card Check
   sdCheck();
-  /*
-  if ( sdCardCheck() )
-  {
-    rootDir = SD.open( "/" );
-    Serial.print( "rootDir: " );
-    Serial.println( rootDir );
-    printDirectory( rootDir, 1 );
-    deviceState = READY;
-  }
-  else
-  {
-    deviceState = NOTREADY;
-  }
-  */
+
 } // End of setup()
 
 // ==============================================================================================================
