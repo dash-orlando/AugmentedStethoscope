@@ -1096,3 +1096,51 @@ boolean stopHeartBeatMonitoring()
   }
 } // End of stopHeartBeatMonitoring()
 // ==============================================================================================================
+
+// ==============================================================================================================
+// Device RESET
+// Based on a status enquiy, this function sets the stethoscope to an idle mode/state
+// 
+// Fluvio L. Lobo Fenoglietto 05/08/2017
+// ============================================================================================================== //
+void setToIdle()
+{
+  Serial.println( "received: SETIDLE..." );                                                                       // signal receipt of function-specific byte
+  Serial.print( "deviceState is " );
+  Serial.println( stateToText( deviceState ) );                                                                   // print state of the device to serial monitor
+
+  switch( deviceState )
+  {
+    case READY :
+      Serial.println( "Device already in IDLE and READY" );
+      Serial.println( "sending: ACK..." );
+      BTooth.write( ACK );
+    break;
+    case NOTREADY :
+      Serial.println( "Device CANNOT TURN to IDLE..." );
+      Serial.println( "Troubleshoot device..." );
+      Serial.println( "sending: NAK..." ); 
+      BTooth.write( NAK );
+    break;
+    case RECORDING :                                                                                               // RECORDING single/multiple audio streams ( this may be broken down later )
+      Serial.println( "Device RECORDING..." );
+      stopRecording();
+    break;
+    case PLAYING :                                                                                                 // PLAYING audio file
+      Serial.println( "Device PLAYING..." );
+      stopPlaying();
+    break;
+    case MONITORING :                                                                                              // MONITORING heart beat ( may be paired with recording )
+      Serial.println( "Device MONITORING..." );
+      stopHeartBeatMonitoring();
+    break;
+    case BLENDING :                                                                                                // BLENDING microphone input with audio file from SD card
+      Serial.println( "Device BLENDING..." );
+      stopBlending();
+    break;
+    case CONTINUING :
+      Serial.println( "Device BLENDING..." );
+      stopBlending();
+    break;
+  }
+} // End setToIdle()

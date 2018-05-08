@@ -24,11 +24,12 @@ byte STE[] = { 0x53, 0x54, 0x45, 0x00 };        // Stethoscope Device IDs
 
 /// Device Control Commands
 //  Diagnostic Functions ============================================================================================================= //
-#define         DEVICEID        	0x11          // *Device Identification                                    					[resp: Device Code]
-#define         SDCHECK         	0x12          // *System Check: "Run system check and report"              					[resp: ACK | NAK]
-#define         SENDWAV         	0x13          // !Send .WAV file (audio recording) via serial port         					[resp: ACK | NAK]
-#define         DELVOLATILE     	0x14          // ?Erase volatile files (all)                               					[resp: ACK | NAK]
+#define         DEVICEID        	0x11          // Device Identification                                    					[resp: Device Code]
+#define         SDCHECK         	0x12          // System Check: "Run system check and report"              					[resp: ACK | NAK]
+#define         SENDWAV         	0x13          // Send .WAV file (audio recording) via serial port         					[resp: ACK | NAK]
+#define         DELVOLATILE     	0x14          // Erase volatile files (all)                               					[resp: ACK | NAK]
 #define         SENDRAW           0x37          // Send .RAW file (or any file within the SD card)
+#define         SETIDLE           0x26          // Set device from any state to IDLE ( mode = 0 )
 
 //  Device-Specific Functions ======================================================================================================== //                     
 #define         STARTREC        	0x16          // Start Recording                                          					[resp: ACK | NAK]
