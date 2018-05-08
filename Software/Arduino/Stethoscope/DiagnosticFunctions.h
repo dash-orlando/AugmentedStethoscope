@@ -42,6 +42,7 @@ void sdCheck()
     Serial.print( "rootDir: " );
     Serial.println( rootDir );
     printDirectory( rootDir, 1 );
+    /*
     if ( SD.exists( "RECORD.RAW" ) )
     {
       SD.remove( "RECORD.RAW" );
@@ -49,6 +50,7 @@ void sdCheck()
       rootDir = SD.open( "/" );
       printDirectory( rootDir, 1 );
     }
+    */
     deviceState = READY;
     BTooth.write( ACK );
     delay( 2000 );
