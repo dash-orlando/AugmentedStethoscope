@@ -48,7 +48,9 @@ void displayByte( byte byteValue )
 
 void displayStatus()
 {
-  Serial.print( "(pre) deviceState    : " );  Serial.println( stateToText( deviceState     ) );
+  Serial.print( "(pre) deviceState    : " );  Serial.println( stateToText( deviceState ) );
+  Serial.print( "(pre) recState       : " );  Serial.println( stateToText( recState    ) );
+  Serial.print( "(pre) blendState     : " );  Serial.println( stateToText( blendState  ) );
 } // End of displayState()
 
 // ==============================================================================================================
