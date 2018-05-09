@@ -512,7 +512,7 @@ void switchMode( int m )
 }
 
 // ==============================================================================================================
-// Read Line
+// Parse String over Bluetooth
 // Read information from the serial port passed
 // as a string
 //
@@ -521,12 +521,10 @@ void switchMode( int m )
 String inString = "";
 String parseString()
 {
-
   if ( BTooth.available() > 0 )
   {
     inString = BTooth.readString();
   }
-
   if ( inString.length() > 1 )
   {
     Serial.println( "Stethoscope received STRING" );                                                            // Function execution confirmation over USB serial
@@ -543,7 +541,6 @@ String parseString()
     BTooth.write( NAK );                                                                                        // ACKnowledgement sent back through bluetooth serial
     return inString;
   }
-  
 } // End of parseString() function
 
 
@@ -579,7 +576,7 @@ boolean setRecordingFilename( String inString, String recExtension, int recMode 
 
     // multiple channels, custom string ------------------------------------------------------------------------- //
     case 1:
-      Serial.println( "Recording Mode 2 : " );
+      Serial.println( "Recording Mode 1 : " );
       Serial.print( "Recording from " );
       Serial.print( recChannels );
       Serial.println( " channels " );

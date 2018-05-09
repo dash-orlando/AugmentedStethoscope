@@ -114,15 +114,19 @@ void parseBtByte( String fn )
       case STARTCREC :
         // STARTCREC : Start Custom Recording
         Serial.println( "received: STARTCREC..." );
+        Serial.println( "recording Mode (recMode): 0..." );
+        recMode = 0; 
         inString = parseString();                                                                      // Parse input string
-        recString = setRecordingFilename( inString, recExtension, recMode );                                    // Create recording string with appropriate extension
+        recString = setRecordingFilename( inString, recExtension, recMode );                           // Create recording string with appropriate extension
         startRecording( recString );                                                                   // Start custom filename recording
       break;
       case STARTMREC :
         // STARTMREC : Start Multi Channel, Custom Recording
         Serial.println( "received: STARTMREC..." );
+        Serial.println( "recording Mode (recMode): 1..." );
+        recMode = 1;                                                                                   // Default recording mode (recMode) for the multi-recording is recMode = 1
         inString = parseString();                                                                      // Parse input string
-        setRecordingFilename( inString, recExtension, 1 );                                             // Create recording string with appropriate extension
+        setRecordingFilename( inString, recExtension, recMode );                                       // Create recording string with appropriate extension
         startMultiChannelRecording( recStrings );                                                      // Start custom filename recording
       break;
 	    case STOPREC :
