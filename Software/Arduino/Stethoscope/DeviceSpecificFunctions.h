@@ -883,10 +883,12 @@ boolean stopRecording()
         return true;
       }
       else
+      {
         Serial.println( "Stethoscope CANNOT STOP RECORDING" );                                                      // Function execution confirmation over USB serial
         Serial.println( "sending: NAK..." );
         BTooth.write( NAK );                                                                                        // Negative AcKnowledgement sent back through bluetooth serial
         return false;
+      }
   } // End of switch( recMode )
 } // End of stopRecording()
 // ==============================================================================================================
