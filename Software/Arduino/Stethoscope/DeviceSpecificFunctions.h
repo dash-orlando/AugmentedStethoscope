@@ -553,8 +553,7 @@ String parseString()
 // filename and avoid overwriting
 //
 // mode   = 0   -- custom filename, uses the "inString" variable passed through serial/bluetooth com.
-//        = 1   -- randomly generated filename to avoid overwrting data
-//        = 2   -- multiple channel recording ( - all channels to be specific )
+//        = 1   -- multiple channel recording ( - all channels to be specific )
 //
 // Fluvio L. Lobo Fenoglietto 11/30/2017
 // ============================================================================================================== //
@@ -563,28 +562,23 @@ String  recString     = "";                                                     
 String  recStrings[]  = {"","",""};                                                                               // Default string array dpending on the rec mode
 int     recMode       = 0;                                                                                        // Default -- rec. mode 0 ( will be expanded later )
 int     recChannels   = 2;
-String setRecordingFilename( String inString, String recExtension, int recMode )
+boolean setRecordingFilename( String inString, String recExtension, int recMode )
 {
   Serial.println( "EXECUTING setRecordingFilename()" );
 
   switch( recMode )
   {
+    // single channel, custom string ---------------------------------------------------------------------------- //
     case 0:
       Serial.println( "Recording Mode 0 : " );
       recString = inString + recExtension;                                                                        // Concatenating extension to input filename
       Serial.print( "Recording using filename : " );
       Serial.println( recString );
+      return true;
     break;
 
+    // multiple channels, custom string ------------------------------------------------------------------------- //
     case 1:
-      Serial.println( "Recording Mode 1 : " );
-      recString = inString + recExtension;                                                                        // Concatenating extension to input filename
-      Serial.print( "Recording using filename : " );
-      Serial.println( recString );
-      // add some check for filename existence
-    break;
-
-    case 2:
       Serial.println( "Recording Mode 2 : " );
       Serial.print( "Recording from " );
       Serial.print( recChannels );
@@ -597,24 +591,11 @@ String setRecordingFilename( String inString, String recExtension, int recMode )
         recStrings[i] = recChannelID + inString + recExtension;
         Serial.println( "Recording using filename : " + recStrings[i] );
       }
-      // add some check for filename existence
+      // add section for file existence check, otherwise it gets deleted later
+      return true;
     break;
-  }
-  
-  
-  
-  //char  recChar[recString.length()+1];                                                                          // Conversion from string to character array
-  //recString.toCharArray( recChar, sizeof( recChar ) );
-
-  //Serial.print(   "USING " );
-  //Serial.print(   recString );
-  //Serial.println( " as recording filename");
-  
-  //if ( SD.exists( recChar ) ) SD.remove( recChar );                                                             // Check for existence of filename
-  //recFile = SD.open( recChar, FILE_WRITE );                                                                     // Create using filename and open for recording
-
-  return recString;
-  
+    
+  } // End of switch( recMode )
 } // End of setRecordingFilename() function
 
 
@@ -726,51 +707,59 @@ boolean startMultiChannelRecording( String recStrings[] )
   Serial.println( "EXECUTING startRecording()" );                                                                 // Identification of function executed
   setRecGains();                                                                                                  // Set-up gains for microphone recording
 
-  // knowing that there are only two channels ------------------------------------------------------------------- //
+  // microphone channel ----------------------------------------------------------------------------------------- //
   Serial.println( recStrings[0] );
-  char  micRecChar[recStrings[0].length()+1];                                                                        // Conversion from string to character array
+  char  micRecChar[recStrings[0].length()+1];                                                                     // Conversion from string to character array
   recStrings[0].toCharArray( micRecChar, sizeof( micRecChar ) );
-
-  Serial.println( recStrings[1] );
-  char  spkRecChar[recStrings[1].length()+1];                                                                        // Conversion from string to character array
-  recStrings[1].toCharArray( spkRecChar, sizeof( spkRecChar ) );
-    
+  
+  if ( SD.exists( micRecChar ) )
+  {
+    Serial.println( "File with the same name was found..." );
+    Serial.println( "Old file removed..." );
+    SD.remove( micRecChar );
+  }
+  
   micFileRec = SD.open( micRecChar, FILE_WRITE );
-  Serial.println( micFileRec );
+  //Serial.println( micFileRec );
+  
+  // speaker channel -------------------------------------------------------------------------------------------- //
+  Serial.println( recStrings[1] );
+  char  spkRecChar[recStrings[1].length()+1];                                                                     // Conversion from string to character array
+  recStrings[1].toCharArray( spkRecChar, sizeof( spkRecChar ) );
+  
+  if ( SD.exists( spkRecChar ) )
+  {
+    Serial.println( "File with the same name was found..." );
+    Serial.println( "Old file removed..." );
+    SD.remove( spkRecChar );
+  }
   
   spkFileRec = SD.open( spkRecChar, FILE_WRITE );
-  Serial.println( spkFileRec );
+  //Serial.println( spkFileRec );
   
-  if (  SD.open( micRecChar, FILE_WRITE ) &&                                                                       // Create and open RECORD.RAW file
-        SD.open( spkRecChar, FILE_WRITE ) )                                                                        // Create and open HRATE.DAT file
+  // confirmation ----------------------------------------------------------------------------------------------- //
+  if (  SD.open( micRecChar, FILE_WRITE ) &&                                                                      // Create and open RECORD.RAW file
+        SD.open( spkRecChar, FILE_WRITE ) )                                                                       // Create and open HRATE.DAT file
   {
-
-    Serial.print( "\nMinimum S1-S2 interval:\t\t"       );  Serial.print(   minS1S2       );  Serial.print( "ms" );
-    Serial.print( "\nMaximum S1-S2 interval:\t\t"       );  Serial.print(   maxS1S2       );  Serial.print( "ms" );
-    Serial.print( "\nNo-heartrate detect interval:\t"   );  Serial.print(   maxHBInterval );  Serial.print( "ms" );
-    Serial.print( "\nHearsound detection threshold:\t"  );  Serial.print(   sigThreshold  );
-    Serial.print( "\nLow-pass filter roll-off freq:\t"  );  Serial.print(   freqLowPass   );
-    Serial.print( "\nHighshelf filter roll-off freq:\t" );  Serial.println( freqHighShelf );
-    Serial.print( "\nRecord file on SD is named:\t"   );    Serial.print(   micRecChar       );
-    Serial.print( "\nHR Data file on SD is named:\t"    );  Serial.println( spkRecChar       );
     queue_recMic.begin();
     queue_recSpk.begin();
     deviceState = RECORDING;
     switchMode( 1 );
     recMode = 1;
     timeStamp   = 0;
-    //sf1.StartSend( STRING, 1000 );                                                                              // Begin transmitting heartrate data as a String
-    Serial.println( "Stethoscope began MULTI RECORDING" );                                                            // Function execution confirmation over USB serial
+    Serial.println( "Stethoscope began MULTI RECORDING" );                                                        // Function execution confirmation over USB serial
     Serial.println( "sending: ACK..." );
-    BTooth.write( ACK );                                                                                        // ACKnowledgement sent back through bluetooth serial
+    BTooth.write( ACK );                                                                                          // ACKnowledgement sent back through bluetooth serial
     Serial.println( "continueRecording() called" );
     return true;
   }
   else
-    Serial.println( "Stethoscope CANNOT begin RECORDING" );                                                     // Function execution failed, notification over USB serial
+  {
+    Serial.println( "Stethoscope CANNOT begin MULTI RECORDING" );                                                 // Function execution failed, notification over USB serial
     Serial.println( "sending: NAK..." );
-    BTooth.write( NAK );                                                                                        // Negative AcKnowledgement sent back through bluetooth serial
+    BTooth.write( NAK );                                                                                          // Negative AcKnowledgement sent back through bluetooth serial
     return false;
+  }
 } // End of startMultiChannelRecording()
 
 // ==============================================================================================================
@@ -781,7 +770,7 @@ boolean startMultiChannelRecording( String recStrings[] )
 // Michael Xynidis
 // Fluvio L. Lobo Fenoglietto 11/21/2017
 // ==============================================================================================================
-void continueRecording( int recMode )
+boolean continueRecording()
 {
   switch( recMode )
   {
@@ -804,6 +793,8 @@ void continueRecording( int recMode )
         //  //sf1.Set( txFr );                                                                                          // set TX data frame with new heartate value
         //}
       }
+      return true;
+    break;
     case 1:
       if ( queue_recMic.available() >= 2 )
       {
@@ -826,6 +817,8 @@ void continueRecording( int recMode )
         queue_recSpk.freeBuffer();                                                                                  // write all 512 bytes to the SD card
         spkFileRec.write( buffer, 512 );
       }
+      return true;
+    break;
   } // End of switch( recMode )
 } // End of continueRecording()
 // ==============================================================================================================
