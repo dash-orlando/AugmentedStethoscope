@@ -669,6 +669,7 @@ boolean startRecording(String recString)
 
     queue_recMic.begin();
     deviceState = RECORDING;
+    recState    = RECORDING;
     switchMode( 1 );
     timeStamp   = 0;
     //sf1.StartSend( STRING, 1000 );                                                                              // Begin transmitting heartrate data as a String
@@ -741,6 +742,7 @@ boolean startMultiChannelRecording( String recStrings[] )
     queue_recMic.begin();
     queue_recSpk.begin();
     deviceState = RECORDING;
+    recState    = RECORDING;
     switchMode( 1 );
     recMode = 1;
     timeStamp   = 0;
@@ -836,7 +838,7 @@ boolean stopRecording()
   {
     case 0:
       queue_recMic.end();
-      if ( deviceState == RECORDING )
+      if ( recState == RECORDING )
       { 
         //sf1.StopSend( STRING );                                                                                     // Terminate transmitting heartrate data as a String
         Serial.println( "Stethoscope will STOP RECORDING" );                                                        // Function execution confirmation over USB serial
@@ -862,7 +864,7 @@ boolean stopRecording()
     case 1:
       queue_recMic.end();
       queue_recSpk.end();
-      if ( deviceState == RECORDING )
+      if ( recState == RECORDING )
       {
         Serial.println( "Stethoscope will STOP MULTI RECORDING" );                                                 // Function execution confirmation over USB serial
         Serial.println( "sending: ACK..." );
@@ -879,6 +881,7 @@ boolean stopRecording()
         micFileRec.close();
         spkFileRec.close();
         deviceState = READY;
+        recState    = READY;
         switchMode( 0 );
         return true;
       }
@@ -982,6 +985,7 @@ boolean startBlending( String fileName )
   if ( SD.exists( filePly ) )
   {
     deviceState = BLENDING;
+    blendState  = BLENDING;
     Serial.println( "Stethoscope will begin BLENDING" );
     playRaw_sdHeartSound.play( filePly );                                                                       // Start playing recorded HB
     BTooth.write( ACK );
@@ -1031,7 +1035,7 @@ void continueBlending(String fileName)
   // 
   // Using blending states, the function fades sound in/continously/out
   //
-  if ( deviceState == BLENDING )                                                                                // if deviceState == STARTING, begin the blending of the signals
+  if ( blendState == BLENDING )                                                                                 // if deviceState == STARTING, begin the blending of the signals
   {
     if ( mic_mixer_lvl > 0.10 )                                                                                 // check the value of the gain levels to trigger a gradual blending
     {
@@ -1046,10 +1050,10 @@ void continueBlending(String fileName)
     }
     else
     {
-      deviceState = CONTINUING;                                                                                  // Switch state to CONTINUING for dynamic blending, other...
+      blendState = CONTINUING;                                                                                   // Switch state to CONTINUING for dynamic blending, other...
     } // End of blend mixer level check
   }
-  else if ( deviceState == CONTINUING )                                                                          // if deviceState == CONTINUING, maintain or vary mixer levels using functions
+  else if ( blendState == CONTINUING )                                                                           // if deviceState == CONTINUING, maintain or vary mixer levels using functions
   {
     //uint8_t rms_switch = rmsAmplitudePeaksDuo();
     uint8_t rms_switch = rmsModulation();
@@ -1076,7 +1080,7 @@ void continueBlending(String fileName)
     //Serial.print(" | PlayBack RMS Mixer Gain = ");
     //Serial.println(playback_rms_mixer_lvl);
   }
-  else if ( deviceState == READY )
+  else if ( blendState == READY )
   {
     if ( mic_mixer_lvl < 0.90 )
     {
@@ -1112,6 +1116,7 @@ boolean stopBlending()
 {
   Serial.println( "EXECUTING stopBlending()" );
   deviceState = READY;                                                                                        // This will trigger the bleding down and stopping
+  blendState  = READY;
   Serial.println( "Stethoscope will STOP BLENDING" );                                                           // Function execution confirmation over USB serial
   Serial.println( "sending: ACK..." );
   BTooth.write( ACK );                                                                                          // ACKnowledgement sent back through bluetooth serial

@@ -32,6 +32,8 @@ enum State
 };
 
 State     deviceState     = READY;                                                                                // Single state variable...
+State     recState        = READY;
+State     blendState      = READY;
 
 // ==============================================================================================================
 // State to Text
