@@ -34,6 +34,7 @@ byte STE[] = { 0x53, 0x54, 0x45, 0x00 };        // Stethoscope Device IDs
 //  Device-Specific Functions ======================================================================================================== //                     
 #define         STARTREC        	0x16          // Start Recording                                          					[resp: ACK | NAK]
 #define         STARTCREC         0x32          // Start Custom Recording                                             [resp: ACK | NAK]
+#define         STARTMREC         0x38          // Start Multi Channel, Custom Recording
 #define         STOPREC         	0x17          // Stop Recording                                           					[resp: ACK | NAK]
 #define         STARTPLAY       	0x18          // Start Playback                                           					[resp: ACK | NAK]
 #define         STOPPLAY        	0x19          // Stop Playback                                            					[resp: ACK | NAK]

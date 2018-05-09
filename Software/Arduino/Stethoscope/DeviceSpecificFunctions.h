@@ -618,6 +618,25 @@ String setRecordingFilename( String inString, String recExtension, int recMode )
 
 
 // ==============================================================================================================
+// Set REC GAINS
+//
+// Fluvio L. Lobo Fenoglietto 05/09/2018
+// ============================================================================================================== //
+void setRecGains()
+{
+  // Control Mixer Channels and Gains
+  rms_mic_mixer.gain(     0,  mixerInputON  );                                                                  // Set mic input, channel 0 of mic&Sd mixer ON      (g = 1)
+  rms_mic_mixer.gain(     1,  mixerInputON  );                                                                  // Set mic input, channel 1 of mic&Sd mixer ON      (g = 1)
+  rms_playRaw_mixer.gain( 0,  mixerInputOFF );                                                                  // Set plaback, channel 0 of rms mixer OFF          (g = 0)
+  mixer_mic_Sd.gain(      0,  mixerInputON  );                                                                  // Set mic input, channel 0 of mic&Sd mixer ON      (g = 1)
+  mixer_mic_Sd.gain(      1,  mixerInputOFF );                                                                  // Set playback, channel 1 of mic&Sd mixer OFF      (g = 0)
+  mixer_allToSpk.gain(    0,  mixerInputON  );                                                                  // Set mic input, channel 0 of speaker mixer ON     (g = 1)
+  mixer_allToSpk.gain(    1,  mixerInputOFF );                                                                  // Set mic effect, channel 1 of speaker mixer ON    (g = 0)
+  mixer_allToSpk.gain(    2,  mixerInputOFF );                                                                  // Set mem playback, channel 1 of speaker mixer ON  (g = 0)
+  
+} // End of setRecGains()
+
+// ==============================================================================================================
 // Start Recording
 // Record audio from the input microphone line into
 // the SD card onboard
@@ -688,6 +707,71 @@ boolean startRecording(String recString)
     
 } // End of startRecording()
 // ==============================================================================================================
+
+// ==============================================================================================================
+// Start Multi-Channel Recording
+// Record audio from multiple on-board audio channels, specifically:
+// -- microphone
+// -- speaker
+// 
+// This function also uses custome naming convention retrieved through bluetooth com.
+//
+// Michael Xynidis
+// Fluvio L. Lobo Fenoglietto 05/09/2018
+// ============================================================================================================== //
+boolean startMultiChannelRecording( String recStrings[] )
+{
+  Serial.println( "EXECUTING startRecording()" );                                                                 // Identification of function executed
+  setRecGains();                                                                                                  // Set-up gains for microphone recording
+
+  int nStrings = sizeof( recStrings );
+  for( int i = 0; i < nStrings; i ++ )
+  {
+    Serial.println( recStrings[i] );
+    char  recChar[recStrings[i].length()+1];                                                                          // Conversion from string to character array
+    recString.toCharArray( recChar, sizeof( recChar ) );
+
+    if ( SD.exists( recChar ) ) SD.remove( recChar );                                                             // Check for existence of RECORD.RAW
+    Serial.println( " here " );
+
+    frec  = SD.open( recChar, FILE_WRITE );                                                                       // Create and open RECORD.RAW file
+    //Serial.println( frec );
+    Serial.println( " here " );
+  }
+
+  /*
+  if (  SD.open( recChar, FILE_WRITE ) &&                                                                       // Create and open RECORD.RAW file
+        SD.open( fileDat, FILE_WRITE ) )                                                                        // Create and open HRATE.DAT file
+  {
+
+    Serial.print( "\nMinimum S1-S2 interval:\t\t"       );  Serial.print(   minS1S2       );  Serial.print( "ms" );
+    Serial.print( "\nMaximum S1-S2 interval:\t\t"       );  Serial.print(   maxS1S2       );  Serial.print( "ms" );
+    Serial.print( "\nNo-heartrate detect interval:\t"   );  Serial.print(   maxHBInterval );  Serial.print( "ms" );
+    Serial.print( "\nHearsound detection threshold:\t"  );  Serial.print(   sigThreshold  );
+    Serial.print( "\nLow-pass filter roll-off freq:\t"  );  Serial.print(   freqLowPass   );
+    Serial.print( "\nHighshelf filter roll-off freq:\t" );  Serial.println( freqHighShelf );
+    Serial.print( "\nRecord file on SD is named:\t"   );    Serial.print(   recChar       );
+    Serial.print( "\nHR Data file on SD is named:\t"    );  Serial.println( fileDat       );
+
+    queue_recMic.begin();
+    deviceState = RECORDING;
+    switchMode( 1 );
+    timeStamp   = 0;
+    //sf1.StartSend( STRING, 1000 );                                                                              // Begin transmitting heartrate data as a String
+    Serial.println( "Stethoscope began RECORDING" );                                                            // Function execution confirmation over USB serial
+    Serial.println( "sending: ACK..." );
+    BTooth.write( ACK );                                                                                        // ACKnowledgement sent back through bluetooth serial
+    Serial.println( "continueRecording() called" );
+    return true;
+  }
+  else
+    Serial.println( "Stethoscope CANNOT begin RECORDING" );                                                     // Function execution failed, notification over USB serial
+    Serial.println( "sending: NAK..." );
+    BTooth.write( NAK );                                                                                        // Negative AcKnowledgement sent back through bluetooth serial
+    return false;
+  */
+} // End of startMultiChannelRecording()
+
 
 // ==============================================================================================================
 // Continue Recording

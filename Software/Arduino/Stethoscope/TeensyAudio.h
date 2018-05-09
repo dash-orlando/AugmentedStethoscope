@@ -15,23 +15,24 @@
 #include <SerialFlash.h>
 
 // GUItool: begin automatically generated code
-AudioInputI2S            i2s_mic;        //xy=165,290
-AudioPlaySdRaw           playRaw_sdHeartSound; //xy=214,516
-AudioPlayMemory          playMem_heartSoundSamp; //xy=226,615
-AudioMixer4              rms_mic_mixer;  //xy=505,238
-AudioMixer4              rms_playRaw_mixer; //xy=507,333
-AudioAnalyzePeak         mic_peaks;      //xy=681,116
-AudioAnalyzePeak         playRaw_peaks;  //xy=696,438
-AudioAnalyzeRMS          mic_rms;        //xy=710,174
-AudioAnalyzeRMS          playRaw_rms;    //xy=720,383
-AudioMixer4              mixer_mic_Sd;   //xy=773,285
-AudioFilterStateVariable filter_LowPass_Rec; //xy=792,621
-AudioFilterStateVariable filter_HighPass_Amb; //xy=796,522
-AudioFilterBiquad        biquad_micSpk_EQ; //xy=971,286
-AudioMixer4              mixer_allToSpk; //xy=1052,542
-AudioRecordQueue         queue_recMic;   //xy=1237,272
-AudioOutputI2S           i2s_speaker;    //xy=1286,567
-AudioAnalyzePeak         peak_QrsMeter;  //xy=1293,485
+AudioInputI2S            i2s_mic;        //xy=115,238
+AudioPlaySdRaw           playRaw_sdHeartSound; //xy=164,464
+AudioPlayMemory          playMem_heartSoundSamp; //xy=176,563
+AudioMixer4              rms_mic_mixer;  //xy=455,186
+AudioMixer4              rms_playRaw_mixer; //xy=457,281
+AudioAnalyzePeak         mic_peaks;      //xy=631,64
+AudioAnalyzePeak         playRaw_peaks;  //xy=646,386
+AudioAnalyzeRMS          mic_rms;        //xy=660,122
+AudioAnalyzeRMS          playRaw_rms;    //xy=670,331
+AudioMixer4              mixer_mic_Sd;   //xy=723,233
+AudioFilterStateVariable filter_LowPass_Rec; //xy=742,569
+AudioFilterStateVariable filter_HighPass_Amb; //xy=746,470
+AudioFilterBiquad        biquad_micSpk_EQ; //xy=921,234
+AudioMixer4              mixer_allToSpk; //xy=1002,490
+AudioRecordQueue         queue_recMic;   //xy=1187,220
+AudioRecordQueue         queue_recSpk;         //xy=1191,620
+AudioOutputI2S           i2s_speaker;    //xy=1236,515
+AudioAnalyzePeak         peak_QrsMeter;  //xy=1243,433
 AudioConnection          patchCord1(i2s_mic, 0, filter_HighPass_Amb, 0);
 AudioConnection          patchCord2(i2s_mic, 0, rms_mic_mixer, 0);
 AudioConnection          patchCord3(i2s_mic, 1, filter_HighPass_Amb, 1);
@@ -52,10 +53,9 @@ AudioConnection          patchCord17(biquad_micSpk_EQ, 0, mixer_allToSpk, 0);
 AudioConnection          patchCord18(mixer_allToSpk, peak_QrsMeter);
 AudioConnection          patchCord19(mixer_allToSpk, 0, i2s_speaker, 0);
 AudioConnection          patchCord20(mixer_allToSpk, 0, i2s_speaker, 1);
-AudioControlSGTL5000     sgtl5000_1;     //xy=174,188
+AudioConnection          patchCord21(mixer_allToSpk, queue_recSpk);
+AudioControlSGTL5000     sgtl5000_1;     //xy=124,136
 // GUItool: end automatically generated code
-
-
 
 /// Variable Definitions
 elapsedMillis             fps;
