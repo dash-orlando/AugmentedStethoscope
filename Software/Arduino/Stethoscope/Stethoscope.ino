@@ -26,12 +26,12 @@ byte      inByte = 0x00;                                                        
 
 // ==============================================================================================================
 // SETUP LOOP
-// ==============================================================================================================
+// ============================================================================================================== //
 void setup()
 {
   // Serial Communication Initialization
-  Serial.begin( SPEED );                                                                            // USB Serial Communication
-  BTooth.begin( SPEED );                                                                            // RF/Bluetooth Serial Communication
+  Serial.begin( SPEED );                                                                                          // USB Serial Communication
+  BTooth.begin( SPEED );                                                                                          // RF/Bluetooth Serial Communication
 
   // Setup Audio Board
   SetupAudioBoard();
@@ -46,7 +46,7 @@ void setup()
 
 // ==============================================================================================================
 // MAIN LOOP
-// ==============================================================================================================
+// ============================================================================================================== //
 void loop()
 { // when using a microphone, continuously adjust gain
 /*  Instead of the following line of code, Mic Level will be hard-coded in SetupAudioBoard()
@@ -62,6 +62,9 @@ void loop()
   if ( mode == 3 ) continueHeartBeatMonitoring();
   //if ( mode == 4 ) continueAudioPassThrough();
   if ( mode == 5 ) continueBlending(fileName);
+
+  // simulation function ---------------------------------------------------------------------------------------- //
+  if ( mode == 6 ) continueSimulating();
   
   // Clear the input byte variable
   inByte = 0x00;                                // this line of code may be unnecessary

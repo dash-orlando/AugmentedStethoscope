@@ -30,54 +30,115 @@ String KOROTBlend(String fileName)                                              
   return fileName;
 } // End of KOROTBlend() function
 
- //
- // *** Blend Synthetic, Early Diastolic Murmur 
- //
- String EDMSYNBlend(String fileName)
- {
+//
+// *** Blend Synthetic, Early Diastolic Murmur 
+//
+String EDMSYNBlend(String fileName)
+{
 
-  fileName = ses.filePly6;
-  startBlending( fileName );                                                      // Blending of a Synthetic, Early Diastolic Murmur
-  Serial.println( fileName );
-  return fileName;
+fileName = ses.filePly6;
+startBlending( fileName );                                                      // Blending of a Synthetic, Early Diastolic Murmur
+Serial.println( fileName );
+return fileName;
+
+} // End of EDMSYNBlend() function
+
+//
+// *** Blend Synthetic, Asys... 
+//
+String ASYSYNBlend(String fileName)
+{
+
+fileName = ses.filePly7;
+startBlending( fileName );                                                      // ...
+Serial.println( fileName );
+return fileName;
+
+} // End of ... function
+
+//
+// *** Blend Synthetic, Peject... 
+//
+String PEJECTBlend(String fileName)
+{
+
+fileName = ses.filePly8;
+startBlending( fileName );                                                      // ...
+Serial.println( fileName );
+return fileName;
+
+} // End of ... function
+
+//
+// *** Blend Synthetic, Psplit... 
+//
+String PSPLITBlend(String fileName)
+{
+
+fileName = ses.filePly9;
+startBlending( fileName );                                                      // ...
+Serial.println( fileName );
+return fileName;
+
+} // End of ... function
+
+// ==============================================================================================================
+// Combined Functions
+// * simulation
+// The following functions combined several stethoscope features such as:
+// -- recording & blending
+// 
+// Fluvio L Lobo Fenoglietto 05/02/2018
+// ============================================================================================================== //
+String simFileName = "";
+boolean startSimulation()
+{
+  Serial.println( "EXECUTING simulation()" );
+  Serial.println( "NOTE simulation consisting of blending and recording..." );
+
+  // start recording -------------------------------------------------------------------------------------------- //
+  Serial.println( "STARTING MULTI-CHANNEL RECORDING" );                                                           // Starting multi-channel recording protocol
+  Serial.println( "recording Mode (recMode): 1..." );
+  recMode = 1;                                                                                                    // Default recording mode (recMode) for the multi-recording is recMode = 1
+  inString = parseString();                                                                                       // Parse input string
+  setRecordingFilename( inString, recExtension, recMode );                                                        // Create recording string with appropriate extension
+  startMultiChannelRecording( recStrings );                                                                       // Start custom filename recording
+
+  // start blending --------------------------------------------------------------------------------------------- //
+  Serial.println( "STARTING BLENDING" );                                                                          // Starting multi-channel recording protocol
+  Serial.println( "blending Aortic Stenosis..." );                                                                // Still need to find this file
+  simFileName = ses.filePly2;
+  startBlending( simFileName );
+
+  // switching operation mode ----------------------------------------------------------------------------------- //
+  switchMode( 6 );                                                                                                // Switch to "continue" mode
   
- } // End of EDMSYNBlend() function
+} // End of simulation()
 
- //
- // *** Blend Synthetic, Asys... 
- //
- String ASYSYNBlend(String fileName)
- {
-
-  fileName = ses.filePly7;
-  startBlending( fileName );                                                      // ...
-  Serial.println( fileName );
-  return fileName;
+boolean continueSimulating()
+{
+  // continue recording ----------------------------------------------------------------------------------------- //
+  continueRecording();
   
- } // End of ... function
+  // continue blending ------------------------------------------------------------------------------------------ //
+  continueBlending( simFileName );
 
- //
- // *** Blend Synthetic, Peject... 
- //
- String PEJECTBlend(String fileName)
- {
-
-  fileName = ses.filePly8;
-  startBlending( fileName );                                                      // ...
-  Serial.println( fileName );
-  return fileName;
+  // switching operation mode ----------------------------------------------------------------------------------- //
+  switchMode( 6 );                                                                                                // Maintain operation mode at 6
   
- } // End of ... function
+} // End of simulation()
 
- //
- // *** Blend Synthetic, Psplit... 
- //
- String PSPLITBlend(String fileName)
- {
+boolean stopSimulation()
+{
+  Serial.println( "EXECUTING stopSimulation()" );
+  // stop recording --------------------------------------------------------------------------------------------- //
+  stopRecording();
 
-  fileName = ses.filePly9;
-  startBlending( fileName );                                                      // ...
-  Serial.println( fileName );
-  return fileName;
+  // stop blending  --------------------------------------------------------------------------------------------- //
+  stopBlending();
+
+  // switching operation mode ----------------------------------------------------------------------------------- //
+  switchMode( 0 ); 
   
- } // End of ... function
+} // End of simulation()
+
