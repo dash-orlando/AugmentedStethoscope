@@ -28,13 +28,30 @@ void sendRAW( String fileName )
   
   if( dataFile )
   {
+    //for( int i = 0; i < 100; i++)
+    int i = 0;
     while( dataFile.available() )
-    //for( int i=0; i < 100; i++ )
     {
-      byte inByte = dataFile.read();
-      Serial.println( inByte, HEX );
-      BTooth.write( inByte );
-      //BTooth.write( dataFile.read() );
+      byte buf[64];
+      Serial.print( i );
+      Serial.print( "," );
+      for( int j = 0; j < 64; j++ )
+      {
+        byte inByte = dataFile.read();
+        buf[j] = inByte;
+        Serial.print( inByte, HEX );
+        Serial.print( "," );
+      }
+      Serial.println();
+      //Serial.println( sizeof(buf) );
+      //byte inByte = dataFile.read();
+      //Serial.print( i );
+      //Serial.print( ", " );
+      //Serial.print( buf[0], HEX );
+      //Serial.print( "," );
+      //Serial.print( buf[1], HEX );
+      BTooth.write( buf, sizeof(buf) );
+      i = i + 1;
     }
     BTooth.write( "END" );
     Serial.println("...completed...");
@@ -60,7 +77,7 @@ void sendWav( String fn )
 	   Serial.print( "Sending '" );
 		 Serial.print( fn );
      Serial.print( "'.\n" );
-     delay( 6000 );                                            // ...optional; in case time is needed to start host receive
+     delay( 2000 );                                            // ...optional; in case time is needed to start host receive
      sendFileSerial( SD.open( filename ) );                    // <--**** new function that sends WAV over Serial
      BTooth.write( ACK );
      Serial.println( "ESC-ACK" );

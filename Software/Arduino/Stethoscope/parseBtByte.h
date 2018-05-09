@@ -92,7 +92,7 @@ void parseBtByte( String fn )
 	    break;
       case SENDWAV :
         // SENDWAV : Send .WAV File
-        sendWav( fn );
+        sendWav( "KOROT.RAW" );
       break;
       case DELVOLATILE :
         //  DELVOLATILE : Delete Volatile Directory
