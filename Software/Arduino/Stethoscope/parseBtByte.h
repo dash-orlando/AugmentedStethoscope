@@ -115,7 +115,7 @@ void parseBtByte( String fn )
         // STARTCREC : Start Custom Recording
         Serial.println( "received: STARTCREC..." );
         inString = parseString();                                                                      // Parse input string
-        recString = setRecordingFilename( inString, recExtension );                                    // Create recording string with appropriate extension
+        recString = setRecordingFilename( inString, recExtension, recMode );                                    // Create recording string with appropriate extension
         startRecording( recString );                                                                   // Start custom filename recording
       break;
 	    case STOPREC :
@@ -174,8 +174,8 @@ void parseBtByte( String fn )
       case PSTRING :
         // PSTRING : Parse String
         inString = parseString();
-        recString = setRecordingFilename( inString, recExtension );
-        startRecording( recString );
+        recString = setRecordingFilename( inString, recExtension, 2 );
+        //startRecording( recString );
       break;
       
       case EDMSYN :

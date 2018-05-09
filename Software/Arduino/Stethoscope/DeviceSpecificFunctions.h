@@ -550,23 +550,64 @@ String parseString()
 // Receive text information to generate a recording
 // filename and avoid overwriting
 //
+// mode   = 0   -- custom filename, uses the "inString" variable passed through serial/bluetooth com.
+//        = 1   -- randomly generated filename to avoid overwrting data
+//        = 2   -- multiple channel recording ( - all channels to be specific )
+//
 // Fluvio L. Lobo Fenoglietto 11/30/2017
-// ==============================================================================================================
-File    recFile;                                                                                                // Recording file definition
-String  recExtension  = ".RAW";                                                                                 // Recording file extension definition
-String  recString     = "";                                                                                     // Recording file string name definiton
-String setRecordingFilename( String inString, String recExtension )
+// ============================================================================================================== //
+File    recFile;                                                                                                  // Recording file definition
+String  recExtension  = ".RAW";                                                                                   // Recording file extension definition
+String  recString     = "";                                                                                       // Recording file string name definiton
+String  recStrings[]  = {"","",""};                                                                               // Default string array dpending on the rec mode
+int     recMode       = 0;                                                                                        // Default -- rec. mode 0 ( will be expanded later )
+int     recChannels   = 3;
+String setRecordingFilename( String inString, String recExtension, int recMode )
 {
   Serial.println( "EXECUTING setRecordingFilename()" );
 
-  recString = inString + recExtension;                                                                          // Concatenating extension to input filename
+  switch( recMode )
+  {
+    case 0:
+      Serial.println( "Recording Mode 0 : " );
+      recString = inString + recExtension;                                                                        // Concatenating extension to input filename
+      Serial.print( "Recording using filename : " );
+      Serial.println( recString );
+    break;
+
+    case 1:
+      Serial.println( "Recording Mode 1 : " );
+      recString = inString + recExtension;                                                                        // Concatenating extension to input filename
+      Serial.print( "Recording using filename : " );
+      Serial.println( recString );
+      // add some check for filename existence
+    break;
+
+    case 2:
+      Serial.println( "Recording Mode 2 : " );
+      Serial.print( "Recording from " );
+      Serial.print( recChannels );
+      Serial.println( " channels " );
+
+      for( int i = 0; i < recChannels; i ++ )
+      {
+        String recChannelPrefix = "R";
+        String recChannelID = recChannelPrefix + i;
+        recStrings[i] = recChannelID + inString + recExtension;
+        Serial.println( "Recording using filename : " + recStrings[i] );
+      }
+      // add some check for filename existence
+    break;
+  }
+  
+  
   
   //char  recChar[recString.length()+1];                                                                          // Conversion from string to character array
   //recString.toCharArray( recChar, sizeof( recChar ) );
 
-  Serial.print(   "USING " );
-  Serial.print(   recString );
-  Serial.println( " as recording filename");
+  //Serial.print(   "USING " );
+  //Serial.print(   recString );
+  //Serial.println( " as recording filename");
   
   //if ( SD.exists( recChar ) ) SD.remove( recChar );                                                             // Check for existence of filename
   //recFile = SD.open( recChar, FILE_WRITE );                                                                     // Create using filename and open for recording
