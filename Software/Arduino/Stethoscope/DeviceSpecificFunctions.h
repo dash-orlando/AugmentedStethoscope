@@ -561,7 +561,7 @@ String  recExtension  = ".RAW";                                                 
 String  recString     = "";                                                                                       // Recording file string name definiton
 String  recStrings[]  = {"","",""};                                                                               // Default string array dpending on the rec mode
 int     recMode       = 0;                                                                                        // Default -- rec. mode 0 ( will be expanded later )
-int     recChannels   = 3;
+int     recChannels   = 2;
 String setRecordingFilename( String inString, String recExtension, int recMode )
 {
   Serial.println( "EXECUTING setRecordingFilename()" );
@@ -719,6 +719,8 @@ boolean startRecording(String recString)
 // Michael Xynidis
 // Fluvio L. Lobo Fenoglietto 05/09/2018
 // ============================================================================================================== //
+File  fileRec[ 3 ];
+int   fileRecFlag = 0;
 boolean startMultiChannelRecording( String recStrings[] )
 {
   Serial.println( "EXECUTING startRecording()" );                                                                 // Identification of function executed
@@ -728,37 +730,28 @@ boolean startMultiChannelRecording( String recStrings[] )
   for( int i = 0; i < nStrings; i ++ )
   {
     Serial.println( recStrings[i] );
-    char  recChar[recStrings[i].length()+1];                                                                          // Conversion from string to character array
+    char  recChar[recStrings[i].length()+1];                                                                      // Conversion from string to character array
     recString.toCharArray( recChar, sizeof( recChar ) );
 
     if ( SD.exists( recChar ) ) SD.remove( recChar );                                                             // Check for existence of RECORD.RAW
-    Serial.println( " here " );
 
-    frec  = SD.open( recChar, FILE_WRITE );                                                                       // Create and open RECORD.RAW file
-    //Serial.println( frec );
-    Serial.println( " here " );
+    if( fileRec[i]  = SD.open( recChar, FILE_WRITE ) )                                                            // Create and open RECORD.RAW file
+    {
+      fileRecFlag = fileRecFlag + 1 ;                                                                      
+    }
   }
 
-  /*
-  if (  SD.open( recChar, FILE_WRITE ) &&                                                                       // Create and open RECORD.RAW file
-        SD.open( fileDat, FILE_WRITE ) )                                                                        // Create and open HRATE.DAT file
+  
+  if (  fileRecFlag == 2 )                                                                                        // Create and open HRATE.DAT file
   {
-
-    Serial.print( "\nMinimum S1-S2 interval:\t\t"       );  Serial.print(   minS1S2       );  Serial.print( "ms" );
-    Serial.print( "\nMaximum S1-S2 interval:\t\t"       );  Serial.print(   maxS1S2       );  Serial.print( "ms" );
-    Serial.print( "\nNo-heartrate detect interval:\t"   );  Serial.print(   maxHBInterval );  Serial.print( "ms" );
-    Serial.print( "\nHearsound detection threshold:\t"  );  Serial.print(   sigThreshold  );
-    Serial.print( "\nLow-pass filter roll-off freq:\t"  );  Serial.print(   freqLowPass   );
-    Serial.print( "\nHighshelf filter roll-off freq:\t" );  Serial.println( freqHighShelf );
-    Serial.print( "\nRecord file on SD is named:\t"   );    Serial.print(   recChar       );
-    Serial.print( "\nHR Data file on SD is named:\t"    );  Serial.println( fileDat       );
-
     queue_recMic.begin();
+    queue_recSpk.begin();
     deviceState = RECORDING;
     switchMode( 1 );
+    recMode = 1;
     timeStamp   = 0;
     //sf1.StartSend( STRING, 1000 );                                                                              // Begin transmitting heartrate data as a String
-    Serial.println( "Stethoscope began RECORDING" );                                                            // Function execution confirmation over USB serial
+    Serial.println( "Stethoscope began MULTI RECORDING" );                                                            // Function execution confirmation over USB serial
     Serial.println( "sending: ACK..." );
     BTooth.write( ACK );                                                                                        // ACKnowledgement sent back through bluetooth serial
     Serial.println( "continueRecording() called" );
@@ -769,44 +762,70 @@ boolean startMultiChannelRecording( String recStrings[] )
     Serial.println( "sending: NAK..." );
     BTooth.write( NAK );                                                                                        // Negative AcKnowledgement sent back through bluetooth serial
     return false;
-  */
+  
 } // End of startMultiChannelRecording()
-
 
 // ==============================================================================================================
 // Continue Recording
 // Continue recording audio to SD card
+// * now with recMode capabilities
 //
 // Michael Xynidis
 // Fluvio L. Lobo Fenoglietto 11/21/2017
 // ==============================================================================================================
-void continueRecording()
+void continueRecording( int recMode )
 {
-  if ( queue_recMic.available() >= 2 )
+  switch( recMode )
   {
-    byte buffer[512];                                                                                           // Fetch 2 blocks from the audio library and copy into a 512 byte buffer.
-                                                                                                                // The Arduino SD library is most efficient when full 512 byte sector size writes are used.
-    memcpy( buffer, queue_recMic.readBuffer(), 256 );
-    queue_recMic.freeBuffer();
-    memcpy( buffer + 256, queue_recMic.readBuffer(), 256 );
-    queue_recMic.freeBuffer();                                                                                  // write all 512 bytes to the SD card
-    frec.write( buffer, 512 );
-    //bool beatCaptured = waveAmplitudePeaks();                                                                   // write HR and time to file at each heart beat
-    //if ( beatCaptured )
-    //{
-    //  lineOut = String( heartRateI, DEC ) + "," + String( timeStamp, DEC ) + "\r\n";
-    //  hRate.print( lineOut );
-    //  //txFr = sf1.Get();                                                                                         // get values from existing TX data frame
-    //  //txFr.DataString = String( heartRateI );                                                                   // update data-string value with heartrate
-    //  //sf1.Set( txFr );                                                                                          // set TX data frame with new heartate value
-    //}
-  }
+    case 0:
+      if ( queue_recMic.available() >= 2 )
+      {
+        byte buffer[512];                                                                                           // Fetch 2 blocks from the audio library and copy into a 512 byte buffer.
+        memcpy( buffer, queue_recMic.readBuffer(), 256 );
+        queue_recMic.freeBuffer();
+        memcpy( buffer + 256, queue_recMic.readBuffer(), 256 );
+        queue_recMic.freeBuffer();                                                                                  // write all 512 bytes to the SD card
+        frec.write( buffer, 512 );
+        //bool beatCaptured = waveAmplitudePeaks();                                                                   // write HR and time to file at each heart beat
+        //if ( beatCaptured )
+        //{
+        //  lineOut = String( heartRateI, DEC ) + "," + String( timeStamp, DEC ) + "\r\n";
+        //  hRate.print( lineOut );
+        //  //txFr = sf1.Get();                                                                                         // get values from existing TX data frame
+        //  //txFr.DataString = String( heartRateI );                                                                   // update data-string value with heartrate
+        //  //sf1.Set( txFr );                                                                                          // set TX data frame with new heartate value
+        //}
+      }
+    case 1:
+      if ( queue_recMic.available() >= 2 )
+      {
+        byte buffer[512];                                                                                           // Fetch 2 blocks from the audio library and copy into a 512 byte buffer.
+                                                                                                                    // The Arduino SD library is most efficient when full 512 byte sector size writes are used.
+        memcpy( buffer, queue_recMic.readBuffer(), 256 );
+        queue_recMic.freeBuffer();
+        memcpy( buffer + 256, queue_recMic.readBuffer(), 256 );
+        queue_recMic.freeBuffer();                                                                                  // write all 512 bytes to the SD card
+        fileRec[0].write( buffer, 512 );
+      }
+    
+      if ( queue_recSpk.available() >= 2 )
+      {
+        byte buffer[512];                                                                                           // Fetch 2 blocks from the audio library and copy into a 512 byte buffer.
+                                                                                                                    // The Arduino SD library is most efficient when full 512 byte sector size writes are used.
+        memcpy( buffer, queue_recSpk.readBuffer(), 256 );
+        queue_recSpk.freeBuffer();
+        memcpy( buffer + 256, queue_recSpk.readBuffer(), 256 );
+        queue_recSpk.freeBuffer();                                                                                  // write all 512 bytes to the SD card
+        fileRec[1].write( buffer, 512 );
+      }
+  } // End of switch( recMode )
 } // End of continueRecording()
 // ==============================================================================================================
 
 // ==============================================================================================================
 // Stop Recording
 // Stops recording audio to SD card
+// * now with multi-channel mode
 //
 // Michael Xynidis
 // Fluvio L. Lobo Fenoglietto 11/21/2017
@@ -815,35 +834,63 @@ boolean stopRecording()
 {
   Serial.println( "EXECUTING stopRecording" );
 
-  // No need to modify channel gains
-  //mixer_mic_Sd.gain( 0, mixerInputON  );                                                                        // Set gain of mixer_mic_Sd, channel0 to 0.5 - Microphone on
-  //mixer_mic_Sd.gain( 1, mixerInputON  );                                                                        // Set gain of mixer_mic_Sd, channel0 to 0.5 - Microphone on
-  //mixer_mic_Sd.gain( 2, mixerInputOFF );                                                                        // Set gain of mixer_mic_Sd, channel2 to 0
-  
-  queue_recMic.end();
-  if ( deviceState == RECORDING )
-  { 
-    //sf1.StopSend( STRING );                                                                                     // Terminate transmitting heartrate data as a String
-    Serial.println( "Stethoscope will STOP RECORDING" );                                                        // Function execution confirmation over USB serial
-    Serial.println( "sending: ACK..." );
-    BTooth.write( ACK );
-    while ( queue_recMic.available() > 0 )
-    {
-      frec.write( (byte*)queue_recMic.readBuffer(), 256 );
-      queue_recMic.freeBuffer();
-    }
-    frec.close();
-    hRate.close();
-    deviceState = READY;
-    switchMode( 0 );
-    return true;
-  }
-  else
-    Serial.println( "Stethoscope CANNOT STOP RECORDING" );                                                      // Function execution confirmation over USB serial
-    Serial.println( "sending: NAK..." );
-    BTooth.write( NAK );                                                                                        // Negative AcKnowledgement sent back through bluetooth serial
-    return false;
-}
+  switch( recMode )
+  {
+    case 0:
+      queue_recMic.end();
+      if ( deviceState == RECORDING )
+      { 
+        //sf1.StopSend( STRING );                                                                                     // Terminate transmitting heartrate data as a String
+        Serial.println( "Stethoscope will STOP RECORDING" );                                                        // Function execution confirmation over USB serial
+        Serial.println( "sending: ACK..." );
+        BTooth.write( ACK );
+        while ( queue_recMic.available() > 0 )
+        {
+          frec.write( (byte*)queue_recMic.readBuffer(), 256 );
+          queue_recMic.freeBuffer();
+        }
+        frec.close();
+        hRate.close();
+        deviceState = READY;
+        switchMode( 0 );
+        return true;
+      }
+      else
+        Serial.println( "Stethoscope CANNOT STOP RECORDING" );                                                      // Function execution confirmation over USB serial
+        Serial.println( "sending: NAK..." );
+        BTooth.write( NAK );                                                                                        // Negative AcKnowledgement sent back through bluetooth serial
+        return false;
+
+    case 1:
+      queue_recMic.end();
+      queue_recSpk.end();
+      if ( deviceState == RECORDING )
+      {
+        Serial.println( "Stethoscope will STOP MULTI RECORDING" );                                                 // Function execution confirmation over USB serial
+        Serial.println( "sending: ACK..." );
+        BTooth.write( ACK );
+        
+        while ( queue_recMic.available() > 0 && queue_recSpk.available() > 0  )
+        {
+          fileRec[0].write( (byte*)queue_recMic.readBuffer(), 256 );
+          queue_recMic.freeBuffer();
+
+          fileRec[1].write( (byte*)queue_recSpk.readBuffer(), 256 );
+          queue_recSpk.freeBuffer();
+        }
+        fileRec[0].close();
+        fileRec[1].close();
+        deviceState = READY;
+        switchMode( 0 );
+        return true;
+      }
+      else
+        Serial.println( "Stethoscope CANNOT STOP RECORDING" );                                                      // Function execution confirmation over USB serial
+        Serial.println( "sending: NAK..." );
+        BTooth.write( NAK );                                                                                        // Negative AcKnowledgement sent back through bluetooth serial
+        return false;
+  } // End of switch( recMode )
+} // End of stopRecording()
 // ==============================================================================================================
 
 //
