@@ -13,6 +13,8 @@
 // Variables
 // ============================================================================================================== //
 File          frec;
+File          micFileRec;
+File          spkFileRec;
 File          hRate;
 
 elapsedMillis msecs;
@@ -556,7 +558,6 @@ String parseString()
 //
 // Fluvio L. Lobo Fenoglietto 11/30/2017
 // ============================================================================================================== //
-File    recFile;                                                                                                  // Recording file definition
 String  recExtension  = ".RAW";                                                                                   // Recording file extension definition
 String  recString     = "";                                                                                       // Recording file string name definiton
 String  recStrings[]  = {"","",""};                                                                               // Default string array dpending on the rec mode
@@ -719,31 +720,39 @@ boolean startRecording(String recString)
 // Michael Xynidis
 // Fluvio L. Lobo Fenoglietto 05/09/2018
 // ============================================================================================================== //
-File  fileRec[ 3 ];
 int   fileRecFlag = 0;
 boolean startMultiChannelRecording( String recStrings[] )
 {
   Serial.println( "EXECUTING startRecording()" );                                                                 // Identification of function executed
   setRecGains();                                                                                                  // Set-up gains for microphone recording
 
-  int nStrings = sizeof( recStrings );
-  for( int i = 0; i < nStrings; i ++ )
-  {
-    Serial.println( recStrings[i] );
-    char  recChar[recStrings[i].length()+1];                                                                      // Conversion from string to character array
-    recString.toCharArray( recChar, sizeof( recChar ) );
+  // knowing that there are only two channels ------------------------------------------------------------------- //
+  Serial.println( recStrings[0] );
+  char  micRecChar[recStrings[0].length()+1];                                                                        // Conversion from string to character array
+  recStrings[0].toCharArray( micRecChar, sizeof( micRecChar ) );
 
-    if ( SD.exists( recChar ) ) SD.remove( recChar );                                                             // Check for existence of RECORD.RAW
-
-    if( fileRec[i]  = SD.open( recChar, FILE_WRITE ) )                                                            // Create and open RECORD.RAW file
-    {
-      fileRecFlag = fileRecFlag + 1 ;                                                                      
-    }
-  }
-
+  Serial.println( recStrings[1] );
+  char  spkRecChar[recStrings[1].length()+1];                                                                        // Conversion from string to character array
+  recStrings[1].toCharArray( spkRecChar, sizeof( spkRecChar ) );
+    
+  micFileRec = SD.open( micRecChar, FILE_WRITE );
+  Serial.println( micFileRec );
   
-  if (  fileRecFlag == 2 )                                                                                        // Create and open HRATE.DAT file
+  spkFileRec = SD.open( spkRecChar, FILE_WRITE );
+  Serial.println( spkFileRec );
+  
+  if (  SD.open( micRecChar, FILE_WRITE ) &&                                                                       // Create and open RECORD.RAW file
+        SD.open( spkRecChar, FILE_WRITE ) )                                                                        // Create and open HRATE.DAT file
   {
+
+    Serial.print( "\nMinimum S1-S2 interval:\t\t"       );  Serial.print(   minS1S2       );  Serial.print( "ms" );
+    Serial.print( "\nMaximum S1-S2 interval:\t\t"       );  Serial.print(   maxS1S2       );  Serial.print( "ms" );
+    Serial.print( "\nNo-heartrate detect interval:\t"   );  Serial.print(   maxHBInterval );  Serial.print( "ms" );
+    Serial.print( "\nHearsound detection threshold:\t"  );  Serial.print(   sigThreshold  );
+    Serial.print( "\nLow-pass filter roll-off freq:\t"  );  Serial.print(   freqLowPass   );
+    Serial.print( "\nHighshelf filter roll-off freq:\t" );  Serial.println( freqHighShelf );
+    Serial.print( "\nRecord file on SD is named:\t"   );    Serial.print(   micRecChar       );
+    Serial.print( "\nHR Data file on SD is named:\t"    );  Serial.println( spkRecChar       );
     queue_recMic.begin();
     queue_recSpk.begin();
     deviceState = RECORDING;
@@ -762,7 +771,6 @@ boolean startMultiChannelRecording( String recStrings[] )
     Serial.println( "sending: NAK..." );
     BTooth.write( NAK );                                                                                        // Negative AcKnowledgement sent back through bluetooth serial
     return false;
-  
 } // End of startMultiChannelRecording()
 
 // ==============================================================================================================
@@ -805,7 +813,7 @@ void continueRecording( int recMode )
         queue_recMic.freeBuffer();
         memcpy( buffer + 256, queue_recMic.readBuffer(), 256 );
         queue_recMic.freeBuffer();                                                                                  // write all 512 bytes to the SD card
-        fileRec[0].write( buffer, 512 );
+        micFileRec.write( buffer, 512 );
       }
     
       if ( queue_recSpk.available() >= 2 )
@@ -816,7 +824,7 @@ void continueRecording( int recMode )
         queue_recSpk.freeBuffer();
         memcpy( buffer + 256, queue_recSpk.readBuffer(), 256 );
         queue_recSpk.freeBuffer();                                                                                  // write all 512 bytes to the SD card
-        fileRec[1].write( buffer, 512 );
+        spkFileRec.write( buffer, 512 );
       }
   } // End of switch( recMode )
 } // End of continueRecording()
@@ -872,14 +880,14 @@ boolean stopRecording()
         
         while ( queue_recMic.available() > 0 && queue_recSpk.available() > 0  )
         {
-          fileRec[0].write( (byte*)queue_recMic.readBuffer(), 256 );
+          micFileRec.write( (byte*)queue_recMic.readBuffer(), 256 );
           queue_recMic.freeBuffer();
 
-          fileRec[1].write( (byte*)queue_recSpk.readBuffer(), 256 );
+          spkFileRec.write( (byte*)queue_recSpk.readBuffer(), 256 );
           queue_recSpk.freeBuffer();
         }
-        fileRec[0].close();
-        fileRec[1].close();
+        micFileRec.close();
+        spkFileRec.close();
         deviceState = READY;
         switchMode( 0 );
         return true;
