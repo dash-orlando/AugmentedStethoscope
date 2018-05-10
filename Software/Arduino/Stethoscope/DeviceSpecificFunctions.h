@@ -1263,3 +1263,17 @@ void setToIdle()
     break;
   }
 } // End setToIdle()
+
+// ================= //
+void testFilters()
+{
+  // rms mic mixer ---------------------------------------------------------------------------------------------- //
+  rms_mic_mixer.gain(   0, mixerInputOFF  );
+  rms_mic_mixer.gain(   1, mixerInputOFF  );
+  // mixer mic SD ----------------------------------------------------------------------------------------------- //
+  mixer_mic_Sd.gain(    0, mixerInputOFF  );                                                                      // Set gain of mixer_mic_Sd, channel0 to 1.00
+  // mixer all to speaker  -------------------------------------------------------------------------------------- //
+  mixer_allToSpk.gain(  0, mixerInputOFF  );                                                                      // Normal stethoscope mic input (on)
+  mixer_allToSpk.gain(  1, mixerInputON );                                                                       // Highpass mic input (off)
+}
+

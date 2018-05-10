@@ -65,6 +65,9 @@ void loop()
 
   // simulation function ---------------------------------------------------------------------------------------- //
   if ( mode == 6 ) continueSimulation();
+
+  // others ----------------------------------------------------------------------------------------------------- //
+  if ( mode == 7 ) testFilters();
   
   // Clear the input byte variable
   inByte = 0x00;                                // this line of code may be unnecessary
