@@ -96,6 +96,6 @@ String stateToText( int state )
  *          = 5   Continue Blending
  *
  */
-int			mode	= 7;
+int			mode	= 0;
 
 
