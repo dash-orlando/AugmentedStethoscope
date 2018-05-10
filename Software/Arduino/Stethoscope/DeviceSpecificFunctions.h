@@ -506,9 +506,9 @@ uint8_t rmsModulation()
 
 void switchMode( int m )
 {
-    Serial.print( "\nMode = "  );  Serial.print( mode );
+    //Serial.print( "\nMode = "  );  Serial.print( mode );
     mode = m;                                                                                                   // Change value of operation mode for continous recording
-    Serial.print( " -> "  );  Serial.println( mode );
+    //Serial.print( " -> "  );  Serial.println( mode );
 }
 
 // ==============================================================================================================
@@ -699,7 +699,6 @@ boolean startRecording(String recString)
 // Michael Xynidis
 // Fluvio L. Lobo Fenoglietto 05/09/2018
 // ============================================================================================================== //
-int   fileRecFlag = 0;
 boolean startMultiChannelRecording( String recStrings[] )
 {
   Serial.println( "EXECUTING startRecording()" );                                                                 // Identification of function executed

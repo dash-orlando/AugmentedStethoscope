@@ -64,7 +64,7 @@ void loop()
   if ( mode == 5 ) continueBlending(fileName);
 
   // simulation function ---------------------------------------------------------------------------------------- //
-  if ( mode == 6 ) continueSimulating();
+  if ( mode == 6 ) continueSimulation();
   
   // Clear the input byte variable
   inByte = 0x00;                                // this line of code may be unnecessary

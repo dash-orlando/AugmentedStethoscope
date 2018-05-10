@@ -55,7 +55,8 @@ byte STE[] = { 0x53, 0x54, 0x45, 0x00 };        // Stethoscope Device IDs
 #define         ASYSYN            0x34          // ...........................                                        [resp: ACK | NAK]
 #define         PEJECT            0x35          // ...........................                                        [resp: ACK | NAK]
 #define         PSPLIT            0x36          // ...........................                                        [resp: ACK | NAK]
-#define         SIM               0x39          // Simulation consisting of blending and recording                                        
+#define         STARTSIM          0x39          // Simulation consisting of blending and recording
+#define         STOPSIM           0x40          // Simulation consisting of blending and recording                                        
 
 
 

@@ -90,18 +90,16 @@ return fileName;
 // 
 // Fluvio L Lobo Fenoglietto 05/02/2018
 // ============================================================================================================== //
-String simFileName = "";
+String simFileName    = "";
 boolean startSimulation()
 {
+  BTooth.write( "ACK" );
   Serial.println( "EXECUTING simulation()" );
   Serial.println( "NOTE simulation consisting of blending and recording..." );
 
   // start recording -------------------------------------------------------------------------------------------- //
   Serial.println( "STARTING MULTI-CHANNEL RECORDING" );                                                           // Starting multi-channel recording protocol
   Serial.println( "recording Mode (recMode): 1..." );
-  recMode = 1;                                                                                                    // Default recording mode (recMode) for the multi-recording is recMode = 1
-  inString = parseString();                                                                                       // Parse input string
-  setRecordingFilename( inString, recExtension, recMode );                                                        // Create recording string with appropriate extension
   startMultiChannelRecording( recStrings );                                                                       // Start custom filename recording
 
   // start blending --------------------------------------------------------------------------------------------- //
@@ -115,7 +113,7 @@ boolean startSimulation()
   
 } // End of simulation()
 
-boolean continueSimulating()
+boolean continueSimulation()
 {
   // continue recording ----------------------------------------------------------------------------------------- //
   continueRecording();
@@ -130,7 +128,9 @@ boolean continueSimulating()
 
 boolean stopSimulation()
 {
+  BTooth.write( "ACK" );
   Serial.println( "EXECUTING stopSimulation()" );
+  
   // stop recording --------------------------------------------------------------------------------------------- //
   stopRecording();
 
