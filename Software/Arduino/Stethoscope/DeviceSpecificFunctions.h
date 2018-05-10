@@ -781,15 +781,6 @@ boolean continueRecording()
         memcpy( buffer + 256, queue_recMic.readBuffer(), 256 );
         queue_recMic.freeBuffer();                                                                                  // write all 512 bytes to the SD card
         frec.write( buffer, 512 );
-        //bool beatCaptured = waveAmplitudePeaks();                                                                   // write HR and time to file at each heart beat
-        //if ( beatCaptured )
-        //{
-        //  lineOut = String( heartRateI, DEC ) + "," + String( timeStamp, DEC ) + "\r\n";
-        //  hRate.print( lineOut );
-        //  //txFr = sf1.Get();                                                                                         // get values from existing TX data frame
-        //  //txFr.DataString = String( heartRateI );                                                                   // update data-string value with heartrate
-        //  //sf1.Set( txFr );                                                                                          // set TX data frame with new heartate value
-        //}
       }
       return true;
     break;
@@ -1122,54 +1113,6 @@ boolean stopBlending()
   return true;
 } // End of stopBlending()
 // ==============================================================================================================
-
-/*
-//
-// *** Start Microphone Passthrough Mode
-//     This function re-configures the stethoscope to pass audio through the microphone to the speakers
-//
-boolean startAudioPassThrough()
-{
-  Serial.println( "EXECUTING startAudioPassThrough()" );
-  if ( deviceState == RECORDING ) stopRecording();                                                              // Stop recording if recording
-  if ( deviceState == PLAYING   ) stopPlaying();                                                                // Stop playback if playing
-
-  if ( selectedInput == AUDIO_INPUT_MIC )
-  {
-    mixer_mic_Sd.gain( 0, mixerInputON  );                                                                      // Set gain of mixer_mic_Sd, channel0 to 0.5 - Microphone on
-    mixer_mic_Sd.gain( 1, mixerInputOFF  );                                                                     // Set gain of mixer_mic_Sd, channel0 to 0.5 - Microphone on
-    //mixer_mic_Sd.gain( 2, mixerInputOFF );                                                                    // Set gain of mixer_mic_Sd, channel2 to 0
-    deviceState = PASSTHRU;
-    switchMode( 4 );
-    Serial.println( "Stethoscope switched AUDIO PASSTHROUGH mode." );                                           // Function execution confirmation over USB serial
-    Serial.println( "sending: ACK..." );
-    BTooth.write( ACK );                                                                                        // ACKnowledgement sent back through bluetooth serial
-    return true;
-  }
-  else
-  {
-    Serial.println( "Stethoscope CANNOT switch to AUDIO PASSTHROUGH mode." );                                   // Function execution confirmation over USB serial
-    Serial.println( "sending: NAK..." );
-    BTooth.write( NAK );                                                                                        // Negative AcKnowledgement sent back through bluetooth serial
-    return false;
-  }
-} // End of startAudioPassThrough()
-
-
-//
-// *** Continue Microphone Passthrough Mode
-//
-boolean continueAudioPassThrough()
-{
-  mixer_mic_Sd.gain( 0, mixerInputON  );                                                                        // Set gain of mixer_mic_Sd, channel0 to 0.5 - Microphone on
-  mixer_mic_Sd.gain( 1, mixerInputOFF  );                                                                       // Set gain of mixer_mic_Sd, channel0 to 0.5 - Microphone on
-  //mixer_mic_Sd.gain( 2, mixerInputOFF );                                                                      // Set gain of mixer_mic_Sd, channel2 to 0
-  rmsAmplitudePeaksSingle();
-  deviceState = PASSTHRU;
-  return true;
-} // End of continueAudioPassThrough()
-*/
-
 
 // ==============================================================================================================
 // Start Heart Beat Monitoring
