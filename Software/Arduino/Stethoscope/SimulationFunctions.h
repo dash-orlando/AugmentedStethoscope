@@ -104,10 +104,10 @@ boolean startSimulation()
   startMultiChannelRecording( recStrings );                                                                       // Start custom filename recording
 
   // start blending --------------------------------------------------------------------------------------------- //
-  //Serial.println( "STARTING BLENDING" );                                                                          // Starting multi-channel recording protocol
-  //Serial.println( "blending Aortic Stenosis..." );                                                                // Still need to find this file
-  //simFileName = ses.filePly2;
-  //startBlending( simFileName );
+  Serial.println( "STARTING BLENDING" );                                                                          // Starting multi-channel recording protocol
+  Serial.println( "blending Aortic Stenosis..." );                                                                // Still need to find this file
+  simFileName = ses.filePly2;
+  startBlending( simFileName );
 
   // switching operation mode ----------------------------------------------------------------------------------- //
   switchMode( 6 );                                                                                                // Switch to "continue" mode
@@ -120,7 +120,7 @@ boolean continueSimulation()
   continueRecording();
   
   // continue blending ------------------------------------------------------------------------------------------ //
-  //continueBlending( simFileName );
+  continueBlending( simFileName );
 
   // switching operation mode ----------------------------------------------------------------------------------- //
   switchMode( 6 );                                                                                                // Maintain operation mode at 6
@@ -137,10 +137,10 @@ boolean stopSimulation()
   stopRecording();
 
   // stop blending  --------------------------------------------------------------------------------------------- //
-  //stopBlending();
+  stopBlending();
 
   // switching operation mode ----------------------------------------------------------------------------------- //
-  switchMode( 0 ); 
+  switchMode( 6 );                                                                                                // the continue blending function will terminate the simulation and switch to mode 0
   
 } // End of simulation()
 

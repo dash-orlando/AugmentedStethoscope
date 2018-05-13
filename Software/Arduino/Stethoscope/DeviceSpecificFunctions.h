@@ -1050,6 +1050,7 @@ void continueBlending(String fileName)
     fileName.toCharArray( filePly, sizeof( filePly ) );
     Serial.println( filePly );
     Serial.println( SD.exists( filePly ) );
+    Serial.println( "stuck here" );
     playRaw_sdHeartSound.play( filePly );
   }
 
@@ -1118,6 +1119,7 @@ void continueBlending(String fileName)
     {
       playRaw_sdHeartSound.stop();                                                                              // stop playback file
       switchMode( 0 );                                                                                          // switch to pre-defined mode (preferably idle/standby)
+      Serial.println( "here" );
     } // End of blend mixer level check
   } // End of deviceState check 
 } // End of continueBlending();
