@@ -90,7 +90,8 @@ return fileName;
 // 
 // Fluvio L Lobo Fenoglietto 05/02/2018
 // ============================================================================================================== //
-String simFileName    = "";
+// String simFileName    = "";
+String simFileName = ses.filePly2;
 boolean startSimulation()
 {
   Serial.println( "EXECUTING simulation()" );

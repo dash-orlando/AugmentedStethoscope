@@ -885,6 +885,7 @@ boolean stopRecording()
         return false;
 
     case 1:
+      Serial.println( " Closing Recording Files " );
       queue_recMic.end();
       queue_recSpk.end();
       if ( recState == RECORDING )
@@ -905,7 +906,7 @@ boolean stopRecording()
         spkFileRec.close();
         deviceState = READY;
         recState    = READY;
-        switchMode( 0 );
+        //switchMode( 0 );
         return true;
       }
       else
