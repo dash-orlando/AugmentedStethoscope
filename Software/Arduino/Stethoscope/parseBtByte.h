@@ -108,6 +108,11 @@ void parseBtByte( String fn )
       break;
       
       // Device-Specific Functions ================================================================== //
+      // Recording ---------------------------------------------------------------------------------- //
+      case RECMODE :
+        // RECMODE : Set Recording Mode
+        setRecordingMode();
+      break;
 	    case STARTREC :
         // STARTREC : Start Recording
         Serial.println( "received: STARTREC..." );

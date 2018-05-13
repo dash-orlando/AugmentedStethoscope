@@ -543,22 +543,53 @@ String parseString()
   }
 } // End of parseString() function
 
-
 // ==============================================================================================================
-// Set Recording Filename
-// Receive text information to generate a recording
-// filename and avoid overwriting
+// Set Recording Mode
+// Function that sets the recording mode
 //
 // mode   = 0   -- custom filename, uses the "inString" variable passed through serial/bluetooth com.
 //        = 1   -- multiple channel recording ( - all channels to be specific )
+//
+// Fluvio L. Lobo Fenoglietto 05/12/2017
+// ============================================================================================================== //
+int     recMode       = 0;                                                                                        // Default -- rec. mode 0 ( will be expanded later )
+int     recChannels   = 2;
+boolean setRecordingMode()
+{
+  if ( BTooth.available() > 0 )
+  {
+    inString = BTooth.readString();
+  }
+  if ( inString.length() == 1 )
+  {
+    Serial.println( "Stethoscope received RECORDING MODE" );                                                      // Function execution confirmation over USB serial
+    Serial.print(   "Stethoscope received ");
+    Serial.println( inString );
+    Serial.println( "sending: ACK..." );
+    BTooth.write( ACK );                                                                                          // ACKnowledgement sent back through bluetooth serial
+    recMode = inString.toInt();                                                                                   // Converting input string to integer
+    return recMode;
+  }
+  else
+  {
+    Serial.println( "Stethoscope did NOT receive STRING" );                                                     // Function execution confirmation over USB serial
+    Serial.println( "Setting RECORDING MODE to default (0)" );
+    Serial.println( "sending: NAK..." );
+    BTooth.write( NAK );                                                                                        // ACKnowledgement sent back through bluetooth serial
+    recMode = 0;                                                                                                // ...leaving the default value
+    return recMode;
+  }
+} // End of setRecordingMode()
+
+// ==============================================================================================================
+// Set Recording Filename
+// Receive text information to generate a recording filename and avoid overwriting
 //
 // Fluvio L. Lobo Fenoglietto 11/30/2017
 // ============================================================================================================== //
 String  recExtension  = ".RAW";                                                                                   // Recording file extension definition
 String  recString     = "";                                                                                       // Recording file string name definiton
 String  recStrings[]  = {"","",""};                                                                               // Default string array dpending on the rec mode
-int     recMode       = 0;                                                                                        // Default -- rec. mode 0 ( will be expanded later )
-int     recChannels   = 2;
 boolean setRecordingFilename( String inString, String recExtension, int recMode )
 {
   Serial.println( "EXECUTING setRecordingFilename()" );
