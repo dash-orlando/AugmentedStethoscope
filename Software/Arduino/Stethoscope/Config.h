@@ -27,6 +27,8 @@ struct Session
     String    filePly7;
     String    filePly8;
     String    filePly9;
+    String    filePly10;
+    String    filePly11;
     String    fileDat;
     int       heartRate;
 };
@@ -60,6 +62,8 @@ void SessionInit( String SID )
               "ASYSYN.RAW",             // ...
               "PEJECT.RAW",             // ...
               "PSPLIT.RAW",             // ...
+              "S4GALL.RAW",             // S4 Gallop
+              "AORSTE.RAW",             // Severe Aortic Stenosis
               "HRATE.DAT"               // Heart Rate data file 
           };
 }
