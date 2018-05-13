@@ -957,7 +957,23 @@ boolean stopPlaying()
   return true;
 }
 
-
+// ==============================================================================================================
+// Set Blend Gains
+// Setting gains on mixers associated with the blending functions
+//
+// Fluvio L. Lobo Fenoglietto 05/13/2017
+// ==============================================================================================================
+boolean setBlendGains()
+{
+  // Control Mixer Channels and Gains
+  //rms_mic_mixer.gain(     0,  mixerInputON  );                                                                  // Set mic input, channel 0 of mic&Sd mixer ON      (g = 1)
+  //rms_mic_mixer.gain(     1,  mixerInputON  );                                                                  // Set mic input, channel 1 of mic&Sd mixer ON      (g = 1)
+  rms_playRaw_mixer.gain(   0,  mixerInputON );                                                                  // Set plaback, channel 0 of rms mixer OFF          (g = 0)
+  mixer_mic_Sd.gain(        0,  mixerInputON  );                                                                  // Set mic input, channel 0 of mic&Sd mixer ON      (g = 1)
+  mixer_mic_Sd.gain(        1,  mixerInputOFF );                                                                  // Set playback, channel 1 of mic&Sd mixer OFF      (g = 0)
+  mixer_allToSpk.gain(      0,  mixerInputON  );                                                                  // Set mic input, channel 0 of speaker mixer ON     (g = 1)
+  mixer_allToSpk.gain(      1,  mixerInputOFF ); 
+} // End of setBlendGains()
 
 // ==============================================================================================================
 // Start Blending
@@ -972,12 +988,43 @@ boolean stopPlaying()
 boolean startBlending( String fileName )
 {
   Serial.println( "EXECUTING startBlending()" );                                                                // Identification of function executed
+  setBlendGains();
+  
+  char  filePly[fileName.length()+1];                                                                           // Conversion from string to character array
+  fileName.toCharArray( filePly, sizeof( filePly ) );
+  Serial.println( filePly );
+  Serial.println( SD.exists( filePly ) );
+  
+  if ( SD.exists( filePly ) )
+  {
+    deviceState = BLENDING;
+    blendState  = BLENDING;
+    Serial.println( "Stethoscope will begin BLENDING" );
+    playRaw_sdHeartSound.play( filePly );                                                                       // Start playing recorded HB
+    BTooth.write( ACK );
+    switchMode( 5 );
+    return true;    
+  }
+  else
+  {
+    Serial.println( "Stethoscope CANNOT begin BLENDING" );                                                      // Function execution confirmation over USB serial
+    BTooth.write( NAK );                                                                                        // Negative AcKnowledgement sent back through bluetooth serial
+    return false;
+  }
+} // End of startBlending()
+// ==============================================================================================================
 
-  // Control Mixer Channels and Gains
-  mixer_mic_Sd.gain( 0, mixerInputON  );                                                                        // Turn ON the input mic channel (0, gain = 1)
-  mixer_mic_Sd.gain( 1, mixerInputOFF  );                                                                       // Turn OFF the playback channel (1, gain = 0)
-  //mixer_allToSpk.gain( 1, mixerInputOFF );                                                                      // Turn OFF the high-pass-filtered channel (1, gain = 0)
-
+// ==============================================================================================================
+// Start Simulation Blending
+// Blending or mixing the input microphone line with an audio file, triggered by an external input
+//
+// Fluvio L. Lobo Fenoglietto 11/12/2017
+// ==============================================================================================================
+boolean startSimBlending( String fileName )
+{
+  Serial.println( "EXECUTING startBlending()" );                                                                // Identification of function executed
+  setBlendGains();
+  
   char  filePly[fileName.length()+1];                                                                           // Conversion from string to character array
   fileName.toCharArray( filePly, sizeof( filePly ) );
   Serial.println( filePly );
@@ -999,7 +1046,7 @@ boolean startBlending( String fileName )
     BTooth.write( NAK );                                                                                        // Negative AcKnowledgement sent back through bluetooth serial
     return false;
   }
-} // End of startBlending()
+} // End of startSimBlending()
 // ==============================================================================================================
 
 // ==============================================================================================================
@@ -1018,7 +1065,6 @@ float   mic_mixer_lvl                 = 1.0;                                    
 float   playback_mixer_lvl            = 0.0;                                                                    // playback mixer gain level (standard and initial)
 float   mic_mixer_lvl_step            = 0.0001;
 float   playback_mixer_lvl_step       = mic_mixer_lvl_step;
-
 float   playback_rms_mixer_lvl        = 0.25;
 float   playback_rms_mixer_lvl_step   = 0.10;                                                                   // mixer level step for rms-based amplitude manipulation
 boolean continueBlending(String fileName) 
