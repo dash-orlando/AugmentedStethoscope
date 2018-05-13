@@ -701,8 +701,8 @@ boolean startRecording(String recString)
     queue_recMic.begin();
     deviceState = RECORDING;
     recState    = RECORDING;
-    switchMode( 1 );
-    timeStamp   = 0;
+    //switchMode( 1 );
+    //timeStamp   = 0;
     //sf1.StartSend( STRING, 1000 );                                                                              // Begin transmitting heartrate data as a String
     Serial.println( "Stethoscope began RECORDING" );                                                            // Function execution confirmation over USB serial
     Serial.println( "sending: ACK..." );

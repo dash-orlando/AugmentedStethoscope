@@ -103,7 +103,8 @@ boolean startSimulation()
   setRecordingFilename( inString, recExtension, recMode );                                                        // Create recording string with appropriate extension
   Serial.println( "STARTING MULTI-CHANNEL RECORDING" );                                                           // Starting multi-channel recording protocol
   AudioNoInterrupts();
-  startMultiChannelRecording( recStrings );                                                                       // Start custom filename recording
+  startRecording( recString );
+  //startMultiChannelRecording( recStrings );                                                                       // Start custom filename recording
 
   // start blending --------------------------------------------------------------------------------------------- //
   Serial.println( "STARTING BLENDING" );                                                                          // Starting multi-channel recording protocol
