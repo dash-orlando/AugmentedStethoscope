@@ -1043,7 +1043,7 @@ float   playback_mixer_lvl_step       = mic_mixer_lvl_step;
 
 float   playback_rms_mixer_lvl        = 0.25;
 float   playback_rms_mixer_lvl_step   = 0.10;                                                                   // mixer level step for rms-based amplitude manipulation
-void continueBlending(String fileName) 
+boolean continueBlending(String fileName) 
 {
   if ( !playRaw_sdHeartSound.isPlaying() )                                                                      // check if playback sound is playing/running                                                                 
   {
@@ -1074,6 +1074,7 @@ void continueBlending(String fileName)
     else
     {
       blendState = CONTINUING;                                                                                   // Switch state to CONTINUING for dynamic blending, other...
+      return true;
     } // End of blend mixer level check
   }
   else if ( blendState == CONTINUING )                                                                           // if deviceState == CONTINUING, maintain or vary mixer levels using functions
@@ -1102,6 +1103,7 @@ void continueBlending(String fileName)
     //Serial.print(rms_switch);
     //Serial.print(" | PlayBack RMS Mixer Gain = ");
     //Serial.println(playback_rms_mixer_lvl);
+    return true;
   }
   else if ( blendState == READY )
   {
@@ -1121,7 +1123,8 @@ void continueBlending(String fileName)
       playRaw_sdHeartSound.stop();                                                                              // stop playback file
       switchMode( 0 );                                                                                          // switch to pre-defined mode (preferably idle/standby)
     } // End of blend mixer level check
-  } // End of deviceState check 
+  } // End of deviceState check
+  return true; 
 } // End of continueBlending();
 // ==============================================================================================================
 

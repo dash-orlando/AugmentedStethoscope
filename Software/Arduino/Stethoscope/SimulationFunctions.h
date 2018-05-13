@@ -122,10 +122,8 @@ boolean continueSimulation()
   // continue recording ----------------------------------------------------------------------------------------- //
   AudioNoInterrupts();
   continueRecording();
-  //AudioInterrupts();
   
   // continue blending ------------------------------------------------------------------------------------------ //
-  // AudioNoInterrupts();
   continueBlending( simFileName );
   AudioInterrupts();
 
