@@ -184,10 +184,11 @@ void parseBtByte( String fn )
         // KOROT : Start Augmenting KorotKoff Sound
         fileName = KOROTBlend(fileName);
       break;
+      
       case PSTRING :
         // PSTRING : Parse String
         inString = parseString();
-        recString = setRecordingFilename( inString, recExtension, 2 );
+        //recString = setRecordingFilename( inString, recExtension, 2 );
         //startRecording( recString );
       break;
       
