@@ -56,7 +56,9 @@ byte STE[] = { 0x53, 0x54, 0x45, 0x00 };        // Stethoscope Device IDs
 #define         PEJECT            0x35          // ...........................                                        [resp: ACK | NAK]
 #define         PSPLIT            0x36          // ...........................                                        [resp: ACK | NAK]
 #define         STARTSIM          0x39          // Simulation consisting of blending and recording
-#define         STOPSIM           0x40          // Simulation consisting of blending and recording                                        
+#define         STOPSIM           0x40          // Simulation consisting of blending and recording
+#define         S4GALL            0x42          // Playback or Blending of the S4 Gallop
+#define         AORSTE            0x43          // Playback ot Blending of the Aortic Stenosis                                        
 
 
 

@@ -82,6 +82,32 @@ return fileName;
 
 } // End of ... function
 
+//
+// *** Blend Synthetic, S4 Gallop... 
+//
+String S4GALLBlend(String fileName)
+{
+
+fileName = ses.filePly10;
+startBlending( fileName );                                                      // ...
+Serial.println( fileName );
+return fileName;
+
+} // End of ... function
+
+//
+// *** Blend Synthetic, Aortic Stenosis... 
+//
+String AORSTEBlend(String fileName)
+{
+
+fileName = ses.filePly11;
+startBlending( fileName );                                                      // ...
+Serial.println( fileName );
+return fileName;
+
+} // End of ... function
+
 // ==============================================================================================================
 // Combined Functions
 // * simulation

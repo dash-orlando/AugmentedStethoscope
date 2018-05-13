@@ -123,11 +123,8 @@ void parseBtByte( String fn )
         //startRecording();
       break;
       case STARTCREC :
-        // STARTCREC : Start Custom Recording                                                                    // Parse input string
-        Serial.println( recMode );
-        Serial.println( inString );
-        setRecordingFilename( inString, recExtension, recMode );                           // Create recording string with appropriate extension
-        Serial.println( recString );
+        // STARTCREC : Start Custom Recording
+        setRecordingFilename( inString, recExtension, recMode );                                       // Create recording string with appropriate extension
         startRecording( recString );                                                                   // Start custom filename recording
       break;
       case STARTMREC :
@@ -212,6 +209,18 @@ void parseBtByte( String fn )
         // PSPLIT : ...
         fileName = ses.filePly9;
         fileName = PSPLITBlend(fileName);
+      break;
+
+      case S4GALL :
+        // S4GALL : S4 Gallop
+        fileName = ses.filePly10;
+        fileName = S4GALLBlend(fileName);
+      break;
+
+      case AORSTE :
+        // AORSTE : Aortic Stenosis
+        fileName = ses.filePly11;
+        fileName = AORSTEBlend(fileName);
       break;
 
       case STARTSIM :
