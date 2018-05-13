@@ -98,9 +98,11 @@ boolean startSimulation()
   Serial.println( "NOTE simulation consisting of blending and recording..." );
 
   // start recording -------------------------------------------------------------------------------------------- //
+  Serial.println( "GENERATING RECORDING FILENAMES" );
+  setRecordingFilename( inString, recExtension, recMode );                                                        // Create recording string with appropriate extension
   Serial.println( "STARTING MULTI-CHANNEL RECORDING" );                                                           // Starting multi-channel recording protocol
   Serial.println( "recording Mode (recMode): 1..." );
-  startMultiChannelRecording( recStrings );                                                                       // Start custom filename recording
+  //startMultiChannelRecording( recStrings );                                                                       // Start custom filename recording
 
   // start blending --------------------------------------------------------------------------------------------- //
   //Serial.println( "STARTING BLENDING" );                                                                          // Starting multi-channel recording protocol
@@ -109,7 +111,7 @@ boolean startSimulation()
   //startBlending( simFileName );
 
   // switching operation mode ----------------------------------------------------------------------------------- //
-  switchMode( 6 );                                                                                                // Switch to "continue" mode
+  //switchMode( 6 );                                                                                                // Switch to "continue" mode
   
 } // End of simulation()
 

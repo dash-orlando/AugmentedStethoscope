@@ -220,9 +220,6 @@ void parseBtByte( String fn )
 
       case STARTSIM :
         // STARTSIM : Start Simulating
-        recMode = 1;                                                                                                    // Default recording mode (recMode) for the multi-recording is recMode = 1
-        inString = parseString();                                                                                       // Parse input string
-        setRecordingFilename( inString, recExtension, recMode );                                                        // Create recording string with appropriate extension
         startSimulation();
       break;
 
