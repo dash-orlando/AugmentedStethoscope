@@ -489,14 +489,14 @@ uint8_t rmsModulation()
       }// End of RMS comparison...
 
       // Print values for comparison
-      Serial.print("micRMS = ");
-      Serial.print(micRMS);
-      Serial.print(" | playRawRMS = ");
-      Serial.print(playRawRMS);
-      Serial.print(" | Count =");
-      Serial.print(count);
-      Serial.print(" | returnValue = ");
-      Serial.println(returnValue);
+      //Serial.print("micRMS = ");
+      //Serial.print(micRMS);
+      //Serial.print(" | playRawRMS = ");
+      //Serial.print(playRawRMS);
+      //Serial.print(" | Count =");
+      //Serial.print(count);
+      //Serial.print(" | returnValue = ");
+      //Serial.println(returnValue);
      
     } // End of availability check
   } // End of fps check
@@ -818,6 +818,7 @@ boolean continueRecording()
     case 1:
       if ( queue_recMic.available() >= 2 )
       {
+        Serial.println( " Recording mic out... " );
         byte buffer[512];                                                                                           // Fetch 2 blocks from the audio library and copy into a 512 byte buffer.
                                                                                                                     // The Arduino SD library is most efficient when full 512 byte sector size writes are used.
         memcpy( buffer, queue_recMic.readBuffer(), 256 );
@@ -829,6 +830,7 @@ boolean continueRecording()
     
       if ( queue_recSpk.available() >= 2 )
       {
+        Serial.println( " Recording speaker out... " );
         byte buffer[512];                                                                                           // Fetch 2 blocks from the audio library and copy into a 512 byte buffer.
                                                                                                                     // The Arduino SD library is most efficient when full 512 byte sector size writes are used.
         memcpy( buffer, queue_recSpk.readBuffer(), 256 );
@@ -995,8 +997,7 @@ boolean startBlending( String fileName )
   // Control Mixer Channels and Gains
   mixer_mic_Sd.gain( 0, mixerInputON  );                                                                        // Turn ON the input mic channel (0, gain = 1)
   mixer_mic_Sd.gain( 1, mixerInputOFF  );                                                                       // Turn OFF the playback channel (1, gain = 0)
-  mixer_allToSpk.gain( 1, mixerInputOFF );                                                                      // Turn OFF the high-pass-filtered channel (1, gain = 0)
-  mixer_allToSpk.gain( 2, mixerInputOFF );                                                                      // Turn OFF the play-from memmory channel (2, gain = 0)
+  //mixer_allToSpk.gain( 1, mixerInputOFF );                                                                      // Turn OFF the high-pass-filtered channel (1, gain = 0)
 
   char  filePly[fileName.length()+1];                                                                           // Conversion from string to character array
   fileName.toCharArray( filePly, sizeof( filePly ) );
@@ -1010,7 +1011,7 @@ boolean startBlending( String fileName )
     Serial.println( "Stethoscope will begin BLENDING" );
     playRaw_sdHeartSound.play( filePly );                                                                       // Start playing recorded HB
     BTooth.write( ACK );
-    switchMode( 5 );
+    //switchMode( 5 );
     return true;    
   }
   else
@@ -1050,7 +1051,6 @@ void continueBlending(String fileName)
     fileName.toCharArray( filePly, sizeof( filePly ) );
     Serial.println( filePly );
     Serial.println( SD.exists( filePly ) );
-    Serial.println( "stuck here" );
     playRaw_sdHeartSound.play( filePly );
   }
 
@@ -1065,10 +1065,10 @@ void continueBlending(String fileName)
       playback_mixer_lvl  = playback_mixer_lvl + playback_mixer_lvl_step;                                       // gradually increase playback gain level
       mixer_mic_Sd.gain(0, mic_mixer_lvl);                                                                      // apply mic. gain
       mixer_mic_Sd.gain(1, playback_mixer_lvl);                                                                 // apply playback gain
-      Serial.print(" mic. gain = ");                                                                            // print gain values for debugging...
-      Serial.print(mic_mixer_lvl);
-      Serial.print(" || playback gain = ");
-      Serial.println(playback_mixer_lvl);
+      //Serial.print(" mic. gain = ");                                                                            // print gain values for debugging...
+      //Serial.print(mic_mixer_lvl);
+      //Serial.print(" || playback gain = ");
+      //Serial.println(playback_mixer_lvl);
     }
     else
     {
@@ -1110,16 +1110,15 @@ void continueBlending(String fileName)
       playback_mixer_lvl  = playback_mixer_lvl - playback_mixer_lvl_step;    
       mixer_mic_Sd.gain(0, mic_mixer_lvl);
       mixer_mic_Sd.gain(1, playback_mixer_lvl);
-      Serial.print(" mic. gain = ");
-      Serial.print(mic_mixer_lvl);
-      Serial.print(" || playback gain = ");
-      Serial.println(playback_mixer_lvl);
+      //Serial.print(" mic. gain = ");
+      //Serial.print(mic_mixer_lvl);
+      //Serial.print(" || playback gain = ");
+      //Serial.println(playback_mixer_lvl);
     }
     else
     {
       playRaw_sdHeartSound.stop();                                                                              // stop playback file
       switchMode( 0 );                                                                                          // switch to pre-defined mode (preferably idle/standby)
-      Serial.println( "here" );
     } // End of blend mixer level check
   } // End of deviceState check 
 } // End of continueBlending();

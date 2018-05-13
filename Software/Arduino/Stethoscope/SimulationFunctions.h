@@ -140,7 +140,7 @@ boolean stopSimulation()
   stopBlending();
 
   // switching operation mode ----------------------------------------------------------------------------------- //
-  switchMode( 6 );                                                                                                // the continue blending function will terminate the simulation and switch to mode 0
+  switchMode( 0 );                                                                                                // the continue blending function will terminate the simulation and switch to mode 0
   
 } // End of simulation()
 
