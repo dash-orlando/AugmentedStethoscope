@@ -102,6 +102,7 @@ boolean startSimulation()
   Serial.println( "GENERATING RECORDING FILENAMES" );
   setRecordingFilename( inString, recExtension, recMode );                                                        // Create recording string with appropriate extension
   Serial.println( "STARTING MULTI-CHANNEL RECORDING" );                                                           // Starting multi-channel recording protocol
+  AudioNoInterrupts();
   startMultiChannelRecording( recStrings );                                                                       // Start custom filename recording
 
   // start blending --------------------------------------------------------------------------------------------- //
@@ -109,6 +110,7 @@ boolean startSimulation()
   Serial.println( "blending Aortic Stenosis..." );                                                                // Still need to find this file
   simFileName = ses.filePly2;
   startBlending( simFileName );
+  AudioInterrupts();
 
   // switching operation mode ----------------------------------------------------------------------------------- //
   switchMode( 6 );                                                                                                // Switch to "continue" mode
@@ -118,13 +120,17 @@ boolean startSimulation()
 boolean continueSimulation()
 {
   // continue recording ----------------------------------------------------------------------------------------- //
+  AudioNoInterrupts();
   continueRecording();
+  AudioInterrupts();
   
   // continue blending ------------------------------------------------------------------------------------------ //
+  AudioNoInterrupts();
   continueBlending( simFileName );
+  AudioInterrupts();
 
   // switching operation mode ----------------------------------------------------------------------------------- //
-  switchMode( 6 );                                                                                                // Maintain operation mode at 6
+  //switchMode( 6 );                                                                                                // Maintain operation mode at 6
   
 } // End of simulation()
 
@@ -135,13 +141,15 @@ boolean stopSimulation()
   BTooth.write( ACK );
   
   // stop recording --------------------------------------------------------------------------------------------- //
+  AudioNoInterrupts();
   stopRecording();
 
   // stop blending  --------------------------------------------------------------------------------------------- //
   stopBlending();
+  AudioInterrupts();
 
   // switching operation mode ----------------------------------------------------------------------------------- //
-  switchMode( 0 );                                                                                                // the continue blending function will terminate the simulation and switch to mode 0
+  switchMode( 6 );                                                                                                // the continue blending function will terminate the simulation and switch to mode 0
   
 } // End of simulation()
 
