@@ -506,9 +506,9 @@ uint8_t rmsModulation()
 
 void switchMode( int m )
 {
-    //Serial.print( "\nMode = "  );  Serial.print( mode );
+    Serial.print( "\nMode = "  );  Serial.print( mode );
     mode = m;                                                                                                   // Change value of operation mode for continous recording
-    //Serial.print( " -> "  );  Serial.println( mode );
+    Serial.print( " -> "  );  Serial.println( mode );
 }
 
 // ==============================================================================================================
@@ -773,7 +773,7 @@ boolean startMultiChannelRecording( String recStrings[] )
     queue_recSpk.begin();
     deviceState = RECORDING;
     recState    = RECORDING;
-    switchMode( 1 );
+    //switchMode( 1 );
     recMode = 1;
     timeStamp   = 0;
     Serial.println( "Stethoscope began MULTI RECORDING" );                                                        // Function execution confirmation over USB serial
@@ -818,7 +818,7 @@ boolean continueRecording()
     case 1:
       if ( queue_recMic.available() >= 2 )
       {
-        Serial.println( " Recording mic out... " );
+        //Serial.println( " Recording mic out... " );
         byte buffer[512];                                                                                           // Fetch 2 blocks from the audio library and copy into a 512 byte buffer.
                                                                                                                     // The Arduino SD library is most efficient when full 512 byte sector size writes are used.
         memcpy( buffer, queue_recMic.readBuffer(), 256 );
@@ -830,7 +830,7 @@ boolean continueRecording()
     
       if ( queue_recSpk.available() >= 2 )
       {
-        Serial.println( " Recording speaker out... " );
+        //Serial.println( " Recording speaker out... " );
         byte buffer[512];                                                                                           // Fetch 2 blocks from the audio library and copy into a 512 byte buffer.
                                                                                                                     // The Arduino SD library is most efficient when full 512 byte sector size writes are used.
         memcpy( buffer, queue_recSpk.readBuffer(), 256 );
@@ -1038,7 +1038,7 @@ float   mixer_lvl_ON                  = 1.0;
 float   mixer_lvl_OFF                 = 0.0;
 float   mic_mixer_lvl                 = 1.0;                                                                    // microphone mixer gain level (standard and initial)
 float   playback_mixer_lvl            = 0.0;                                                                    // playback mixer gain level (standard and initial)
-float   mic_mixer_lvl_step            = 0.00005;
+float   mic_mixer_lvl_step            = 0.0001;
 float   playback_mixer_lvl_step       = mic_mixer_lvl_step;
 
 float   playback_rms_mixer_lvl        = 0.25;
@@ -1047,7 +1047,7 @@ void continueBlending(String fileName)
 {
   if ( !playRaw_sdHeartSound.isPlaying() )                                                                      // check if playback sound is playing/running                                                                 
   {
-
+    Serial.println( "File NOT PLAYING... RESTARTING playback" );
     char  filePly[fileName.length()+1];                                                                         // Conversion from string to character array
     fileName.toCharArray( filePly, sizeof( filePly ) );
     Serial.println( filePly );
