@@ -444,7 +444,6 @@ uint8_t rmsAmplitudePeaksDuo()
 // 
 // Fluvio L. Lobo Fenoglietto 11/10/2017
 // ==============================================================================================================
-//uint32_t count;
 uint32_t min_count = 1;
 uint8_t rmsModulation()
 {
@@ -589,7 +588,7 @@ boolean setRecordingMode()
 // ============================================================================================================== //
 String  recExtension  = ".RAW";                                                                                   // Recording file extension definition
 String  recString     = "";                                                                                       // Recording file string name definiton
-String  recStrings[]  = {"","",""};                                                                               // Default string array dpending on the rec mode
+String  recStrings[]  = {"",""};                                                                                  // Default string array dpending on the rec mode
 boolean setRecordingFilename( String inString, String recExtension, int recMode )
 {
   Serial.println( "EXECUTING setRecordingFilename()" );
@@ -598,15 +597,19 @@ boolean setRecordingFilename( String inString, String recExtension, int recMode 
   {
     // single channel, custom string ---------------------------------------------------------------------------- //
     case 0:
+    {
       Serial.println( "Recording Mode 0 : " );
-      recString = inString + recExtension;                                                                        // Concatenating extension to input filename
+      String recChannelPrefix = "R0";
+      recString = recChannelPrefix + inString + recExtension;                                                     // Concatenating extension to input filename
       Serial.print( "Recording using filename : " );
       Serial.println( recString );
-      return true;
+      return recString;
+    }
     break;
 
     // multiple channels, custom string ------------------------------------------------------------------------- //
     case 1:
+    {
       Serial.println( "Recording Mode 1 : " );
       Serial.print( "Recording from " );
       Serial.print( recChannels );
@@ -620,7 +623,8 @@ boolean setRecordingFilename( String inString, String recExtension, int recMode 
         Serial.println( "Recording using filename : " + recStrings[i] );
       }
       // add section for file existence check, otherwise it gets deleted later
-      return true;
+      return recStrings;
+    }
     break;
     
   } // End of switch( recMode )
@@ -660,50 +664,23 @@ void setRecGains()
 boolean startRecording(String recString)
 {
   Serial.println( "EXECUTING startRecording()" );                                                               // Identification of function executed
+  setRecGains();
 
-  // Control Mixer Channels and Gains
-  rms_mic_mixer.gain(     0,  mixerInputON  );                                                                  // Set mic input, channel 0 of mic&Sd mixer ON      (g = 1)
-  rms_mic_mixer.gain(     1,  mixerInputON  );                                                                  // Set mic input, channel 1 of mic&Sd mixer ON      (g = 1)
-  rms_playRaw_mixer.gain( 0,  mixerInputOFF );                                                                  // Set plaback, channel 0 of rms mixer OFF          (g = 0)
-  mixer_mic_Sd.gain(      0,  mixerInputON  );                                                                  // Set mic input, channel 0 of mic&Sd mixer ON      (g = 1)
-  mixer_mic_Sd.gain(      1,  mixerInputOFF );                                                                  // Set playback, channel 1 of mic&Sd mixer OFF      (g = 0)
-  mixer_allToSpk.gain(    0,  mixerInputON  );                                                                  // Set mic input, channel 0 of speaker mixer ON     (g = 1)
-  mixer_allToSpk.gain(    1,  mixerInputOFF );                                                                  // Set mic effect, channel 1 of speaker mixer ON    (g = 0)
-  mixer_allToSpk.gain(    2,  mixerInputOFF );                                                                  // Set mem playback, channel 1 of speaker mixer ON  (g = 0)
-
+  Serial.println( recString );
   char  recChar[recString.length()+1];                                                                          // Conversion from string to character array
   recString.toCharArray( recChar, sizeof( recChar ) );
-
-  char  fileDat[ses.fileDat.length()+1];                                                                        // Conversion from string to character array
-  ses.fileDat.toCharArray( fileDat, sizeof( fileDat ) );
   
-  if ( SD.exists( recChar ) ) SD.remove( recChar );                                                             // Check for existence of RECORD.RAW
-  if ( SD.exists( fileDat ) ) SD.remove( fileDat );                                                             // Check for existence of HRATE.DAT
+  if ( SD.exists( recChar ) ) SD.remove( recChar );                                                             // Check for existence of HRATE.DAT
 
-  frec  = SD.open( recChar, FILE_WRITE );                                                                       // Create and open RECORD.RAW file
+  frec = SD.open( recChar, FILE_WRITE );                                                                       // Create and open RECORD.RAW file
   Serial.println( frec );
-  hRate = SD.open( fileDat,  FILE_WRITE );                                                                      // Create and open HRATE.DAT file
-  Serial.println( hRate );
 
-  if (  SD.open( recChar, FILE_WRITE ) &&                                                                       // Create and open RECORD.RAW file
-        SD.open( fileDat, FILE_WRITE ) )                                                                        // Create and open HRATE.DAT file
+  if (  SD.open( recChar, FILE_WRITE ) )                                                                        // Create and open HRATE.DAT file
   {
-
-    Serial.print( "\nMinimum S1-S2 interval:\t\t"       );  Serial.print(   minS1S2       );  Serial.print( "ms" );
-    Serial.print( "\nMaximum S1-S2 interval:\t\t"       );  Serial.print(   maxS1S2       );  Serial.print( "ms" );
-    Serial.print( "\nNo-heartrate detect interval:\t"   );  Serial.print(   maxHBInterval );  Serial.print( "ms" );
-    Serial.print( "\nHearsound detection threshold:\t"  );  Serial.print(   sigThreshold  );
-    Serial.print( "\nLow-pass filter roll-off freq:\t"  );  Serial.print(   freqLowPass   );
-    Serial.print( "\nHighshelf filter roll-off freq:\t" );  Serial.println( freqHighShelf );
-    Serial.print( "\nRecord file on SD is named:\t"   );    Serial.print(   recChar       );
-    Serial.print( "\nHR Data file on SD is named:\t"    );  Serial.println( fileDat       );
-
     queue_recMic.begin();
     deviceState = RECORDING;
     recState    = RECORDING;
-    //switchMode( 1 );
-    //timeStamp   = 0;
-    //sf1.StartSend( STRING, 1000 );                                                                              // Begin transmitting heartrate data as a String
+    switchMode( 1 );
     Serial.println( "Stethoscope began RECORDING" );                                                            // Function execution confirmation over USB serial
     Serial.println( "sending: ACK..." );
     BTooth.write( ACK );                                                                                        // ACKnowledgement sent back through bluetooth serial
@@ -711,11 +688,12 @@ boolean startRecording(String recString)
     return true;
   }
   else
+  {
     Serial.println( "Stethoscope CANNOT begin RECORDING" );                                                     // Function execution failed, notification over USB serial
     Serial.println( "sending: NAK..." );
     BTooth.write( NAK );                                                                                        // Negative AcKnowledgement sent back through bluetooth serial
     return false;
-    
+  } 
 } // End of startRecording()
 // ==============================================================================================================
 
@@ -862,8 +840,7 @@ boolean stopRecording()
     case 0:
       queue_recMic.end();
       if ( recState == RECORDING )
-      { 
-        //sf1.StopSend( STRING );                                                                                     // Terminate transmitting heartrate data as a String
+      {
         Serial.println( "Stethoscope will STOP RECORDING" );                                                        // Function execution confirmation over USB serial
         Serial.println( "sending: ACK..." );
         BTooth.write( ACK );
@@ -875,6 +852,7 @@ boolean stopRecording()
         frec.close();
         hRate.close();
         deviceState = READY;
+        recState = READY;
         switchMode( 0 );
         return true;
       }

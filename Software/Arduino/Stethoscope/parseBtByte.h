@@ -108,23 +108,26 @@ void parseBtByte( String fn )
       break;
       
       // Device-Specific Functions ================================================================== //
+      case PSTRING :
+        // PSTRING : Parse String
+        inString = parseString();
+      break;
       // Recording ---------------------------------------------------------------------------------- //
       case RECMODE :
         // RECMODE : Set Recording Mode
-        setRecordingMode();
+        recMode = setRecordingMode();
       break;
 	    case STARTREC :
         // STARTREC : Start Recording
-        Serial.println( "received: STARTREC..." );
+        //Serial.println( "received: STARTREC..." );
         //startRecording();
       break;
       case STARTCREC :
-        // STARTCREC : Start Custom Recording
-        Serial.println( "received: STARTCREC..." );
-        Serial.println( "recording Mode (recMode): 0..." );
-        recMode = 0; 
-        inString = parseString();                                                                      // Parse input string
-        recString = setRecordingFilename( inString, recExtension, recMode );                           // Create recording string with appropriate extension
+        // STARTCREC : Start Custom Recording                                                                    // Parse input string
+        Serial.println( recMode );
+        Serial.println( inString );
+        setRecordingFilename( inString, recExtension, recMode );                           // Create recording string with appropriate extension
+        Serial.println( recString );
         startRecording( recString );                                                                   // Start custom filename recording
       break;
       case STARTMREC :
@@ -188,13 +191,6 @@ void parseBtByte( String fn )
       case KOROT :
         // KOROT : Start Augmenting KorotKoff Sound
         fileName = KOROTBlend(fileName);
-      break;
-      
-      case PSTRING :
-        // PSTRING : Parse String
-        inString = parseString();
-        //recString = setRecordingFilename( inString, recExtension, 2 );
-        //startRecording( recString );
       break;
       
       case EDMSYN :
