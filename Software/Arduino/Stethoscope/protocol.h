@@ -43,7 +43,8 @@ byte STE[] = { 0x53, 0x54, 0x45, 0x00 };        // Stethoscope Device IDs
 #define         STARTBLEND        0x1F          // Start Blending
 #define         STOPBLEND         0x20          // Stop Blending
 #define         PSTRING           0x31          // Parse string data                                                  [resp: ACK | NAK]
-#define         RECMODE           0x41          // Parse recording mode                                               ... 
+#define         RECMODE           0x41          // Parse recording mode                                               ...
+#define         SETGAINS          0x44          // Set device gains 
 
 //  Simulation Functions ============================================================================================================= // 
 #define         NHBSYN          	0x1D          // Playback of Synthetic, Normal Heart Beat                           [resp: ACK | NAK]

@@ -57,6 +57,7 @@ void loop()
   if ( BTooth.available() > 0 ) parseBtByte( "RECORD.RAW" );
 
   // If playing or recording, carry on...
+  if ( mode == 0 ) setGains(0);
   if ( mode == 1 ) continueRecording();
   if ( mode == 2 ) continuePlaying();
   if ( mode == 3 ) continueHeartBeatMonitoring();

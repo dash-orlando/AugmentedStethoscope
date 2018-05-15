@@ -968,7 +968,7 @@ boolean setBlendGains()
   // Control Mixer Channels and Gains
   //rms_mic_mixer.gain(     0,  mixerInputON  );                                                                  // Set mic input, channel 0 of mic&Sd mixer ON      (g = 1)
   //rms_mic_mixer.gain(     1,  mixerInputON  );                                                                  // Set mic input, channel 1 of mic&Sd mixer ON      (g = 1)
-  rms_playRaw_mixer.gain(   0,  mixerInputON );                                                                  // Set plaback, channel 0 of rms mixer OFF          (g = 0)
+  rms_playRaw_mixer.gain(   0,  mixerInputON );                                                                   // Set plaback, channel 0 of rms mixer OFF          (g = 0)
   mixer_mic_Sd.gain(        0,  mixerInputON  );                                                                  // Set mic input, channel 0 of mic&Sd mixer ON      (g = 1)
   mixer_mic_Sd.gain(        1,  mixerInputOFF );                                                                  // Set playback, channel 1 of mic&Sd mixer OFF      (g = 0)
   mixer_allToSpk.gain(      0,  mixerInputON  );                                                                  // Set mic input, channel 0 of speaker mixer ON     (g = 1)
@@ -1090,7 +1090,7 @@ boolean continueBlending(String fileName)
       playback_mixer_lvl  = playback_mixer_lvl + playback_mixer_lvl_step;                                       // gradually increase playback gain level
       mixer_mic_Sd.gain(0, mic_mixer_lvl);                                                                      // apply mic. gain
       mixer_mic_Sd.gain(1, playback_mixer_lvl);                                                                 // apply playback gain
-      //Serial.print(" mic. gain = ");                                                                            // print gain values for debugging...
+      //Serial.print(" mic. gain = ");                                                                          // print gain values for debugging...
       //Serial.print(mic_mixer_lvl);
       //Serial.print(" || playback gain = ");
       //Serial.println(playback_mixer_lvl);
@@ -1275,6 +1275,36 @@ boolean stopHeartBeatMonitoring()
   }
 } // End of stopHeartBeatMonitoring()
 // ==============================================================================================================
+
+// ==============================================================================================================
+// Set Gains
+// 
+// This function sets the gains of the stethoscope by mode of operation or simulation scenario
+// **In the future, this function will consolidate all independent gain-adjustment functions
+//
+// Fluvio L. Lobo Fenoglietto 05/14/2018
+// ============================================================================================================== //
+int gainMode = 0;                                                                                                 // default gain mode to 0
+boolean setGains( int gainMode )
+{
+  switch( gainMode )
+  {
+    case 0:                                                                                                       // default settings
+      // normal - nothing
+      // calls setup functions to ensure similar settings
+      setupMicToSpeaker();
+      setupSDToSpeaker();
+    break;
+
+    case 1:                                                                                                       // mute mic. for bpc simulation
+      // mute the mic. channel for simulation purposes
+      rms_mic_mixer.gain(   0, 0.10  );
+      rms_mic_mixer.gain(   1, 0.10  );
+    break;
+    
+  } // End of gainMode switch()
+  
+} // End of setGains()
 
 // ==============================================================================================================
 // Device RESET
