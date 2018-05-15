@@ -511,6 +511,36 @@ void switchMode( int m )
 }
 
 // ==============================================================================================================
+// Set Gains
+// 
+// This function sets the gains of the stethoscope by mode of operation or simulation scenario
+// **In the future, this function will consolidate all independent gain-adjustment functions
+//
+// Fluvio L. Lobo Fenoglietto 05/14/2018
+// ============================================================================================================== //
+int gainMode = 0;                                                                                                 // default gain mode to 0
+boolean setGains( int gainMode )
+{
+  switch( gainMode )
+  {
+    case 0:                                                                                                       // default settings
+      // normal - nothing
+      // calls setup functions to ensure similar settings
+      setupMicToSpeaker();
+      setupSDToSpeaker();
+    break;
+
+    case 1:                                                                                                       // mute mic. for bpc simulation
+      // mute the mic. channel for simulation purposes
+      mixer_mic_Sd.gain(   0, 0.10  );
+      //rms_mic_mixer.gain(   1, 0.10  );
+    break;
+    
+  } // End of gainMode switch()
+  
+} // End of setGains()
+
+// ==============================================================================================================
 // Parse String over Bluetooth
 // Read information from the serial port passed
 // as a string
@@ -1145,7 +1175,9 @@ boolean continueBlending(String fileName)
     else
     {
       playRaw_sdHeartSound.stop();                                                                              // stop playback file
-      switchMode( 0 );                                                                                          // switch to pre-defined mode (preferably idle/standby)
+      setGains(0);
+      switchMode( 0 );
+      // switch to pre-defined mode (preferably idle/standby)
     } // End of blend mixer level check
   } // End of deviceState check
   return true; 
@@ -1275,36 +1307,6 @@ boolean stopHeartBeatMonitoring()
   }
 } // End of stopHeartBeatMonitoring()
 // ==============================================================================================================
-
-// ==============================================================================================================
-// Set Gains
-// 
-// This function sets the gains of the stethoscope by mode of operation or simulation scenario
-// **In the future, this function will consolidate all independent gain-adjustment functions
-//
-// Fluvio L. Lobo Fenoglietto 05/14/2018
-// ============================================================================================================== //
-int gainMode = 0;                                                                                                 // default gain mode to 0
-boolean setGains( int gainMode )
-{
-  switch( gainMode )
-  {
-    case 0:                                                                                                       // default settings
-      // normal - nothing
-      // calls setup functions to ensure similar settings
-      setupMicToSpeaker();
-      setupSDToSpeaker();
-    break;
-
-    case 1:                                                                                                       // mute mic. for bpc simulation
-      // mute the mic. channel for simulation purposes
-      rms_mic_mixer.gain(   0, 0.10  );
-      rms_mic_mixer.gain(   1, 0.10  );
-    break;
-    
-  } // End of gainMode switch()
-  
-} // End of setGains()
 
 // ==============================================================================================================
 // Device RESET

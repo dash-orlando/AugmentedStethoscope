@@ -113,6 +113,10 @@ void parseBtByte( String fn )
         inString = parseString();
       break;
       // Recording ---------------------------------------------------------------------------------- //
+      case SETIDLE :
+        // SETIDLE : Set to Idle
+        setToIdle();
+      break;
       case RECMODE :
         // RECMODE : Set Recording Mode
         recMode = setRecordingMode();
@@ -187,6 +191,7 @@ void parseBtByte( String fn )
       break;
       case KOROT :
         // KOROT : Start Augmenting KorotKoff Sound
+        setGains( 1 );
         fileName = KOROTBlend(fileName);
       break;
       
