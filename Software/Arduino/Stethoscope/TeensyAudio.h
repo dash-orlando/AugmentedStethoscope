@@ -71,15 +71,6 @@ float                     mixerInputON    =     1.00;
 float                     mixerInputOFF   =     0.00;
 float                     mixerLvL        =     1.00;
 
-float                     bpLowPassFreq   =   250.0;                            // Low pass from HB sample
-float                     bpHighPassFreq  =   500.0;                            // High pass from mic
-
-float                     freqHighShelf   =  2000.0f;
-float                     tGain1          =   -20.0f;                           // ...may need to fiddle with this one
-float                     slope1          =    1.0f;
-
-float                     freqLowPass     = 2000.0f;                            // prjc example uses 800.0
-float                     Q2              =    0.707f;                          // 0.707 = Butterworth Filter value;  min: 0.1;
 String                    fileName        = "";                                 // String with sound file name
 
 // ==============================================================================================================
