@@ -23,7 +23,8 @@ String  file;
 int listPlyID( String file )
 {
   Serial.print( " Using file " );
-  Serial.println( file ); 
+  Serial.println( file );
+  Serial.println( ses.lenPly ); 
   for( int i = 0; i < ses.lenPly; i ++ )
   {
     if( ses.filePly[i] == file )
@@ -31,9 +32,9 @@ int listPlyID( String file )
       indexPly = i;
       Serial.print( "AOK: File found under index = " );
       Serial.println( indexPly );
+      break;
     }
-
-    if( i == ses.lenPly - 1 )
+    else if( i == ses.lenPly - 1 )
     {
       indexPly = -1;
       Serial.println( "ERR: File not found within Play List" );

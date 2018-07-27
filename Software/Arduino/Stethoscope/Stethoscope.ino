@@ -39,10 +39,8 @@ void setup()
   // Configuration File
   SessionInit();
 
-  
   // SD Reader and Card Check
   sdCheck();
-  Serial.println("stuck");
 
 } // End of setup()
 
