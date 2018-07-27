@@ -16,9 +16,9 @@
 // ============================================================================================================== //
 struct Session
 {
-    String    sessionID;
     String    fileRec;
-    String    filePly1;
+    String    filePly[2];
+    /*
     String    filePly2;
     String    filePly3;
     String    filePly4;
@@ -29,8 +29,10 @@ struct Session
     String    filePly9;
     String    filePly10;
     String    filePly11;
+    
     String    fileDat;
     int       heartRate;
+    */
 };
 
 Session  ses;
@@ -41,30 +43,10 @@ Session  ses;
 // Michael Xynidis
 // Fluvio L Lobo Fenoglietto 05/07/2018
 // ============================================================================================================== //
-void SessionInit( String SID )
+void SessionInit()
 {
-    /* ...read config XML (e.g. "CONFIG.XML")  */
-    /* ...parse out file names and other       */
-    /*    configurations data                  */
-    /* ...load the data into the configuration */
-    /*    object:                              */
-    
-    ses = (Session)                     // Note that the string must be 6 characters long
-          {
-              SID,
-              "RECORD.RAW",             // Recording 
-              "NHBSYN.RAW",             // Normal Heart Beat            - Synthetic
-              "ESMSYN.RAW",             // Early Systolic Heart Murmur  - Synthetic
-              "NHBREC.RAW",             // Normal Heart Beat            - Recorded
-              "EHBREC.RAW",             // Exercised Heart Beat         - Recorded
-              "KOROT.RAW",              // Korotkoff Sound (seg.)       - Recorded
-              "EDMSYN.RAW",             // Early Diastolic Heart Murmur - Synthetic
-              "ASYSYN.RAW",             // ...
-              "PEJECT.RAW",             // ...
-              "PSPLIT.RAW",             // ...
-              "S4GALL.RAW",             // S4 Gallop
-              "AORSTE.RAW",             // Severe Aortic Stenosis
-              "HRATE.DAT"               // Heart Rate data file 
-          };
+    ses.fileRec = "RECORD.RAW";
+    ses.filePly[0] = "NHBSYN.RAW";
+    ses.filePly[1] = "ESMSYN.RAW";
 }
 

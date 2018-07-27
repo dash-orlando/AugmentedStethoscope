@@ -37,10 +37,12 @@ void setup()
   SetupAudioBoard();
 
   // Configuration File
-  SessionInit( "01" );
+  SessionInit();
+
   
   // SD Reader and Card Check
   sdCheck();
+  Serial.println("stuck");
 
 } // End of setup()
 

@@ -147,7 +147,7 @@ void parseBtByte( String fn )
   	  break;
   	  case STARTPLAY :
   	    // STARTPLAY : Start Playing
-  	    startPlaying( ses.filePly1 );
+  	    //startPlaying( ses.filePly1 );
   	  break;
   	  case STOPPLAY :
   	    // STOPPLAY : Stop Playing
@@ -175,56 +175,56 @@ void parseBtByte( String fn )
       // Simulation Functions =======================================================================  //
       case NHBSYN :
         // NHBSYN : Blending of Synthetic, Normal Heart Beat
-        NHBSBlend();
+        //NHBSBlend();
       break;
       case ESMSYN :
         // ESMSYN : Blending of Synthetic, Early Systolic Heart Murmur
-        ESMSBlend();
+        //ESMSBlend();
       break;
       case NHBREC   :
         // NHBREC   : Blending of Recorded, Normal Heart Beat
-        NHBRBlend();
+        //NHBRBlend();
       break;
       case EHBREC   :
         // EHBREC   : Blending of Recorded, Exercised Heart Beat
-        EHBRBlend();
+        //EHBRBlend();
       break;
       case KOROT :
         // KOROT : Start Augmenting KorotKoff Sound
         setGains( 1 );
-        fileName = KOROTBlend(fileName);
+        //fileName = KOROTBlend(fileName);
       break;
       
       case EDMSYN :
         // EDMSYN : Start Augmenting Early Diastolic Heart Murmur
-        fileName = EDMSYNBlend(fileName);
+        //fileName = EDMSYNBlend(fileName);
       break;
 
       case ASYSYN :
         // ASYSYN : ...
-        fileName = ASYSYNBlend(fileName);
+        //fileName = ASYSYNBlend(fileName);
       break;
 
       case PEJECT :
         // PEJECT : ...
-        fileName = PEJECTBlend(fileName);
+        //fileName = PEJECTBlend(fileName);
       break;
 
       case PSPLIT :
         // PSPLIT : ...
-        fileName = ses.filePly9;
-        fileName = PSPLITBlend(fileName);
+        //fileName = ses.filePly9;
+        //fileName = PSPLITBlend(fileName);
       break;
 
       case S4GALL :
         // S4GALL : S4 Gallop
-        fileName = ses.filePly10;
-        fileName = S4GALLBlend(fileName);
+        //fileName = ses.filePly10;
+        //fileName = S4GALLBlend(fileName);
       break;
 
       case AORSTE :
         // AORSTE : Aortic Stenosis
-        fileName = ses.filePly11;
+        //fileName = ses.filePly11;
         fileName = AORSTEBlend(fileName);
       break;
 

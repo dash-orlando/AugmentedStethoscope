@@ -15,6 +15,7 @@
 // Fluvio L Lobo Fenoglietto 05/02/2018
 // ============================================================================================================== //
 
+/*
 // old format, without continuous blending...
 void NHBSBlend(){ startBlending( ses.filePly1 ); }                                                                // Blending of a Synthetic, Normal Heart Beat
 void ESMSBlend(){ startBlending( ses.filePly2 ); }                                                                // Blending of a Synthetic, Early Systolic Heart Murmur
@@ -94,17 +95,20 @@ Serial.println( fileName );
 return fileName;
 
 } // End of ... function
-
+*/
 //
 // *** Blend Synthetic, Aortic Stenosis... 
 //
 String AORSTEBlend(String fileName)
 {
 
-fileName = ses.filePly11;
-startBlending( fileName );                                                      // ...
-Serial.println( fileName );
-return fileName;
+int structSize = sizeof(Session);
+Serial.println( structSize );
+Serial.println( ses.filePly[0] );
+//fileName = ses.filePly11;
+//startBlending( fileName );                                                      // ...
+//Serial.println( fileName );
+//return fileName;
 
 } // End of ... function
 
@@ -117,7 +121,8 @@ return fileName;
 // Fluvio L Lobo Fenoglietto 05/02/2018
 // ============================================================================================================== //
 // String simFileName    = "";
-String simFileName = ses.filePly2;
+//String simFileName = ses.filePly2;
+String simFileName = ses.filePly[0];
 boolean startSimulation()
 {
   Serial.println( "EXECUTING simulation()" );
@@ -135,7 +140,8 @@ boolean startSimulation()
   // start blending --------------------------------------------------------------------------------------------- //
   Serial.println( "STARTING BLENDING" );                                                                          // Starting multi-channel recording protocol
   Serial.println( "blending Aortic Stenosis..." );                                                                // Still need to find this file
-  simFileName = ses.filePly2;
+  //simFileName = ses.filePly2;
+  simFileName = ses.filePly[0];
   startBlending( simFileName );
   AudioInterrupts();
 
