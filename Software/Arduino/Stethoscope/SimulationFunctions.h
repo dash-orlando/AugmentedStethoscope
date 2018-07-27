@@ -105,6 +105,10 @@ String AORSTEBlend(String fileName)
 int structSize = sizeof(Session);
 Serial.println( structSize );
 Serial.println( ses.filePly[0] );
+if( ses.filePly[0] == "NHBSYN.RAW" )
+{
+  Serial.println( " hola " );
+}
 //fileName = ses.filePly11;
 //startBlending( fileName );                                                      // ...
 //Serial.println( fileName );

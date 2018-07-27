@@ -18,21 +18,6 @@ struct Session
 {
     String    fileRec;
     String    filePly[2];
-    /*
-    String    filePly2;
-    String    filePly3;
-    String    filePly4;
-    String    filePly5;
-    String    filePly6;
-    String    filePly7;
-    String    filePly8;
-    String    filePly9;
-    String    filePly10;
-    String    filePly11;
-    
-    String    fileDat;
-    int       heartRate;
-    */
 };
 
 Session  ses;
