@@ -181,41 +181,13 @@ void parseBtByte( String fn )
         // ESMSYN : Blending of Synthetic, Early Systolic Heart Murmur
         //ESMSBlend();
       break;
-      case NHBREC   :
-        // NHBREC   : Blending of Recorded, Normal Heart Beat
-        //NHBRBlend();
-      break;
-      case EHBREC   :
-        // EHBREC   : Blending of Recorded, Exercised Heart Beat
-        //EHBRBlend();
-      break;
+      
       case KOROT :
         // KOROT : Start Augmenting KorotKoff Sound
         setGains( 1 );
         //fileName = KOROTBlend(fileName);
       break;
       
-      case EDMSYN :
-        // EDMSYN : Start Augmenting Early Diastolic Heart Murmur
-        //fileName = EDMSYNBlend(fileName);
-      break;
-
-      case ASYSYN :
-        // ASYSYN : ...
-        //fileName = ASYSYNBlend(fileName);
-      break;
-
-      case PEJECT :
-        // PEJECT : ...
-        //fileName = PEJECTBlend(fileName);
-      break;
-
-      case PSPLIT :
-        // PSPLIT : ...
-        //fileName = ses.filePly9;
-        //fileName = PSPLITBlend(fileName);
-      break;
-
       case S4GALL :
         // S4GALL : S4 Gallop
         //fileName = ses.filePly10;
