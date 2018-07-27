@@ -17,7 +17,7 @@
 struct Session
 {
     String    fileRec;
-    String    filePly[2];
+    String    filePly[11];
     int       lenPly;
 };
 
@@ -32,8 +32,17 @@ Session  ses;
 void SessionInit()
 {
     ses.fileRec =     "RECORD.RAW";
-    ses.filePly[0] =  "NHBSYN.RAW";
-    ses.filePly[1] =  "ESMSYN.RAW";
+    ses.filePly[0] =  "AORSTE.RAW";
+    ses.filePly[1] =  "S4GALL.RAW";
+    ses.filePly[2] =  "ESMSYN.RAW";
+    ses.filePly[3] =  "KOROT1.RAW";
+    ses.filePly[4] =  "KOROT2.RAW";
+    ses.filePly[5] =  "KOROT3.RAW";
+    ses.filePly[6] =  "KOROT4.RAW";
+    ses.filePly[7] =  "RECAOR.RAW";
+    ses.filePly[8] =  "RECMIT.RAW";
+    ses.filePly[9] =  "RECPUL.RAW";
+    ses.filePly[10] =  "RECTRI.RAW";
 
     ses.lenPly = sizeof(ses.filePly)/sizeof(ses.filePly[0]);
 }

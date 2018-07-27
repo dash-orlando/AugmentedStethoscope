@@ -46,20 +46,21 @@ byte STE[] = { 0x53, 0x54, 0x45, 0x00 };        // Stethoscope Device IDs
 #define         RECMODE           0x41          // Parse recording mode                                               ...
 #define         SETGAINS          0x44          // Set device gains 
 
-//  Simulation Functions ============================================================================================================= // 
-#define         NHBSYN          	0x1D          // Playback of Synthetic, Normal Heart Beat                           [resp: ACK | NAK]
-#define         ESMSYN           	0x1E          // Playback of Synthetic, Early Systolic Heart Murmur                 [resp: ACK | NAK]
-#define         NHBREC            0x21          // Blend Normal Heart Beat Recorded                                   [resp: ACK | NAK]
-#define         EHBREC            0x22          // Blend Exercised Heart Beat Recorded                                [resp: ACK | NAK]
-#define         KOROT             0x30          // Playback of Korotkoff Sound                                        [resp: ACK | NAK]
-#define         EDMSYN            0x33          // ...........................                                        [resp: ACK | NAK]
-#define         ASYSYN            0x34          // ...........................                                        [resp: ACK | NAK]
-#define         PEJECT            0x35          // ...........................                                        [resp: ACK | NAK]
-#define         PSPLIT            0x36          // ...........................                                        [resp: ACK | NAK]
-#define         STARTSIM          0x39          // Simulation consisting of blending and recording
-#define         STOPSIM           0x40          // Simulation consisting of blending and recording
-#define         S4GALL            0x42          // Playback or Blending of the S4 Gallop
-#define         AORSTE            0x43          // Playback ot Blending of the Aortic Stenosis                                        
+//  Simulation Functions ============================================================================================================= //
+#define         AORSTE            0x50          // Playback ot Blending of the Aortic Stenosis
+#define         S4GALL            0x51          // Playback or Blending of the S4 Gallop 
+#define         ESMSYN            0x52          // Playback of Synthetic, Early Systolic Heart Murmur                 [resp: ACK | NAK]
+#define         KOROT1            0x53
+#define         KOROT2            0x54
+#define         KOROT3            0x55
+#define         KOROT4            0x56
+#define         RECAOR            0x57
+#define         RECMIT            0x58
+#define         RECPUL            0x59
+#define         RECTRI            0x60
+
+#define         STARTSIM          0x70
+#define         STOPSIM           0x71
 
 
 
