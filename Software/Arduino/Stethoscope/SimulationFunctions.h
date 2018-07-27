@@ -16,30 +16,54 @@
 // ============================================================================================================== //
 
 //
+// *** Identify within structure
+//
+int     indexPly;
+String  file;
+int listPlyID( String file )
+{
+  Serial.print( " Using file " );
+  Serial.println( file ); 
+  for( int i = 0; i < ses.lenPly; i ++ )
+  {
+    if( ses.filePly[i] == file )
+    {
+      indexPly = i;
+      Serial.print( "AOK: File found under index = " );
+      Serial.println( indexPly );
+    }
+
+    if( i == ses.lenPly - 1 )
+    {
+      indexPly = -1;
+      Serial.println( "ERR: File not found within Play List" );
+    }
+  }
+
+  return indexPly;
+  
+} // End of listPlyID()
+
+//
 // *** Blend Synthetic, Aortic Stenosis... 
 //
-String AORSTEBlend(String fileName)
+String audioBlend( int indexPly )
 {
-
-
-for( int i = 0; i < ses.lenPly; i ++ )
-{
-  if( ses.filePly[i] == "ESMSYN.RAW" )
+  if ( indexPly == -1 )
   {
-    Serial.println( i );
+    Serial.println( "ERR: Non-existent file cannot be played" );
+    fileName = "";
   }
-}
-
-Serial.println( ses.lenPly );
-Serial.println( ses.filePly[0] );
-if( ses.filePly[0] == "NHBSYN.RAW" )
-{
-  Serial.println( " hola " );
-}
-//fileName = ses.filePly11;
-//startBlending( fileName );                                                      // ...
-//Serial.println( fileName );
-//return fileName;
+  else
+  {
+    Serial.println( ses.lenPly );
+    Serial.println( ses.filePly[indexPly] );
+    fileName = ses.filePly[indexPly];
+    //startBlending( fileName );
+    //Serial.println( fileName );
+  }
+   
+  return fileName;
 
 } // End of ... function
 

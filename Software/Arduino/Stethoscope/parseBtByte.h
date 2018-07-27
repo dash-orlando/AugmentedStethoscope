@@ -196,8 +196,10 @@ void parseBtByte( String fn )
 
       case AORSTE :
         // AORSTE : Aortic Stenosis
-        //fileName = ses.filePly11;
-        fileName = AORSTEBlend(fileName);
+        //file = "ESMSYN.RAW";
+        file = "NKBSYN.RAW";
+        indexPly = listPlyID( file );
+        fileName = audioBlend( indexPly );
       break;
 
       case STARTSIM :
