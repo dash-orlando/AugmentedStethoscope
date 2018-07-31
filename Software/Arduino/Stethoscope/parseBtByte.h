@@ -14,7 +14,6 @@
 // ============================================================================================================== //
 
 #include  "DiagnosticFunctions.h"
-#include  "OperationalFunctions.h"
 #include  "DeviceSpecificFunctions.h"
 #include  "SimulationFunctions.h"
 
@@ -121,11 +120,6 @@ void parseBtByte( String fn )
 	    break;
 
       // Operational Functions ====================================================================== //
-      case SENDRAW :
-        // SENDRAW : Send Raw Data from SD Card
-        Serial.println( "received: SENDRAW..." );
-        sendRAW( "KOROT.RAW" );
-      break;
       
       // Device-Specific Functions ================================================================== //
       case PSTRING :
