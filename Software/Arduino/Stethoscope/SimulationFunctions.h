@@ -14,53 +14,17 @@
 // Michael Xynidis
 // Fluvio L Lobo Fenoglietto 05/02/2018
 // ============================================================================================================== //
-
-/*
-//
-// *** Identify within structure
-//
-int     indexPly;
-String  file;
-int listPlyID( String file )
-{
-  Serial.print( " Using file " );
-  Serial.println( file );
-  Serial.println( ses.lenPly ); 
-  for( int i = 0; i < ses.lenPly; i ++ )
-  {
-    if( ses.filePly[i] == file )
-    {
-      indexPly = i;
-      Serial.print( "AOK: File found under index = " );
-      Serial.println( indexPly );
-      break;
-    }
-    else if( i == ses.lenPly - 1 )
-    {
-      indexPly = -1;
-      Serial.println( "ERR: File not found within Play List" );
-    }
-  }
-
-  return indexPly;
-  
-} // End of listPlyID()
-*/
-
-//
-// *** Blend Synthetic, Aortic Stenosis... 
-//
 String audioBlend( int indexPly )
 {
   if ( indexPly == -1 )
   {
-    Serial.println( "ERR: Non-existent file cannot be played" );
+    Serial.println( ">   ERR: Non-existent file cannot be played" );
     fileName = "";
   }
   else
   {
     fileName = ses.filePly[indexPly];
-    Serial.print( "AOK: " );
+    Serial.print( ">   AOK: " );
     Serial.print( fileName );
     Serial.println( " will be played" );
     //startBlending( fileName );

@@ -37,11 +37,9 @@ int       blendByteIndex;
 
 void displayByte( byte byteValue )
 {
-  Serial.print( "received: [" );
-  Serial.print( (char)byteValue );
-  Serial.print( "][" );
-  Serial.print( byteValue, HEX );
-  Serial.println( ']' );
+  Serial.println( "> ============================================================= >" );
+  Serial.print(   "> Received: " );
+  Serial.println( byteValue, HEX );
 }
 
 // ==============================================================================================================
@@ -71,10 +69,9 @@ void displayStatus()
 
 void blendByteCheck( byte inByte ) {
 
-  Serial.println( "Cross-referencing playback/blending bytes" );
+  Serial.println( ">  Cross-referencing playback/blending bytes" );
   for( int i = 0; i < ses.lenBlendByteList; i ++ ) {
     if( ses.blendByteList[i] == inByte ) {
-      Serial.println( "Match found..." );
       blendByteIndex = i;
       audioBlend( blendByteIndex );
     }
@@ -92,17 +89,15 @@ void blendByteCheck( byte inByte ) {
 // ============================================================================================================== //
 void parseBtByte( String fn )
 {
-    byte  inByte = 0x00;
-
     char  filename[fn.length()+1];
     fn.toCharArray( filename, sizeof( filename ) );
 
-    Serial.print( "\nBTooth inbound queue, no. of bytes available: " ); 
-    Serial.println( BTooth.available() );
+    //Serial.print( "\nBTooth inbound queue, no. of bytes available: " ); 
+    //Serial.println( BTooth.available() );
 
     inByte = BTooth.read();                                                                                       // get incoming byte
     displayByte( inByte );
-    displayStatus();
+    //displayStatus();
 
     // Cross-reference blend/playback bytes ==================================================================== //
     blendByteCheck( inByte );
@@ -298,10 +293,10 @@ void parseBtByte( String fn )
       break;
       */
       default :
-        Serial.print( (char)inByte );
+        //Serial.print( (char)inByte );
       break;
     }
-    displayStatus();
+    //displayStatus();
     delay( 10 );
 }
 
