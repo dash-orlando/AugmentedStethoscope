@@ -1045,41 +1045,6 @@ boolean startBlending( String fileName )
 // ==============================================================================================================
 
 // ==============================================================================================================
-// Start Simulation Blending
-// Blending or mixing the input microphone line with an audio file, triggered by an external input
-//
-// Fluvio L. Lobo Fenoglietto 11/12/2017
-// ==============================================================================================================
-boolean startSimBlending( String fileName )
-{
-  Serial.println( "EXECUTING startBlending()" );                                                                // Identification of function executed
-  setBlendGains();
-  
-  char  filePly[fileName.length()+1];                                                                           // Conversion from string to character array
-  fileName.toCharArray( filePly, sizeof( filePly ) );
-  Serial.println( filePly );
-  Serial.println( SD.exists( filePly ) );
-  
-  if ( SD.exists( filePly ) )
-  {
-    deviceState = BLENDING;
-    blendState  = BLENDING;
-    Serial.println( "Stethoscope will begin BLENDING" );
-    playRaw_sdHeartSound.play( filePly );                                                                       // Start playing recorded HB
-    BTooth.write( ACK );
-    //switchMode( 5 );
-    return true;    
-  }
-  else
-  {
-    Serial.println( "Stethoscope CANNOT begin BLENDING" );                                                      // Function execution confirmation over USB serial
-    BTooth.write( NAK );                                                                                        // Negative AcKnowledgement sent back through bluetooth serial
-    return false;
-  }
-} // End of startSimBlending()
-// ==============================================================================================================
-
-// ==============================================================================================================
 // Continue Blending
 // Blending or mixing the input microphone line with an 
 // audio file from the SD card

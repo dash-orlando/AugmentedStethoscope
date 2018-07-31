@@ -61,14 +61,7 @@ void loop()
   if ( mode == 1 ) continueRecording();
   if ( mode == 2 ) continuePlaying();
   if ( mode == 3 ) continueHeartBeatMonitoring();
-  //if ( mode == 4 ) continueAudioPassThrough();
   if ( mode == 5 ) continueBlending( fileName );
-
-  // simulation function ---------------------------------------------------------------------------------------- //
-  if ( mode == 6 ) continueSimulation();
-
-  // others ----------------------------------------------------------------------------------------------------- //
-  if ( mode == 7 ) testFilters();
   
   // Clear the input byte variable
   inByte = 0x00;                                // this line of code may be unnecessary
