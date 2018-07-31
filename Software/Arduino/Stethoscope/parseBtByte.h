@@ -74,6 +74,17 @@ void parseBtByte( String fn )
     inByte = BTooth.read();                                                                                       // get incoming byte
     displayByte( inByte );
     displayStatus();
+
+    int byteIndex;
+    for( int i = 0; i < ses.lenByteList; i ++ ) {
+      if( ses.byteList[i] == inByte ) {
+        Serial.println( " Match found " );
+        byteIndex = i;
+        Serial.println( inByte, HEX );
+        audioBlend( byteIndex );
+      }
+    } // Search within playlist
+    
     switch ( inByte )
     {
       case ENQ :
