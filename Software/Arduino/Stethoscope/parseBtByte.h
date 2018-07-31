@@ -119,13 +119,6 @@ void parseBtByte( String fn )
         // DC1_SDCHECK
 		    sdCheck();
 	    break;
-      case SENDWAV :
-        // SENDWAV : Send .WAV File
-        sendWav( "KOROT.RAW" );
-      break;
-      case DELVOLATILE :
-        //  DELVOLATILE : Delete Volatile Directory
-      break;
 
       // Operational Functions ====================================================================== //
       case SENDRAW :
