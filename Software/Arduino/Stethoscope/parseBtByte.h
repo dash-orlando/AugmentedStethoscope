@@ -19,6 +19,13 @@
 #include  "SimulationFunctions.h"
 
 // ==============================================================================================================
+// Variables
+// ============================================================================================================== //
+byte      inByte          = 0x00;
+int       blendByteIndex;
+
+
+// ==============================================================================================================
 // Display Byte
 //
 // This function translates and displays byte information on a connected serial monitor
@@ -53,6 +60,28 @@ void displayStatus()
   Serial.print( "(pre) blendState     : " );  Serial.println( stateToText( blendState  ) );
 } // End of displayState()
 
+
+// ==============================================================================================================
+// Blend Byte
+//
+// This function cross references the input byte with the list of sounds files available for playback
+//
+// Fluvio L Lobo Fenoglietto 07/30/2018
+// ============================================================================================================== //
+
+void blendByte() {
+
+  Serial.println( "Cross-referencing playback/blending bytes" );
+  for( int i = 0; i < ses.lenByteList; i ++ ) {
+    if( ses.byteList[i] == inByte ) {
+      Serial.println( "Match found..." );
+      byteIndex = i;
+      audioBlend( byteIndex );
+    }
+  } // Search within playlist
+  
+} // End of blendByte()
+
 // ==============================================================================================================
 // Parse Byte
 //
@@ -75,15 +104,7 @@ void parseBtByte( String fn )
     displayByte( inByte );
     displayStatus();
 
-    int byteIndex;
-    for( int i = 0; i < ses.lenByteList; i ++ ) {
-      if( ses.byteList[i] == inByte ) {
-        Serial.println( " Match found " );
-        byteIndex = i;
-        Serial.println( inByte, HEX );
-        audioBlend( byteIndex );
-      }
-    } // Search within playlist
+    
     
     switch ( inByte )
     {
