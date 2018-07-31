@@ -73,9 +73,6 @@ void blendByteCheck( byte inByte ) {
 
   Serial.println( "Cross-referencing playback/blending bytes" );
   for( int i = 0; i < ses.lenBlendByteList; i ++ ) {
-    Serial.print( ses.blendByteList[i], HEX );
-    Serial.print( ", " );
-    Serial.println( inByte, HEX );
     if( ses.blendByteList[i] == inByte ) {
       Serial.println( "Match found..." );
       blendByteIndex = i;
@@ -107,6 +104,7 @@ void parseBtByte( String fn )
     displayByte( inByte );
     displayStatus();
 
+    // Cross-reference blend/playback bytes ==================================================================== //
     blendByteCheck( inByte );
     
     switch ( inByte )

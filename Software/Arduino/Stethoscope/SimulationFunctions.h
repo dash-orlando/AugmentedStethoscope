@@ -15,6 +15,7 @@
 // Fluvio L Lobo Fenoglietto 05/02/2018
 // ============================================================================================================== //
 
+/*
 //
 // *** Identify within structure
 //
@@ -44,6 +45,7 @@ int listPlyID( String file )
   return indexPly;
   
 } // End of listPlyID()
+*/
 
 //
 // *** Blend Synthetic, Aortic Stenosis... 
@@ -57,11 +59,11 @@ String audioBlend( int indexPly )
   }
   else
   {
-    Serial.println( ses.lenPly );
-    Serial.println( ses.filePly[indexPly] );
     fileName = ses.filePly[indexPly];
+    Serial.print( "AOK: " );
+    Serial.print( fileName );
+    Serial.println( " will be played" );
     //startBlending( fileName );
-    //Serial.println( fileName );
   }
    
   return fileName;
