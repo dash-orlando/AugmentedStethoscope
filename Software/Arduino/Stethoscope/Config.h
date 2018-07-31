@@ -19,8 +19,8 @@ struct Session
     String    fileRec;
     String    filePly[ 11 ];
     int       lenPly;
-    byte      byteList[ 11 ];
-    int       lenByteList;
+    byte      blendByteList[ 11 ];
+    int       lenBlendByteList;
 };
 
 Session  ses;
@@ -48,17 +48,17 @@ void SessionInit()
 
     ses.lenPly      = sizeof(ses.filePly)/sizeof(ses.filePly[0]);
 
-    for( int i = 50; i < 61; i ++ ) {
-      ses.byteList[i] = (byte)i;
+    // Generate list of blend/playback bytes ==================================================================== //
+    int blendOffset = 50;
+    for( int i = 0; i < ses.lenPly; i ++ ) {
+      ses.blendByteList[i] = (byte)(i + blendOffset);
     }
-    //ses.byteList[0] = 0x72;
-    //ses.byteList[1] = 0x73;
 
-    Serial.println( ses.byteList[52] );
+    Serial.println( ses.blendByteList[2] );
     Serial.println( ses.filePly[8] );
 
-    ses.lenByteList = sizeof(ses.byteList)/sizeof(ses.byteList[0]);
-    Serial.println( ses.lenByteList );
+    ses.lenBlendByteList = sizeof(ses.blendByteList)/sizeof(ses.blendByteList[0]);
+    Serial.println( ses.lenBlendByteList );
      
 }
 

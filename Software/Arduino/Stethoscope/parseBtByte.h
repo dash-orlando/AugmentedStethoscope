@@ -69,11 +69,11 @@ void displayStatus()
 // Fluvio L Lobo Fenoglietto 07/30/2018
 // ============================================================================================================== //
 
-void blendByte() {
+void blendByteCheck() {
 
   Serial.println( "Cross-referencing playback/blending bytes" );
-  for( int i = 0; i < ses.lenByteList; i ++ ) {
-    if( ses.byteList[i] == inByte ) {
+  for( int i = 0; i < ses.lenBlendByteList; i ++ ) {
+    if( ses.blendByteList[i] == inByte ) {
       Serial.println( "Match found..." );
       blendByteIndex = i;
       audioBlend( blendByteIndex );
