@@ -75,8 +75,8 @@ void blendByte() {
   for( int i = 0; i < ses.lenByteList; i ++ ) {
     if( ses.byteList[i] == inByte ) {
       Serial.println( "Match found..." );
-      byteIndex = i;
-      audioBlend( byteIndex );
+      blendByteIndex = i;
+      audioBlend( blendByteIndex );
     }
   } // Search within playlist
   

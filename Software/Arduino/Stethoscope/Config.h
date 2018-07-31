@@ -19,7 +19,7 @@ struct Session
     String    fileRec;
     String    filePly[ 11 ];
     int       lenPly;
-    byte      byteList[ 2 ];
+    byte      byteList[ 11 ];
     int       lenByteList;
 };
 
@@ -48,10 +48,17 @@ void SessionInit()
 
     ses.lenPly      = sizeof(ses.filePly)/sizeof(ses.filePly[0]);
 
-    ses.byteList[0] = 0x72;
-    ses.byteList[1] = 0x73;
+    for( int i = 50; i < 61; i ++ ) {
+      ses.byteList[i] = (byte)i;
+    }
+    //ses.byteList[0] = 0x72;
+    //ses.byteList[1] = 0x73;
+
+    Serial.println( ses.byteList[52] );
+    Serial.println( ses.filePly[8] );
 
     ses.lenByteList = sizeof(ses.byteList)/sizeof(ses.byteList[0]);
+    Serial.println( ses.lenByteList );
      
 }
 
