@@ -99,9 +99,8 @@ void parseBtByte( String fn )
     displayByte( inByte );
     //displayStatus();
 
-    // Cross-reference blend/playback bytes ==================================================================== //
-    blendByteCheck( inByte );
-    
+    // Cross-reference function-specific bytes ================================================================= //
+    Serial.println( ">  Cross-referencing function-specific bytes" );
     switch ( inByte )
     {
       case ENQ :
@@ -199,103 +198,14 @@ void parseBtByte( String fn )
         // STOPBLEND : Stop Blending default audio file
         stopBlending();
       break;
-      /*
-      // Simulation Functions =======================================================================  //
-      case AORSTE :
-        // AORSTE : Aortic Stenosis
-        file = "AORSTE.RAW";
-        indexPly = listPlyID( file );
-        fileName = audioBlend( indexPly );
-      break;
-
-      case S4GALL :
-        // S4GALL : S4 Gallop
-        file = "S4GALL.RAW";
-        indexPly = listPlyID( file );
-        fileName = audioBlend( indexPly );
-      break;
-
-      case ESMSYN :
-        // ESMSYN : Blending of Synthetic, Early Systolic Heart Murmur
-        file = "ESMSYN.RAW";
-        indexPly = listPlyID( file );
-        fileName = audioBlend( indexPly );
-      break;
-      
-      case KOROT1 :
-        // KOROT : Start Augmenting KorotKoff Sound
-        setGains( 1 );
-        file = "KOROT1.RAW";
-        indexPly = listPlyID( file );
-        fileName = audioBlend( indexPly );
-      break;
-      
-      case KOROT2 :
-        // KOROT : Start Augmenting KorotKoff Sound
-        setGains( 1 );
-        file = "KOROT2.RAW";
-        indexPly = listPlyID( file );
-        fileName = audioBlend( indexPly );
-      break;
-      
-      case KOROT3 :
-        // KOROT : Start Augmenting KorotKoff Sound
-        setGains( 1 );
-        file = "KOROT3.RAW";
-        indexPly = listPlyID( file );
-        fileName = audioBlend( indexPly );
-      break;
-      
-      case KOROT4 :
-        // KOROT : Start Augmenting KorotKoff Sound
-        setGains( 1 );
-        file = "KOROT4.RAW";
-        indexPly = listPlyID( file );
-        fileName = audioBlend( indexPly );
-      break;
-
-      case RECAOR :
-        // RECAOR : Recorded Aortic Sound
-        file = "RECAOR.RAW";
-        indexPly = listPlyID( file );
-        fileName = audioBlend( indexPly );
-      break;
-
-      case RECMIT :
-        // RECMIT : Recorded Mitral Sound
-        file = "RECMIT.RAW";
-        indexPly = listPlyID( file );
-        fileName = audioBlend( indexPly );
-      break;
-
-      case RECPUL :
-        // RECPUL : Recorded Pulmonary Sound
-        file = "RECPUL.RAW";
-        indexPly = listPlyID( file );
-        fileName = audioBlend( indexPly );
-      break;
-
-      case RECTRI :
-        // RECTRI : Recorded Tricuspid Sound
-        file = "RECTRI.RAW";
-        indexPly = listPlyID( file );
-        fileName = audioBlend( indexPly );
-      break;
-      
-      case STARTSIM :
-        // STARTSIM : Start Simulating
-        startSimulation();
-      break;
-
-      case STOPSIM :
-        // STOPSIM : Stop Simulating
-        stopSimulation();
-      break;
-      */
       default :
         //Serial.print( (char)inByte );
       break;
     }
+
+    // Cross-reference blend/playback bytes ==================================================================== //
+    blendByteCheck( inByte );
+    
     //displayStatus();
     delay( 10 );
 }
