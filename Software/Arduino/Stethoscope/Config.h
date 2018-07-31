@@ -19,7 +19,7 @@ struct Session
     String    fileRec;
     String    filePly[ 11 ];
     int       lenPly;
-    byte      blendByteList[ 11 ];
+    char      blendByteList[ 11 ];
     int       lenBlendByteList;
 };
 
@@ -54,11 +54,7 @@ void SessionInit()
       ses.blendByteList[i] = (byte)(i + blendOffset);
     }
 
-    Serial.println( ses.blendByteList[2] );
-    Serial.println( ses.filePly[8] );
-
     ses.lenBlendByteList = sizeof(ses.blendByteList)/sizeof(ses.blendByteList[0]);
-    Serial.println( ses.lenBlendByteList );
      
-}
+} // End of SessionInit()
 

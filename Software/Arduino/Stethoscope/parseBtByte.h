@@ -69,10 +69,13 @@ void displayStatus()
 // Fluvio L Lobo Fenoglietto 07/30/2018
 // ============================================================================================================== //
 
-void blendByteCheck() {
+void blendByteCheck( byte inByte ) {
 
   Serial.println( "Cross-referencing playback/blending bytes" );
   for( int i = 0; i < ses.lenBlendByteList; i ++ ) {
+    Serial.print( ses.blendByteList[i], HEX );
+    Serial.print( ", " );
+    Serial.println( inByte, HEX );
     if( ses.blendByteList[i] == inByte ) {
       Serial.println( "Match found..." );
       blendByteIndex = i;
@@ -104,7 +107,7 @@ void parseBtByte( String fn )
     displayByte( inByte );
     displayStatus();
 
-    
+    blendByteCheck( inByte );
     
     switch ( inByte )
     {
@@ -203,7 +206,7 @@ void parseBtByte( String fn )
         // STOPBLEND : Stop Blending default audio file
         stopBlending();
       break;
-
+      /*
       // Simulation Functions =======================================================================  //
       case AORSTE :
         // AORSTE : Aortic Stenosis
@@ -295,7 +298,7 @@ void parseBtByte( String fn )
         // STOPSIM : Stop Simulating
         stopSimulation();
       break;
-      
+      */
       default :
         Serial.print( (char)inByte );
       break;
