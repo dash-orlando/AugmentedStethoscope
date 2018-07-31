@@ -27,8 +27,7 @@ String audioBlend( int indexPly )
     Serial.print( ">   AOK: " );
     Serial.print( fileName );
     Serial.println( " will be played" );
-    //startBlending( fileName );
-    startBlending( "RECAOR.RAW" );
+    startBlending( fileName );
   }
    
   return fileName;

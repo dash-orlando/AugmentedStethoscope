@@ -62,7 +62,7 @@ void loop()
   if ( mode == 2 ) continuePlaying();
   if ( mode == 3 ) continueHeartBeatMonitoring();
   //if ( mode == 4 ) continueAudioPassThrough();
-  if ( mode == 5 ) continueBlending(fileName);
+  if ( mode == 5 ) continueBlending( fileName );
 
   // simulation function ---------------------------------------------------------------------------------------- //
   if ( mode == 6 ) continueSimulation();
