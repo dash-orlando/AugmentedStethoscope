@@ -66,7 +66,7 @@ void displayStatus() {
 
 void blendByteCheck( byte inByte ) {
 
-  Serial.println( ">  Cross-referencing playback/blending bytes" );
+  //Serial.println( ">  Cross-referencing playback/blending bytes" );
   for( int i = 0; i < ses.lenBlendByteList; i ++ ) {
     if( ses.blendByteList[i] == inByte ) {
       blendByteIndex = i;
@@ -88,10 +88,7 @@ void parseBtByte( String fn ) {
     char  filename[fn.length()+1];
     fn.toCharArray( filename, sizeof( filename ) );
 
-    //Serial.print( "\nBTooth inbound queue, no. of bytes available: " ); 
-    //Serial.println( BTooth.available() );
-
-    inByte = BTooth.read();                                                                                       // get incoming byte
+    inByte = BTooth.read();                                                                                       // read incoming byte
     displayByte( inByte );
     //displayStatus();
 

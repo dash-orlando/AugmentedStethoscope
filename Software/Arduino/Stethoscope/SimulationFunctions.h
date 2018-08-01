@@ -14,23 +14,18 @@
 // Michael Xynidis
 // Fluvio L Lobo Fenoglietto 05/02/2018
 // ============================================================================================================== //
-String audioBlend( int indexPly )
-{
-  if ( indexPly == -1 )
-  {
+String audioBlend( int indexPly ) {
+  Serial.println( ">   EXECUTING audioBlend()" );
+  if ( indexPly == -1 ) {
     Serial.println( ">   ERR: Non-existent file cannot be played" );
     fileName = "";
-  }
-  else
-  {
+  } else {
     fileName = ses.filePly[indexPly];
     Serial.print( ">   AOK: " );
     Serial.print( fileName );
     Serial.println( " will be played" );
-    startBlending( fileName );
+    startBlending( fileName );                                                                                    // execute startBlending()
   }
-   
   return fileName;
-
 } // End of audioBlend()
 // ============================================================================================================== //

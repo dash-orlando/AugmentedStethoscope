@@ -460,7 +460,7 @@ uint8_t rmsModulation() {
 // ==============================================================================================================
 
 void switchMode( int m ) {
-    Serial.print( "\nMode = "  );  Serial.print( mode );
+    Serial.print( ">    Switching Mode = "  );  Serial.print( mode );
     mode = m;                                                                                                   // Change value of operation mode for continous recording
     Serial.print( " -> "  );  Serial.println( mode );
 }
@@ -475,8 +475,7 @@ void switchMode( int m ) {
 // ============================================================================================================== //
 int gainMode = 0;                                                                                                 // default gain mode to 0
 boolean setGains( int gainMode ) {
-  switch( gainMode )
-  {
+  switch( gainMode ) {
     case 0:                                                                                                       // default settings
       // normal - nothing
       // calls setup functions to ensure similar settings
@@ -937,7 +936,7 @@ boolean stopPlaying() {
 // Fluvio L. Lobo Fenoglietto 05/13/2017
 // ==============================================================================================================
 boolean setBlendGains() {
-  // Control Mixer Channels and Gains
+  Serial.println( ">    Setting-up gains associated with the blending pathway" );
   //rms_mic_mixer.gain(     0,  mixerInputON  );                                                                  // Set mic input, channel 0 of mic&Sd mixer ON      (g = 1)
   //rms_mic_mixer.gain(     1,  mixerInputON  );                                                                  // Set mic input, channel 1 of mic&Sd mixer ON      (g = 1)
   rms_playRaw_mixer.gain(   0,  mixerInputON );                                                                   // Set plaback, channel 0 of rms mixer OFF          (g = 0)
@@ -956,29 +955,26 @@ boolean setBlendGains() {
 // onto the microphone signal
 //
 // Fluvio L. Lobo Fenoglietto 11/12/2017
-// ==============================================================================================================
+// ============================================================================================================== //
 boolean startBlending( String fileName ) {
-  Serial.println( "EXECUTING startBlending()" );                                                                // Identification of function executed
-  setBlendGains();
+  Serial.println( ">    EXECUTING startBlending()" );                                                             // Identification of function executed
+  setBlendGains();                                                                                                // Setting gains associated with the blending pathway
   
-  char  filePly[fileName.length()+1];                                                                           // Conversion from string to character array
+  char  filePly[fileName.length()+1];                                                                             // Conversion from string to character array
   fileName.toCharArray( filePly, sizeof( filePly ) );
-  Serial.println( filePly );
-  Serial.println( SD.exists( filePly ) );
+  //Serial.println( filePly );
+  //Serial.println( SD.exists( filePly ) );
   
-  if ( SD.exists( filePly ) )
-  {
+  if ( SD.exists( filePly ) ) {
     deviceState = BLENDING;
     blendState  = BLENDING;
-    Serial.println( "Stethoscope will begin BLENDING" );
+    Serial.println( ">    Stethoscope will begin BLENDING" );
     playRaw_sdHeartSound.play( filePly );                                                                       // Start playing recorded HB
     BTooth.write( ACK );
     switchMode( 5 );
     return true;    
-  }
-  else
-  {
-    Serial.println( "Stethoscope CANNOT begin BLENDING" );                                                      // Function execution confirmation over USB serial
+  } else {
+    Serial.println( ">    Stethoscope CANNOT begin BLENDING" );                                                 // Function execution confirmation over USB serial
     BTooth.write( NAK );                                                                                        // Negative AcKnowledgement sent back through bluetooth serial
     return false;
   }
@@ -1004,23 +1000,20 @@ float   playback_mixer_lvl_step       = mic_mixer_lvl_step;
 float   playback_rms_mixer_lvl        = 0.25;
 float   playback_rms_mixer_lvl_step   = 0.10;                                                                   // mixer level step for rms-based amplitude manipulation
 boolean continueBlending(String fileName) {
-  if ( !playRaw_sdHeartSound.isPlaying() )                                                                      // check if playback sound is playing/running                                                                 
-  {
-    Serial.println( "File NOT PLAYING... RESTARTING playback" );
+  if ( !playRaw_sdHeartSound.isPlaying() ) {
+    Serial.println( ">    File NOT PLAYING... RESTARTING playback" );
     char  filePly[fileName.length()+1];                                                                         // Conversion from string to character array
     fileName.toCharArray( filePly, sizeof( filePly ) );
-    Serial.println( filePly );
-    Serial.println( SD.exists( filePly ) );
+    //Serial.println( filePly );
+    //Serial.println( SD.exists( filePly ) );
     playRaw_sdHeartSound.play( filePly );
   }
 
   // 
   // Using blending states, the function fades sound in/continously/out
   //
-  if ( blendState == BLENDING )                                                                                 // if deviceState == STARTING, begin the blending of the signals
-  {
-    if ( mic_mixer_lvl > 0.10 )                                                                                 // check the value of the gain levels to trigger a gradual blending
-    {
+  if ( blendState == BLENDING ) {                                                                               // if deviceState == STARTING, begin the blending of the signals
+    if ( mic_mixer_lvl > 0.10 ) {
       mic_mixer_lvl       = mic_mixer_lvl - mic_mixer_lvl_step;                                                 // gradually decrease mic. gain level
       playback_mixer_lvl  = playback_mixer_lvl + playback_mixer_lvl_step;                                       // gradually increase playback gain level
       mixer_mic_Sd.gain(0, mic_mixer_lvl);                                                                      // apply mic. gain
@@ -1029,31 +1022,25 @@ boolean continueBlending(String fileName) {
       //Serial.print(mic_mixer_lvl);
       //Serial.print(" || playback gain = ");
       //Serial.println(playback_mixer_lvl);
-    }
-    else
-    {
-      blendState = CONTINUING;                                                                                   // Switch state to CONTINUING for dynamic blending, other...
+    } else {
+      blendState = CONTINUING;                                                                                  // Switch state to CONTINUING for dynamic blending, other...
       return true;
     } // End of blend mixer level check
-  }
-  else if ( blendState == CONTINUING )                                                                           // if deviceState == CONTINUING, maintain or vary mixer levels using functions
-  {
+    
+  } else if ( blendState == CONTINUING ) {                                                                      // if deviceState == CONTINUING, maintain or vary mixer levels using functions
     //uint8_t rms_switch = rmsAmplitudePeaksDuo();
     uint8_t rms_switch = rmsModulation();
-    if ( rms_switch == 0 )                                                                                      // RMS value of mic. and playback signal are similar
-    {
+    if ( rms_switch == 0 ) {                                                                                    // RMS value of mic. and playback signal are similar
       // nothing
       //mixer_mic_Sd.gain(0, mic_mixer_lvl);
       //mixer_mic_Sd.gain(1, playback_mixer_lvl);
-    }
-    else if ( rms_switch == 1 )                                                                                 // RMS value of mic. > playback signal
-    {
+      
+    } else if ( rms_switch == 1 ) {                                                                             // RMS value of mic. > playback signal
       playback_rms_mixer_lvl = playback_rms_mixer_lvl + playback_rms_mixer_lvl_step;                            // ...increase gain value
       if ( playback_rms_mixer_lvl > 1.25 ) playback_rms_mixer_lvl = 1.25;
       rms_playRaw_mixer.gain(0, playback_rms_mixer_lvl);                                                        // ...apply gain value
-    }
-    else if ( rms_switch == 2 )                                                                                 // RMS value of mic. < playback signal
-    {
+      
+    } else if ( rms_switch == 2 ) {                                                                             // RMS value of mic. < playback signal
       playback_rms_mixer_lvl = playback_rms_mixer_lvl - playback_rms_mixer_lvl_step;                            // ...increase gain value
       if ( playback_rms_mixer_lvl < 0 ) playback_rms_mixer_lvl = 0;                                             // ...sign check, gain values are taken as the absolute so anything below zero will also generate sounds
       rms_playRaw_mixer.gain(0, playback_rms_mixer_lvl);                                                        // ...apply gain value
@@ -1063,11 +1050,9 @@ boolean continueBlending(String fileName) {
     //Serial.print(" | PlayBack RMS Mixer Gain = ");
     //Serial.println(playback_rms_mixer_lvl);
     return true;
-  }
-  else if ( blendState == READY )
-  {
-    if ( mic_mixer_lvl < 0.90 )
-    {
+    
+  } else if ( blendState == READY ) {
+    if ( mic_mixer_lvl < 0.90 ) {
       mic_mixer_lvl       = mic_mixer_lvl + mic_mixer_lvl_step;
       playback_mixer_lvl  = playback_mixer_lvl - playback_mixer_lvl_step;    
       mixer_mic_Sd.gain(0, mic_mixer_lvl);
@@ -1076,9 +1061,8 @@ boolean continueBlending(String fileName) {
       //Serial.print(mic_mixer_lvl);
       //Serial.print(" || playback gain = ");
       //Serial.println(playback_mixer_lvl);
-    }
-    else
-    {
+      
+    } else {
       playRaw_sdHeartSound.stop();                                                                              // stop playback file
       setGains(0);
       switchMode( 0 );
@@ -1087,9 +1071,9 @@ boolean continueBlending(String fileName) {
   } // End of deviceState check
   return true; 
 } // End of continueBlending();
-// ==============================================================================================================
+// ============================================================================================================ //
 
-// ==============================================================================================================
+// ============================================================================================================ //
 // Stop Blending
 // Blending or mixing the input microphone line with an 
 // audio file from the SD card
@@ -1098,13 +1082,12 @@ boolean continueBlending(String fileName) {
 // onto the microphone signal
 //
 // Fluvio L. Lobo Fenoglietto 11/13/2017
-// ==============================================================================================================
+// ============================================================================================================ //
 boolean stopBlending() {
-  Serial.println( "EXECUTING stopBlending()" );
-  deviceState = READY;                                                                                        // This will trigger the bleding down and stopping
+  Serial.println( ">    EXECUTING stopBlending()" );
+  deviceState = READY;                                                                                          // This will trigger the bleding down and stopping
   blendState  = READY;
-  Serial.println( "Stethoscope will STOP BLENDING" );                                                           // Function execution confirmation over USB serial
-  Serial.println( "sending: ACK..." );
+  Serial.println( ">    Stethoscope will STOP BLENDING" );                                                      // Function execution confirmation over USB serial
   BTooth.write( ACK );                                                                                          // ACKnowledgement sent back through bluetooth serial
   return true;
 } // End of stopBlending()

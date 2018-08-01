@@ -78,7 +78,7 @@ String                    fileName        = "";                                 
 // ============================================================================================================== //
 void setupMicToSpeaker()
 {
-  Serial.println( "SETTING UP lines from Microphone to Speaker" );
+  // Serial.println( "SETTING UP lines from Microphone to Speaker" );
   // rms mic mixer ---------------------------------------------------------------------------------------------- //
   rms_mic_mixer.gain(   0, mixerInputON  );
   rms_mic_mixer.gain(   1, mixerInputON  );
