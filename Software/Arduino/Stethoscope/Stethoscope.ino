@@ -27,8 +27,7 @@
 // ==============================================================================================================
 // SETUP LOOP
 // ============================================================================================================== //
-void setup()
-{
+void setup() {
   // Serial Communication Initialization
   Serial.begin( SPEED );                                                                                          // USB Serial Communication
   BTooth.begin( SPEED );                                                                                          // RF/Bluetooth Serial Communication
@@ -47,12 +46,7 @@ void setup()
 // ==============================================================================================================
 // MAIN LOOP
 // ============================================================================================================== //
-void loop()
-{ // when using a microphone, continuously adjust gain
-/*  Instead of the following line of code, Mic Level will be hard-coded in SetupAudioBoard()
-  if ( myInput == AUDIO_INPUT_MIC ) adjustMicLevel();
- */
-
+void loop() {
   // if we get a valid byte, read analog from BT:
   if ( BTooth.available() > 0 ) parseBtByte( "RECORD.RAW" );
 

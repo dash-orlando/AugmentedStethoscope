@@ -7,15 +7,13 @@
 // Fluvio L Lobo Fenoglietto 05/07/2018
 // ============================================================================================================== //
 
-
 // ==============================================================================================================
 // Session (structure)
 //
 // Michael Xynidis
 // Fluvio L Lobo Fenoglietto 05/07/2018
 // ============================================================================================================== //
-struct Session
-{
+struct Session {
     String    fileRec;
     String    filePly[ 11 ];
     int       lenPly;
@@ -31,8 +29,7 @@ Session  ses;
 // Michael Xynidis
 // Fluvio L Lobo Fenoglietto 05/07/2018
 // ============================================================================================================== //
-void SessionInit()
-{
+void SessionInit() {
     ses.fileRec     =  "RECORD.RAW";
     ses.filePly[0]  =  "AORSTE.RAW";
     ses.filePly[1]  =  "S4GALL.RAW";

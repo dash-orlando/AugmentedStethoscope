@@ -50,8 +50,7 @@ String        lineOut       = "";
 // 
 // Michael Xynidis 11/12/2017
 // ==============================================================================================================
-void adjustMicLevel()
-{
+void adjustMicLevel() {
   // TODO: read the peak_QrsMeter1 object and adjust sgtl5000_1.micGain()
   // if anyone gets this working, please submit a github pull request :-)
 }
@@ -67,15 +66,12 @@ void adjustMicLevel()
 // Michael Xynidis
 // Fluvio L. Lobo Fenoglietto 11/12/2017
 // ==============================================================================================================
-bool waveAmplitudePeaks()
-{
-  if ( msecs > 40 )                                     // sample at 25MHz
-  {
+bool waveAmplitudePeaks() {
+  if ( msecs > 40 ) {
      msecs = 0;
-    if ( peak_QrsMeter.available() )
-    {
+    if ( peak_QrsMeter.available() ) {
+      
       float peakNumber  = 0.0;
-
       peakNumber = peak_QrsMeter.read();
 
       int   leftPeak    = peakNumber  * 30.0;
@@ -91,16 +87,14 @@ bool waveAmplitudePeaks()
       Serial.print( leftPeak );
       Serial.print( '\t' );
 
-      for ( int i = 0; i < 30 - leftPeak; i++ )
-      {
+      for ( int i = 0; i < 30 - leftPeak; i++ ) {
          if ( i == (30 - (sigThreshold * 30)) )
           Serial.print( "." );
         else
           Serial.print( " " );
       }
 
-      if ( peakNumber >= sigThreshold )                 // Sound is heard.
-      {
+      if ( peakNumber >= sigThreshold ) {
         fillCharL = '<';
         fillCharR = '>';
         if ( atRest )                                   // If heart is at rest, then a sound is heard...
@@ -108,9 +102,7 @@ bool waveAmplitudePeaks()
         else                                            // otherwise...
           transition  = false;                          // ....there is no transition
         atRest        = false;                          // ....but with either event, the heart is NOT at rest.
-      }
-      else                                              // No sound heard (or, below threshold)
-      {
+      } else {
         fillCharL = ' ';
         fillCharR = ' ';
         if ( !atRest )                                  // If heart was NOT at rest, then NO sound is heard...
@@ -121,69 +113,40 @@ bool waveAmplitudePeaks()
       }
 
 
-      if ( transition && !atRest && !soundTwo )         // transitioning into (potential) 1st heart sound
-      {
-        if ( restTime > minS1S2 )
-        {
+      if ( transition && !atRest && !soundTwo ) {
+        if ( restTime > minS1S2 ) {
           intervalRate  = triggerTime;
           triggerTime   = 0;
         }
-      }
-
-      else if ( !transition && !atRest && !soundTwo )   // within (potential) 1st heart sound *(may be unnecessary)*
-      {
-      }
-
-      else if ( transition && atRest && !soundTwo )     // transitioning out of (potential) 1st heart sound
-      {
+      } else if ( !transition && !atRest && !soundTwo ) {
+      } else if ( transition && atRest && !soundTwo ) {
         soundTwo      = true;
         restTime      = 0;
-      }
-
-      else if ( transition && !atRest && soundTwo )     // transitioning into (potential) 2nd heart sound
-      {
-        if ( ( triggerTime >= minS1S2 )                 // qualifies as 2nd heart sound if S1S2 interval falls...
-          && ( triggerTime <= maxS1S2 ) )               // ....within the defined range
-        {
+      } else if ( transition && !atRest && soundTwo ) {
+        if ( ( triggerTime >= minS1S2 ) && ( triggerTime <= maxS1S2 ) ) {
           beatHeard     = true;
         }
-      }
-
-      else if ( !transition && !atRest && soundTwo )    // within (potential) 1st heart sound *(may be unnecessary)*
-      {
+      } else if ( !transition && !atRest && soundTwo ) {
         beatHeard     = false;
-      }
-
-      else if ( transition && atRest && soundTwo )      // transitioning out of (potential) 2nd heart sound
-      {
+      } else if ( transition && atRest && soundTwo ) {
         soundTwo      = false;
         beatHeard     = false;
         intervalRate  = 0;
-      }
-
-      else if ( !transition && atRest && restTime > maxS1S2 )
-      {
+      } else if ( !transition && atRest && restTime > maxS1S2 ) {
         soundTwo = false;
-      }
-      
-      else
+      } else
         beatHeard     = false;
 
 
-      if ( beatHeard )                                  // This section calculates a running average...
-      {                                                 // heart rate from three successive samples
+      if ( beatHeard ) {
         hrSample[ndx] = elapsed;  // - timestamp;
-        if ( ndx == 2 )
-        {
+        if ( ndx == 2 ) {
           heartRateI = 60000 / ((hrSample[0] + hrSample[1] + hrSample[2]) / 3);
           for ( int i = 0; i < 3; i++ ) hrSample[i] = 0;
           ndx = 0;
-        }
-        else ndx++;
+        } else ndx++;
         elapsed = 0;
       }
-//      else if ( elapsed > maxHBInterval )               // If no heartbeat is detected within this...
-//        heartRateI = 0;                                 // ....interval, heart rate is set to zero.
 
       for ( int i = 0; i < leftPeak; i++ )
         Serial.print( fillCharL );
@@ -200,21 +163,18 @@ bool waveAmplitudePeaks()
       for ( count = 0; count < leftPeak; count++ )
         Serial.print( fillCharR );
 
-      while ( count++ <= 30 )
-      {
+      while ( count++ <= 30 ) {
          if ( count == sigThreshold * 30 )
           Serial.print( "." );
         else
           Serial.print( " " );
       }
 
-      if ( transition )
-      {
+      if ( transition ) {
         Serial.print( "\ttime: " );
         Serial.print( triggerTime );
       }
-      if ( beatHeard )
-      {
+      if ( beatHeard ) {
         Serial.print( "\tHR: " );
         Serial.print( heartRateI );
       }
@@ -248,8 +208,7 @@ unsigned long   late_bound     = 1250;                                          
 float           hr             = 0;                                                                             // Heart Rate, bpm - beats per minute
 elapsedMillis   timer;
 
-void waveAmplitudePeaks2()
-{
+void waveAmplitudePeaks2() {
   if( fps > 24 )
   {
     if ( peak_QrsMeter.available() )                                                                            // if peak is available
@@ -347,8 +306,7 @@ void waveAmplitudePeaks2()
 // 
 // Fluvio L. Lobo Fenoglietto 11/12/2017
 // ==============================================================================================================
-void rmsAmplitudePeaksSingle()
-{
+void rmsAmplitudePeaksSingle() {
   if( fps > 24 )
   {
     // only the microphone
@@ -380,8 +338,7 @@ void rmsAmplitudePeaksSingle()
 // Fluvio L. Lobo Fenoglietto 11/12/2017
 // ==============================================================================================================
 uint32_t count;
-uint8_t rmsAmplitudePeaksDuo()
-{
+uint8_t rmsAmplitudePeaksDuo() {
   
   uint8_t returnValue = 0;
   uint8_t threshRMS   = 0;
@@ -445,8 +402,7 @@ uint8_t rmsAmplitudePeaksDuo()
 // Fluvio L. Lobo Fenoglietto 11/10/2017
 // ==============================================================================================================
 uint32_t min_count = 1;
-uint8_t rmsModulation()
-{
+uint8_t rmsModulation() {
   
   uint8_t returnValue = 0;
   //uint8_t threshRMS   = 0;
@@ -503,8 +459,7 @@ uint8_t rmsModulation()
 } // End of rmsModulation()
 // ==============================================================================================================
 
-void switchMode( int m )
-{
+void switchMode( int m ) {
     Serial.print( "\nMode = "  );  Serial.print( mode );
     mode = m;                                                                                                   // Change value of operation mode for continous recording
     Serial.print( " -> "  );  Serial.println( mode );
@@ -519,8 +474,7 @@ void switchMode( int m )
 // Fluvio L. Lobo Fenoglietto 05/14/2018
 // ============================================================================================================== //
 int gainMode = 0;                                                                                                 // default gain mode to 0
-boolean setGains( int gainMode )
-{
+boolean setGains( int gainMode ) {
   switch( gainMode )
   {
     case 0:                                                                                                       // default settings
@@ -548,8 +502,7 @@ boolean setGains( int gainMode )
 // Fluvio L. Lobo Fenoglietto 11/30/2017
 // ==============================================================================================================
 String inString = "";
-String parseString()
-{
+String parseString() {
   if ( BTooth.available() > 0 )
   {
     inString = BTooth.readString();
@@ -583,8 +536,7 @@ String parseString()
 // ============================================================================================================== //
 int     recMode       = 0;                                                                                        // Default -- rec. mode 0 ( will be expanded later )
 int     recChannels   = 2;
-boolean setRecordingMode()
-{
+boolean setRecordingMode() {
   if ( BTooth.available() > 0 )
   {
     inString = BTooth.readString();
@@ -619,8 +571,7 @@ boolean setRecordingMode()
 String  recExtension  = ".RAW";                                                                                   // Recording file extension definition
 String  recString     = "";                                                                                       // Recording file string name definiton
 String  recStrings[]  = {"",""};                                                                                  // Default string array dpending on the rec mode
-boolean setRecordingFilename( String inString, String recExtension, int recMode )
-{
+boolean setRecordingFilename( String inString, String recExtension, int recMode ) {
   Serial.println( "EXECUTING setRecordingFilename()" );
 
   switch( recMode )
@@ -666,8 +617,7 @@ boolean setRecordingFilename( String inString, String recExtension, int recMode 
 //
 // Fluvio L. Lobo Fenoglietto 05/09/2018
 // ============================================================================================================== //
-void setRecGains()
-{
+void setRecGains() {
   // Control Mixer Channels and Gains
   rms_mic_mixer.gain(     0,  mixerInputON  );                                                                  // Set mic input, channel 0 of mic&Sd mixer ON      (g = 1)
   rms_mic_mixer.gain(     1,  mixerInputON  );                                                                  // Set mic input, channel 1 of mic&Sd mixer ON      (g = 1)
@@ -691,8 +641,7 @@ void setRecGains()
 // Michael Xynidis
 // Fluvio L. Lobo Fenoglietto 11/21/2017
 // ==============================================================================================================
-boolean startRecording(String recString)
-{
+boolean startRecording(String recString) {
   Serial.println( "EXECUTING startRecording()" );                                                               // Identification of function executed
   setRecGains();
 
@@ -738,8 +687,7 @@ boolean startRecording(String recString)
 // Michael Xynidis
 // Fluvio L. Lobo Fenoglietto 05/09/2018
 // ============================================================================================================== //
-boolean startMultiChannelRecording( String recStrings[] )
-{
+boolean startMultiChannelRecording( String recStrings[] ) {
   Serial.println( "EXECUTING startRecording()" );                                                                 // Identification of function executed
   setRecGains();                                                                                                  // Set-up gains for microphone recording
 
@@ -807,8 +755,7 @@ boolean startMultiChannelRecording( String recStrings[] )
 // Michael Xynidis
 // Fluvio L. Lobo Fenoglietto 11/21/2017
 // ==============================================================================================================
-boolean continueRecording()
-{
+boolean continueRecording() {
   switch( recMode )
   {
     case 0:
@@ -861,8 +808,7 @@ boolean continueRecording()
 // Michael Xynidis
 // Fluvio L. Lobo Fenoglietto 11/21/2017
 // ==============================================================================================================
-boolean stopRecording()
-{
+boolean stopRecording() {
   Serial.println( "EXECUTING stopRecording" );
 
   switch( recMode )
@@ -931,8 +877,7 @@ boolean stopRecording()
 //
 // *** Start Playing
 //
-boolean startPlaying( String fileName )
-{
+boolean startPlaying( String fileName ) {
   Serial.println( "EXECUTING startPlaying()" );                                                                 // Identification of function executed
 
   mixer_mic_Sd.gain( 0, mixerInputOFF );                                                                        // Set the microphone channel 0 to mute (gain value = 0)
@@ -963,8 +908,7 @@ boolean startPlaying( String fileName )
 //
 // *** Continue Playing
 //
-void continuePlaying() 
-{
+void continuePlaying() {
   if ( !playRaw_sdHeartSound.isPlaying() )
   {
     playRaw_sdHeartSound.stop();
@@ -975,8 +919,7 @@ void continuePlaying()
 //
 // *** Stop Playing
 //
-boolean stopPlaying()
-{
+boolean stopPlaying() {
   Serial.println( "stopPlaying" );
   if ( deviceState == PLAYING ) playRaw_sdHeartSound.stop();
   deviceState = READY;
@@ -993,8 +936,7 @@ boolean stopPlaying()
 //
 // Fluvio L. Lobo Fenoglietto 05/13/2017
 // ==============================================================================================================
-boolean setBlendGains()
-{
+boolean setBlendGains() {
   // Control Mixer Channels and Gains
   //rms_mic_mixer.gain(     0,  mixerInputON  );                                                                  // Set mic input, channel 0 of mic&Sd mixer ON      (g = 1)
   //rms_mic_mixer.gain(     1,  mixerInputON  );                                                                  // Set mic input, channel 1 of mic&Sd mixer ON      (g = 1)
@@ -1015,8 +957,7 @@ boolean setBlendGains()
 //
 // Fluvio L. Lobo Fenoglietto 11/12/2017
 // ==============================================================================================================
-boolean startBlending( String fileName )
-{
+boolean startBlending( String fileName ) {
   Serial.println( "EXECUTING startBlending()" );                                                                // Identification of function executed
   setBlendGains();
   
@@ -1062,8 +1003,7 @@ float   mic_mixer_lvl_step            = 0.0001;
 float   playback_mixer_lvl_step       = mic_mixer_lvl_step;
 float   playback_rms_mixer_lvl        = 0.25;
 float   playback_rms_mixer_lvl_step   = 0.10;                                                                   // mixer level step for rms-based amplitude manipulation
-boolean continueBlending(String fileName) 
-{
+boolean continueBlending(String fileName) {
   if ( !playRaw_sdHeartSound.isPlaying() )                                                                      // check if playback sound is playing/running                                                                 
   {
     Serial.println( "File NOT PLAYING... RESTARTING playback" );
@@ -1159,8 +1099,7 @@ boolean continueBlending(String fileName)
 //
 // Fluvio L. Lobo Fenoglietto 11/13/2017
 // ==============================================================================================================
-boolean stopBlending()
-{
+boolean stopBlending() {
   Serial.println( "EXECUTING stopBlending()" );
   deviceState = READY;                                                                                        // This will trigger the bleding down and stopping
   blendState  = READY;
