@@ -14,7 +14,7 @@
 #include  "TeensyAudio.h"
 #include  "Config.h"
 #include  "states.h"
-#include  "protocol.h"
+//#include  "protocol.h"
 #include  "FileSD.h"
 #include  "parseBtByte.h"
 

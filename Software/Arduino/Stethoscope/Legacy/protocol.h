@@ -47,18 +47,6 @@ byte STE[] = { 0x53, 0x54, 0x45, 0x00 };        // Stethoscope Device IDs
 #define         SETGAINS          0x44          // Set device gains 
 
 //  Simulation Functions ============================================================================================================= //
-#define         AORSTE            0x50          // Playback ot Blending of the Aortic Stenosis
-#define         S4GALL            0x51          // Playback or Blending of the S4 Gallop 
-#define         ESMSYN            0x52          // Playback of Synthetic, Early Systolic Heart Murmur                 [resp: ACK | NAK]
-#define         KOROT1            0x53
-#define         KOROT2            0x54
-#define         KOROT3            0x55
-#define         KOROT4            0x56
-#define         RECAOR            0x57
-#define         RECMIT            0x58
-#define         RECPUL            0x59
-#define         RECTRI            0x60
-
 #define         STARTSIM          0x70
 #define         STOPSIM           0x71
 
