@@ -34,8 +34,7 @@ int       blendByteIndex;
 // Fluvio L Lobo Fenoglietto 05/02/2018
 // ============================================================================================================== //
 
-void displayByte( byte byteValue )
-{
+void displayByte( byte byteValue ) {
   Serial.println( "> ============================================================= >" );
   Serial.print(   "> Received: " );
   Serial.println( byteValue, HEX );
@@ -50,8 +49,7 @@ void displayByte( byte byteValue )
 // Fluvio L Lobo Fenoglietto 05/02/2018
 // ============================================================================================================== //
 
-void displayStatus()
-{
+void displayStatus() {
   Serial.print( "(pre) deviceState    : " );  Serial.println( stateToText( deviceState ) );
   Serial.print( "(pre) recState       : " );  Serial.println( stateToText( recState    ) );
   Serial.print( "(pre) blendState     : " );  Serial.println( stateToText( blendState  ) );
@@ -86,8 +84,7 @@ void blendByteCheck( byte inByte ) {
 // Michael Xynidis
 // Fluvio L Lobo Fenoglietto 05/02/2018
 // ============================================================================================================== //
-void parseBtByte( String fn )
-{
+void parseBtByte( String fn ) {
     char  filename[fn.length()+1];
     fn.toCharArray( filename, sizeof( filename ) );
 
@@ -100,8 +97,7 @@ void parseBtByte( String fn )
 
     // Cross-reference function-specific bytes ================================================================= //
     Serial.println( ">  Cross-referencing function-specific bytes" );
-    switch ( inByte )
-    {
+    switch ( inByte ) {
       case ENQ :
         statusEnquiry();
       break;
