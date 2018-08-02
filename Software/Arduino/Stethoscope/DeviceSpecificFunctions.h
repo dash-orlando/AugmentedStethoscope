@@ -958,7 +958,7 @@ boolean setBlendGains() {
 // ============================================================================================================== //
 boolean startBlending( String fileName ) {
   Serial.println( ">    EXECUTING startBlending()" );                                                             // Identification of function executed
-  setBlendGains();                                                                                                // Setting gains associated with the blending pathway
+  //setBlendGains();                                                                                                // Setting gains associated with the blending pathway
   
   char  filePly[fileName.length()+1];                                                                             // Conversion from string to character array
   fileName.toCharArray( filePly, sizeof( filePly ) );
@@ -999,6 +999,7 @@ float   mic_mixer_lvl_step            = 0.0001;
 float   playback_mixer_lvl_step       = mic_mixer_lvl_step;
 float   playback_rms_mixer_lvl        = 0.25;
 float   playback_rms_mixer_lvl_step   = 0.10;                                                                   // mixer level step for rms-based amplitude manipulation
+float   mixer_lvl_max                 = 1.50;
 boolean continueBlending(String fileName) {
   if ( !playRaw_sdHeartSound.isPlaying() ) {
     Serial.println( ">    File NOT PLAYING... RESTARTING playback" );
@@ -1037,7 +1038,7 @@ boolean continueBlending(String fileName) {
       
     } else if ( rms_switch == 1 ) {                                                                             // RMS value of mic. > playback signal
       playback_rms_mixer_lvl = playback_rms_mixer_lvl + playback_rms_mixer_lvl_step;                            // ...increase gain value
-      if ( playback_rms_mixer_lvl > 1.25 ) playback_rms_mixer_lvl = 1.25;
+      if ( playback_rms_mixer_lvl > mixer_lvl_max ) playback_rms_mixer_lvl = mixer_lvl_max;
       rms_playRaw_mixer.gain(0, playback_rms_mixer_lvl);                                                        // ...apply gain value
       
     } else if ( rms_switch == 2 ) {                                                                             // RMS value of mic. < playback signal
@@ -1064,7 +1065,7 @@ boolean continueBlending(String fileName) {
       
     } else {
       playRaw_sdHeartSound.stop();                                                                              // stop playback file
-      setGains(0);
+      //setGains(0);
       switchMode( 0 );
       // switch to pre-defined mode (preferably idle/standby)
     } // End of blend mixer level check
